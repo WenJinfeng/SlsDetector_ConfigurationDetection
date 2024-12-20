@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: MQ + Lambda
+
+Resources:
+  HelloWorldSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      GenerateSecretString:
+        GenerateStringKey: password
+        PasswordLength: 32
+        SecretStringTemplate: '{"username": "admin"}'
+
+  HelloWorldBroker:
+    Type: AWS::AmazonMQ::Broker
+    Properties:
+      AutoMinorVersionUpgrade: false
+      BrokerName: !Sub "${AWS::StackName}-HelloWorldBroker"
+      DeploymentMode: SINGLE_INSTANCE
+      EngineType: RabbitMQ
+      EngineVersion: '3.9.16'
+      HostInstanceType: mq.t3.micro
+      PubliclyAccessible: true
+      Users:
+        - Password: !Sub '{{resolve:secretsmanager:${HelloWorldSecret}:SecretString:password}}'
+          Username: !Sub '{{resolve:secretsmanager:${HelloWorldSecret}:SecretString:username}}'
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      InlineCode: >
+        exports.handler = async (event, context) => {
+          console.log(JSON.stringify(event))
+        }
+      Events:
+        HelloWorld:
+          Type: MQ
+          Properties:
+            Broker: !GetAtt HelloWorldBroker.Arn
+            Queues:
+              - HelloWorld
+            SourceAccessConfigurations:
+              - Type: BASIC_AUTH
+                URI: !Ref HelloWorldSecret
+            Enabled: true
+
+Outputs:
+  HelloWorldEndpoint:
+    Value: !Select [0, !GetAtt HelloWorldBroker.AmqpEndpoints]
+  HelloWorldSecret:
+    Value: !Ref HelloWorldSecret

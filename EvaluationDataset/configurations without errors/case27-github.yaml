@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-experiment
+
+  Sample SAM Template for sam-experiment
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+    Tracing: Active
+    Layers:
+      - !Ref UtilsLayer
+      - !Ref RequirementsLayer
+
+Resources:
+  UtilsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: utils-layer
+      ContentUri: utils
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: python3.9
+  RequirementsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: requirements
+      CompatibleRuntimes:
+        - python3.9
+    Metadata:
+      BuildMethod: python3.9
+
+  EdiqGet:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: read/
+      Handler: read.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - x86_64
+      Events:
+        EdiqGetAPI:
+          Type: Api 
+          Properties:
+            Path: /ediq
+            Method: GET
+      Layers:
+        - !Ref UtilsLayer
+        - !Ref RequirementsLayer
+
+  Outputs:
+    UtilsLayerArn:
+      Description: "Common utils function Layer"
+      Value: !Ref UtilsLayer
+      Export:
+        Name: !Sub '${AWS::StackName}-UtilsLayerArn'
+    RequirementsLayerArn:
+      Description: "Layer containing libraries"
+      Value: !Ref RequirementsLayer
+      Export:
+        Name: !Sub '${AWS::StackName}-RequirementsLayerArn'

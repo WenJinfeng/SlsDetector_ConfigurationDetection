@@ -1,0 +1,513 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+  - AWS::Serverless-2016-10-31
+  - AWS::LanguageExtensions
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Tracing: Active
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      SubnetIds:
+        - !Ref SubnetId
+    Environment:
+      Variables:
+        DbName: !Ref DbName
+        ArrayMetadataCollectionName: !Ref ArrayMetadataCollectionName
+        JobQueue: !Ref JobQueue
+        JobDefinitionArn: !Ref PostNewDatasetBatchJobDefinition
+        ElasticHostUrl: !Ref ElasticHostUrl
+        MongoSecretName: !Ref MongoSecretName
+        ArrayViewName: tiledb_arrays_enriched
+        POWERTOOLS_SERVICE_NAME: !Sub ${AWS::StackName}
+        StripPrefixes:
+          Fn::ToJsonString: [ "/test", "/api/v1/Tiledb" ]
+
+Parameters:
+  SecurityGroupId:
+    Type: 'String'
+  SubnetId:
+    Type: 'String'
+  DbName:
+    Type: 'String'
+    Description: "Mongodb database name"
+  ArrayMetadataCollectionName:
+    Type: 'String'
+    Description: "Mongodb collection name of metadata resources"
+  MongoSecretName:
+    Type: 'String'
+    Description: 'AWS secret name containing Mongodb server secrets'
+  JobQueue:
+    Type: 'String'
+    Description: "AWS batch job queue name"
+  VPCEndpointId:
+    Type: 'String'
+    Description: "vpc endpoint associated with said APIGW"
+    AllowedPattern: '^vpce-[A-Za-z0-9]+$'
+  ElasticHostUrl:
+    Type: 'String'
+  HostedZoneId:
+    Type: 'AWS::Route53::HostedZone::Id'
+  DomainName:
+    Type: 'String'
+  CertificateArn:
+    Type: 'String'
+    AllowedPattern: '^arn:aws:acm:[A-Za-z0-9-]+:[0-9]+:certificate\/[A-Za-z0-9-]+$'
+  BaseBucketName:
+    Type: 'String'
+  FileSystemId:
+    Type: 'String'
+    AllowedPattern: '^fs-[A-Za-z0-9]+$'
+    Default: "fs-03c7b62b6598c3dc3"
+  Environment:
+    Type: 'String'
+    Default: 'test'
+    AllowedValues:
+      - test
+      - prod
+
+Conditions:
+  CreateCustomDomain: !Equals
+    - !Ref Environment
+    - prod
+
+Mappings:
+  EnvironmentMap:
+    test:
+      ApiMappingKey: "test"
+      Suffix: "-test"
+    prod:
+      ApiMappingKey: ""
+      Suffix: ""
+
+Resources:
+
+  UpdateAwsBatchJobsOpensearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: batch:Describe*
+              Resource: "*"
+            - Effect: Allow
+              Action: "aoss:APIAccessAll"
+              Resource: "*"
+      Events:
+        EBRule:
+          Type: EventBridgeRule
+          Properties:
+            Pattern:
+              "source":
+                - "aws.batch"
+              "detail-type":
+                - "Batch Job State Change"
+              "detail":
+                "jobDefinition":
+                  - !Ref PostNewDatasetBatchJobDefinition
+            Target:
+              Id: MyTarget
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/UpdateAwsBatchJobsOpensearchFunction
+  ListJobsAndLogsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:Get*
+                - batch:Describe*
+              Resource: "*"
+            - Effect: Allow
+              Action: "aoss:APIAccessAll"
+              Resource: "*"
+      Events:
+        ListJobsEvent:
+          Type: Api
+          Properties:
+            Path: /jobs/
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+        ListSingleJobEvent:
+          Type: Api
+          Properties:
+            Path: /jobs/{jobid}
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+        GetJobLogsEvent:
+          Type: Api
+          Properties:
+            RequestParameters:
+              - method.request.querystring.hours:
+                  Required: false
+                  Caching: false
+              - method.request.querystring.limit:
+                  Required: false
+                  Caching: false
+              - method.request.querystring.start_from_head:
+                  Required: false
+                  Caching: false
+            Path: /jobs/{jobid}/logs
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/GetJobsFunction
+  DatasetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 2048
+      PackageType: Image
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}*"
+        - VPCAccessPolicy: { }
+        - S3CrudPolicy:
+            BucketName: !Ref BaseBucketName
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: "batch:SubmitJob"
+              Resource:
+                - !Ref PostNewDatasetBatchJobDefinition
+                - !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${JobQueue}"
+            - Effect: Allow
+              Action: "batch:List*"
+              Resource: "*"
+      Events:
+        DatasetDeleteEvent:
+          Type: Api
+          Properties:
+            Auth:
+              Authorizer: AWS_IAM
+              InvokeRole: NONE
+            Path: /datasets/{datasetid}
+            Method: delete
+            RestApiId:
+              Ref: MyRestApi
+        PostDataSetEvent:
+          Type: Api
+          Properties:
+            Path: /datasets/
+            Method: post
+            RestApiId:
+              Ref: MyRestApi
+        GetDatasetidEvent:
+          Type: Api
+          Properties:
+            Path: /datasets/{datasetid}
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+        ListDatasetsEvent:
+          Type: Api
+          Properties:
+            RequestParameters:
+              - method.request.querystring.dataset_type:
+                  Required: false
+              - method.request.querystring.expand:
+                  Required: false
+              - method.request.querystring.offset:
+                  Required: false
+              - method.request.querystring.limit:
+                  Required: false
+              - method.request.querystring.cnt:
+                  Required: false
+              - method.request.querystring.organism:
+                  Required: false
+            Path: /datasets/
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+        GetAnnotationsEvent:
+          Type: Api
+          Properties:
+            Path: /datasets/{datasetid}/obs/annotations/
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+        GetAnnotationValuesEvent:
+          Type: Api
+          Properties:
+            Path: /datasets/{datasetid}/obs/annotations/{annotationid}
+            RequestParameters:
+              - method.request.path.datasetid:
+                  Required: true
+                  Caching: true
+              - method.request.path.annotationid:
+                  Required: true
+                  Caching: true
+            Method: get
+            RestApiId:
+              Ref: MyRestApi
+        GetVarEvent:
+          Type: Api
+          Properties:
+            Path: /datasets/{datasetid}/var/ids/
+            Method: get
+            RequestParameters:
+              - method.request.path.datasetid:
+                  Required: true
+                  Caching: true
+              - method.request.querystring.expand:
+                  Caching: true
+              - method.request.querystring.offset:
+                  Caching: true
+              - method.request.querystring.limit:
+                  Caching: true
+              - method.request.querystring.cnt:
+                  Caching: true
+            RestApiId:
+              Ref: MyRestApi
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/DatasetFunction
+
+  MapGenesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./functions/MapGenesFunction
+      Timeout: 7
+      PackageType: Image
+      Environment:
+        Variables:
+          Neo4JSecretName: "neo4j-creds"
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:neo4j-creds*"
+        - VPCAccessPolicy: { }
+      Events:
+        GetGenesMapEvent:
+          Type: Api
+          Properties:
+            Path: /genes/map/
+            RequestModel:
+              Model: MapGenesModel
+              Required: true
+              ValidateBody: true
+            Method: post
+            RestApiId:
+              Ref: MyRestApi
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/MapGenesFunction
+  GetExpressionDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      MemorySize: 8192
+      Timeout: 29
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}*"
+        - VPCAccessPolicy: { }
+        - S3CrudPolicy:
+            BucketName: !Ref BaseBucketName
+      Events:
+        GetDataEvent:
+          Type: Api
+          Properties:
+            Path: /datasets/{datasetid}/data
+            Method: post
+            RequestModel:
+              Model: GetDataModel
+              ValidateBody: true
+            RestApiId:
+              Ref: MyRestApi
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./functions/GetExpressionDataFunction
+  CustomDomain:
+    Type: AWS::ApiGateway::DomainName
+    Condition: CreateCustomDomain
+    Properties:
+      RegionalCertificateArn: !Ref CertificateArn
+      DomainName: !Ref DomainName
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+  CustomDomainMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      ApiId: !Ref MyRestApi
+      DomainName: !Ref DomainName
+      ApiMappingKey: !FindInMap [ EnvironmentMap ,!Ref Environment, ApiMappingKey ]
+      Stage: !Ref MyRestApi.Stage
+  MyRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      BinaryMediaTypes:
+        - "application/octet-stream"
+      MinimumCompressionSize: 12800
+      CacheClusterEnabled: true
+      CacheClusterSize: '0.5'
+      EndpointConfiguration:
+        Type: PRIVATE
+        VPCEndpointIds:
+          - !Ref VPCEndpointId
+      Name: !Sub
+        - "tiledb-api${Suffix}"
+        - Suffix: !FindInMap [ EnvironmentMap ,!Ref Environment, Suffix ]
+      StageName: "v1"
+      TracingEnabled: true
+      GatewayResponses:
+        MISSING_AUTHENTICATION_TOKEN:
+          ResponseTemplates:
+            "application/json": "{\"message\": \"missing authentication token error OR unsupported API method or resource\" }"
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date'"
+        MaxAge: "'300'"
+      Auth:
+        ResourcePolicy:
+          CustomStatements:
+            - Effect: 'Allow'
+              Action: 'execute-api:Invoke'
+              Resource: 'execute-api:/*/*/*'
+              Principal: '*'
+      MethodSettings:
+        - HttpMethod: "*"
+          LoggingLevel: "INFO"
+          ResourcePath: "/*"
+          DataTraceEnabled: true
+          CachingEnabled: false
+          MetricsEnabled: true
+      Models:
+        GetDataModel:
+          type: object
+          required:
+            - annotations
+            - genes
+          properties:
+            annotations:
+              type: array
+              items:
+                - type: string
+            genes:
+              type: array
+              items:
+                - type: string
+            agg:
+              type: [ boolean, string ]
+              enum: [ true, "True", "" ]
+            offset:
+              type: integer
+            limit:
+              type: integer
+        ListDatasetsModel:
+          type: object
+          properties:
+            expand:
+              type: [ boolean, string ]
+              enum: [ true, "True", "" ]
+            dataset_type:
+              type: string
+              enum: [ single-cell, bulk ]
+            offset:
+              type: integer
+            limit:
+              type: integer
+        MapGenesModel:
+          type: object
+          oneOf:
+            - type: object
+              required:
+                - gene_names
+              properties:
+                gene_names:
+                  type: array
+                  items:
+                    - type: string
+            - type: object
+              required:
+                - gene_ids
+              properties:
+                gene_ids:
+                  type: array
+                  items:
+                    - type: string
+  BatchECR:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: "Retain"
+  PostNewDatasetBatchJobRole:
+    Type : AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: "sts:AssumeRole"
+            Principal:
+              Service: "ecs-tasks.amazonaws.com"
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 's3:*'
+                Resource:
+                  - !Sub "arn:aws:s3:::${BaseBucketName}/*"
+                  - !Sub "arn:aws:s3:::${BaseBucketName}"
+              - Effect: Allow
+                Action: 'secretsmanager:GetSecretValue'
+                Resource: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}*"
+  PostNewDatasetBatchJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      ContainerProperties:
+        Secrets:
+          - Name: MongoSecret
+            ValueFrom: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}"
+        Volumes:
+          - "Name": "Rnd"
+            "Host":
+              "SourcePath": "/Rnd"
+        "MountPoints":
+          - "ContainerPath": "/Rnd"
+            "ReadOnly": false
+            "SourceVolume": "Rnd"
+        Environment:
+          - Name: MongoSecretName
+            Value: !Ref MongoSecretName
+          - Name: DbName
+            Value: !Ref DbName
+          - Name: ArrayMetadataCollectionName
+            Value: !Ref ArrayMetadataCollectionName
+          - Name: BaseBucketName
+            Value: !Ref BaseBucketName
+        Image: !Join [ ":",[ !GetAtt BatchECR.RepositoryUri,"latest" ] ]
+        Command: [ "python3", "main.py", "Ref::h5ad_file_location", "Ref::dataset_type", "Ref::dataset_name"]
+        JobRoleArn: !GetAtt PostNewDatasetBatchJobRole.Arn
+        ExecutionRoleArn: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+        ResourceRequirements:
+          - "Value": "16"
+            "Type": "VCPU"
+          - "Value": "90112"
+            "Type": "MEMORY"
+        LinuxParameters:
+          Tmpfs:
+            - ContainerPath: "/tmp"
+              Size: 85830
+      PlatformCapabilities:
+        - "EC2"
+      Type: container
+
+Outputs:
+  RestApiId:
+    Value: !Ref MyRestApi
+    Description: "Tiledb rest API ID"
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-RestApiId'

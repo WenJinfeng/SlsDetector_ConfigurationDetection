@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ESB PackingList API
+
+Resources:
+  ListPetsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: io.andrewohara.pets.ListPetsHandler
+      CodeUri: ./pets-api/build/libs/pets-api.jar
+      Events:
+        http:
+          Type: Api
+          Properties:
+            Path: /pets
+            Method: GET
+            RestApiId: !Ref RestApi 

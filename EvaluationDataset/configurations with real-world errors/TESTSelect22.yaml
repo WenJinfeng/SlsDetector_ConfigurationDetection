@@ -1,0 +1,27 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  servicecognitologin:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: service-cognito-login
+      CodeUri: lambda/service-cognito-login/
+      Handler: app.handler
+      Runtime: nodejs18.x
+      MemorySize: 128
+      Timeout: 10      
+      Architectures:
+      - arm64
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Sid: CloudWatchLogGroup
+              Action: 
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !GetAtt AuthLogGroup.Arn
+              Effect: Allow      
+      LoggingConfig:
+        LogFormat: JSON 
+        ApplicationLogLevel: DEBUG 
+        SystemLogLevel: INFO 
+        LogGroup: !Ref AuthLogGroup

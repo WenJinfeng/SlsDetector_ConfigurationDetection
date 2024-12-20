@@ -1,0 +1,42 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  PrivateApiResource:
+    Type: AWS::Serverless::Api
+    Tags:
+      Application: !Ref Application
+    Properties:
+      Name: !Sub ${Env}-${Application}-PrivateApiResource
+      StageName: prod
+      EndpointConfiguration:
+        Type: PRIVATE
+        VPCEndpointIds:
+          - !FindInMap [ EnvConfig, !Ref Env, VPCEndpointAPI ]
+      Auth:
+        ResourcePolicy:
+          CustomStatements:
+            - Effect: Allow
+              Principal: '*'
+              Action: execute-api:Invoke
+              Resource: "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*/*/*"
+            - Effect: Deny
+              Principal: '*'
+              Action: execute-api:Invoke
+              Resource: "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*/*/*"
+              Condition:
+                StringNotEquals:
+                  aws:SourceVpce: !FindInMap [ EnvConfig, !Ref Env, VPCEndpointAPI ]
+  SayHelloPrivately:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ./target/index.sayHelloPrivatelyHandler
+      Runtime: nodejs18.x
+      CodeUri:
+        Bucket: !Ref Bucket
+        Key: !Sub ${Application}/latest-lambda.zip
+      Events:
+        SayHelloApi:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
+            RestApiId: !Ref PrivateApiResource

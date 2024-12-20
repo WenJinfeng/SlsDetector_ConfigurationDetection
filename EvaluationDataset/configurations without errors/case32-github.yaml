@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  Semver:
+    Type: String
+    Default: 1.0.3
+Resources:
+  helloworld:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:077246666028:applications/hello-world
+        SemanticVersion: !Ref Semver
+      Parameters: 
+        IdentityNameParameter: "myname"  

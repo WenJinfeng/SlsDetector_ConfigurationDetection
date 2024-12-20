@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
+      GatewayResponses: #https://stackoverflow.com/questions/36913196/401-return-from-an-api-gateway-custom-authorizer-is-missing-access-control-allo/58059560#58059560
+        UNAUTHORIZED:
+          StatusCode: 401
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+        ACCESS_DENIED:
+          StatusCode: 403
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+        DEFAULT_5XX:
+          StatusCode: 500
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+        RESOURCE_NOT_FOUND:
+          StatusCode: 404
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"              
+      Cors: 
+        AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key, Access-Control-Allow-Origin'"
+        AllowOrigin: "'*'"
+        #AllowCredentials: true
+      Auth:
+        # AddDefaultAuthorizerToCorsPreflight: False
+        # DefaultAuthorizer: CustomLambdaTokenAuthorizer
+        Authorizers:
+          CustomLambdaTokenAuthorizer:
+            FunctionArn: !GetAtt ValidateTokenFunction.Arn
+            Identity:
+              Header: Authorization
+              #ValidationExpression: Bearer.*
+  GetUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app
+      Handler: usersFacade.get
+      Runtime: nodejs18.x
+      Policies: AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+      Events:
+        GetUserPath:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: /{apiVersionId}/users/{resourceId}
+            Method: get
+            Auth:
+              Authorizer: CustomLambdaTokenAuthorizer
+  UpdateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app
+      Handler: usersFacade.updateUserInfo
+      Runtime: nodejs10.x
+      Policies: AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+      Events:
+        PutRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyAPI
+            Path: /{apiVersionId}/users/{resourceId}/userInfo
+            Method: put
+            Auth:
+              Authorizer: CustomLambdaTokenAuthorizer
+  ValidateTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./app
+      Handler: AuthorizerFacade.validateToken 
+      Runtime: nodejs10.x
+      Policies: 
+        - AmazonDynamoDBFullAccess
+        - SecretsManagerReadWrite 
+      # Environment:
+      #   Variables:
+      #     ACCESS_TOKEN_TTL: !Ref AccessTokenTTL
+      #     REFRESH_TOKEN_TTL: !Ref RefreshTokenTTL
+      #     SECRET: !Ref AuthSecret
+      #     TOKEN_TABLE_NAME: !Ref AuthorizationTokenTable

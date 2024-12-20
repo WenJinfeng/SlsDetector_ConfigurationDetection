@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: "The deployment stage (e.g., dev, prod, etc.)"
+
+Resources:
+  MySimpleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Function: !Sub 'my-simple-function-${Stage}'
+      Runtime: python3.8

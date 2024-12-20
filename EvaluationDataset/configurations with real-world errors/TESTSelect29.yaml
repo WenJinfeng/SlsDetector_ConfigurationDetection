@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SampleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: python3.8
+      InlineCode: |
+        def handler(event, context):
+          print("Hello, world!")
+      Policies: AWSLambdaExecute
+      Events:
+        SampleEvent:
+          Type: Schedule
+          Properties:
+            EventBusName: sample-bus
+            Schedule: rate(1 minute)

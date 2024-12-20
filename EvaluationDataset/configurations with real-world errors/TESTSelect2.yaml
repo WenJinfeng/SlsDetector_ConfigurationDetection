@@ -1,0 +1,17 @@
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  MyJobTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      Name: "MyJobTrigger"
+      Type: "CONDITIONAL"
+      StartOnCreation: true
+      Description: "Description for a conditional job trigger"
+      Actions:
+        - JobName: !Ref GlueJob1
+      Predicate:
+        Conditions:
+          - LogicalOperator: EQUALS
+            CrawlerName: !Ref DataCrawler
+            CrawlState: SUCCEEDED

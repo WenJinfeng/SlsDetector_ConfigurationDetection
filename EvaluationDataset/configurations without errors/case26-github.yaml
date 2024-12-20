@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  StageName:
+    Type: String
+    Default: Prod
+
+Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref StageName
+
+  TestApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub test-api-key-${AWS::StackName}
+      Description: Test API Key
+      Enabled: true
+
+  TestUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref ApiGateway
+          Stage: !Ref StageName
+      Description: Test Usage Plan
+
+  TestUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    DependsOn: TestUsagePlan
+    Properties:
+      KeyId: !Ref TestApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref TestUsagePlan

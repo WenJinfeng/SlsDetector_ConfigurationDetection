@@ -1,0 +1,25 @@
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+Parameters:
+  MyParameter:
+    Type: String
+    Default: 3.0.0
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      OpenApiVersion: !Ref MyParameter
+      StageName: prod
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs16.x
+      Handler: index.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /
+            RestApiId: !Ref MyApi

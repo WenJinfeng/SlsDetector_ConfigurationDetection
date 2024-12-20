@@ -1,0 +1,19 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyQueue:
+    Type: AWS::SQS::Queue
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode:  |
+        def bar(event, context):
+          print('hello')
+      Handler: bar
+      Runtime: python3.9
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt MyQueue.Arn
+            FunctionResponseType:
+              - ReportBatchItemFailures

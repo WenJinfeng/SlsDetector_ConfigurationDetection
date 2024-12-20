@@ -1,0 +1,7 @@
+
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  LambdaName:
+  Type: AWS::Serverless::Function
+  Properties:
+    FunctionName: 'functionname'

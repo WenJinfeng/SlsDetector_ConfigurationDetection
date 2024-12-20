@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for the Monologue Repo at Example
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  WebUIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./web-ui/build
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Events:
+        WebUITrigger:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            ApiId: !Ref ExampleHttpApi
+        WebUIIndexTrigger:
+          Type: HttpApi 
+          Properties:
+            Path: /
+            Method: ANY
+            ApiId: !Ref ExampleHttpApi
+  ExampleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - arm64
+      Events:
+        Example:
+          Type: HttpApi
+          Properties:
+            Path: /api/hello
+            Method: get
+            ApiId: !Ref ExampleHttpApi
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./api/hey/hello_world
+      DockerTag: python3.11-v1
+  HoWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - arm64
+      Events:
+        Example:
+          Type: HttpApi
+          Properties:
+            Path: /api/ho
+            Method: ANY
+            ApiId: !Ref ExampleHttpApi
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./api/ho/hello_world
+      DockerTag: python3.11-v1
+
+Outputs:
+  ExampleFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt ExampleFunction.Arn

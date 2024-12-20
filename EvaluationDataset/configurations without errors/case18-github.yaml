@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Codebuild heic layer
+Resources:
+  DeploymentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: photosai-codebuild-deployments
+  BuilderIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: photosai-codebuild-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: "codebuild-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+              - Effect: "Allow"
+                Action:
+                  - "s3:PutObject"
+                  - "s3:PutObjectAcl"
+                  - "s3:GetObject"
+                Resource: !Sub "arn:aws:s3:::${DeploymentBucket}/*"
+              - Effect: "Allow"
+                Action:
+                  - "lambda:AddLayerVersionPermission"
+                  - "lambda:PublishLayerVersion"
+                  - "lambda:GetLayerVersion"
+                  - "lambda:DeleteLayerVersion"
+                  - "lambda:ListLayerVersions"
+                  - "lambda:ListLayers"
+                  - "lambda:RemoveLayerVersionPermission"
+                Resource: "*"
+              - Effect: "Allow"
+                Action:
+                  - "cloudformation:CreateChangeSet"
+                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:DescribeStackEvents"
+                  - "cloudformation:DescribeChangeSet"
+                  - "cloudformation:ExecuteChangeSet"
+                Resource: "*"
+
+  SharpHEICCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: sharp-heic-lambda-layer
+      Description: Sharp Lambda Layer with HEIC Support
+      ServiceRole: !Ref BuilderIAMRole
+      BadgeEnabled: false
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Source:
+        Auth:
+          Type: OAUTH
+        Type: GITHUB
+        Location: https://github.com/agcty/sharp-heic-lambda-layer.git
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: SAM_BUCKET
+            Type: PLAINTEXT
+            Value: !Ref DeploymentBucket
+          - Name: STACK_NAME
+            Type: PLAINTEXT
+            Value: bcb-sharp-heic-lambda-layer
+      Cache:
+        Type: NO_CACHE
+      Triggers:
+        FilterGroups:
+          - Type: EVENT
+            Pattern: PUSH
+            ExcludeMatchedPattern: false
+          - Type: HEAD_REF
+            Pattern: "^refs/tags/.*"
+            ExcludeMatchedPattern: false
+        Webhook: true
+      EncryptionKey: !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3

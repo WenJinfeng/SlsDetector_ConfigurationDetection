@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  conditionIsProdVar:
+    Default: prod
+    Type: String
+
+Resources:
+  Certificate:
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: example.mydomain-GavinZZ-testing.com
+
+  DomainName:
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties:
+      CertificateArn: !Ref Certificate
+      DomainName: example.mydomain-GavinZZ-testing.com
+
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: Id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: Id
+        KeyType: HASH
+      DeletionPolicy: Retain
+
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: |
+        exports.handler = async (event) => {
+          const response = {
+            statusCode: 200,
+            body: JSON.stringify('Hello from Lambda!'),
+          };
+          return response;
+        };
+      Handler: index.handler
+      Runtime: nodejs16.x
+      Events:
+        Fetch:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyApi
+            Method: Get
+            Path: /get
+
+  MyApiBaseMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: MyApiProdStage
+    Properties:
+      BasePath: "basepath"
+      DomainName: !Ref DomainName
+      RestApiId: !Ref MyApi
+
+  MyApiProdStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref MyApi
+      StageName: Prod
+
+  DNS: 
+    Type: "AWS::Route53::HostedZone"
+    Properties: 
+      Name: example.mydomain-GavinZZ-testing.com
+
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      OpenApiVersion: 3.0.1
+      StageName: Prod
+      Domain:
+        DomainName:
+          Ref: DomainName
+        CertificateArn:
+          Ref: Certificate
+        EndpointConfiguration: EDGE
+        BasePath:
+        - /get
+        Route53:
+          HostedZoneId:
+            Ref: DNS
+          IpV6: true

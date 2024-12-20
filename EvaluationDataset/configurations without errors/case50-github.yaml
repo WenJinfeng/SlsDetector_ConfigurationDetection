@@ -1,0 +1,32 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      # Auth:
+      #   ApiKeyRequired: true
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: MyFunctionHandler
+      Runtime: dotnetcore3.1
+      MemorySize: 256
+      Policies:
+        - "AWSLambdaBasicExecutionRole"
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /my_function
+            Method: get
+        RootOptions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /my_function
+            Method: options
+            Auth:
+              ApiKeyRequired: false

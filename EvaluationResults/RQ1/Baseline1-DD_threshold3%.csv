@@ -1,0 +1,543 @@
+Model,Configuration,Final_responses,TypeNum,EntryNum,ValueNum,EntryDependencyNum,ValueDependencyNum,TotalNum
+DDmethod,case10-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Cors']]
+*****[Configuration Entry Value Errors: ['0.0.1', 'AwsSamExample', ""exports.handler = async (event) => {\n  const response = {\n    statusCode: 200,\n    body: JSON.stringify('Hello from Lambda!'),\n  };\n  return response;\n};\n"", '/mypath']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,4,0,0,5
+DDmethod,case11-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Auth.OverrideApiAuth', 'Resources.PHAWS::Cognito::UserPool.Properties.UserPoolName']]
+*****[Configuration Entry Value Errors: ['2016-09-23T22:23:23Z', 'Simple Api', 'MyLambdaRequestAuth', ""exports.handler = async (event, context, callback) => {\n  return {\n    statusCode: 200,\n    body: 'Success'\n  }\n}\n"", 'MyLambdaRequestAuth', '/lambda-request', 'NONE', '/lambda-request-override-none', 'MyCognitoAuthorizer', '/lambda-request-override-cognito', ""exports.handler = async (event, context, callback) => {\n  const auth = event.queryStringParameters.authorization\n  const policyDocument = {\n    Version: '2012-10-17',\n    Statement: [{\n      Action: 'execute-api:Invoke',\n      Effect: auth && auth.toLowerCase() === 'allow' ? 'Allow' : 'Deny',\n      Resource: event.methodArn\n    }]\n  }\n  \n  return {\n    principalId: 'user',\n    context: {},\n    policyDocument\n  }\n}\n"", 'MyCognitoUserPool', 'MyCognitoUserPoolClient']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,13,0,0,15
+DDmethod,case12-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['Dev', 'VerifyIAMAuthorizer', './cmd/authorizer', './cmd/test', 'MyServerlessAPI']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,5,0,0,5
+DDmethod,case13-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Models.User.properties.username.type', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Required', 'Resources.PHAWS::Logs::LogGroup.DeletionPolicy', 'Resources.PHAWS::Serverless::Api.Properties.Models.User.type', 'Resources.PHAWS::Logs::LogGroup.Properties.LogGroupName', 'Resources.PHAWS::Serverless::Api.Properties.AccessLogSetting.DestinationArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Model']]
+*****[Configuration Entry Value Errors: [30, '3.0.1', '$context.requestId', ""exports.handler = async (event, context, callback) => {\n  return {\n    statusCode: 200,\n    body: 'Success'\n  }\n}\n"", '/none']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,7,5,0,0,12
+DDmethod,case14-github.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::UsagePlan', 'AWS::ApiGateway::ApiKey', 'AWS::ApiGateway::UsagePlanKey']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApiGateway::ApiKey.Properties.Enabled', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.UsagePlanId.Ref', 'Resources.PHAWS::ApiGateway::ApiKey.Properties.StageKeys', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Type', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.KeyType', 'Resources.PHAWS::ApiGateway::UsagePlan.Type', 'Resources.PHAWS::Cognito::UserPool.Properties.UserPoolName', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.ApiStages', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.KeyId.Ref', 'Resources.PHAWS::ApiGateway::ApiKey.DependsOn', 'Resources.PHAWS::ApiGateway::ApiKey.Type']]
+*****[Configuration Entry Value Errors: ['MyAuthorizerV1', ""exports.handler = async (event, context, callback) => {\n  return {\n    statusCode: 200,\n    body: 'Success'\n  }\n}\n"", 'MyAuthorizerV1', '/v2/test', 'MyAuthorizerV2', 'MyCognitoUserPool', 'MyCognitoUserPoolClient']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",3,11,7,0,0,21
+DDmethod,case15-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['index.get', ""module.exports = async () => { throw new Error('Check out the response headers!') }"", '/error']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,3,0,0,3
+DDmethod,case16-github.yaml,"****[Resource Type Errors: ['AWS::ApplicationInsights::Application', 'AWS::ResourceGroups::Group', 'CLOUDFORMATION_STACK_1_0']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApplicationInsights::Application.Properties.ResourceGroupName.Ref', 'Resources.PHAWS::ApplicationInsights::Application.Properties.AutoConfigurationEnabled', 'Resources.PHAWS::ResourceGroups::Group.Properties.Name.Fn::Sub', 'Resources.PHAWS::ApplicationInsights::Application.Type', 'Resources.PHAWS::ResourceGroups::Group.Properties.PHCLOUDFORMATION_STACK_1_0.Type', 'Resources.PHAWS::ResourceGroups::Group.Type']]
+*****[Configuration Entry Value Errors: ['python3.10', 'Listen to S3', 'S3 Listener Function ARN', 'S3ListenerFunction.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",3,6,4,0,0,13
+DDmethod,case17-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: [['AWS::LanguageExtensions', 'AWS::Serverless-2016-10-31'], 'Foo service.', 'The token identifying the deployment environment, such as ""dev"", ""dev3"", or ""dev-jdoe"".', '\\w[\\w-]*', 'The development environment identifier must only use word characters and dashes.', 'java17', 800, 4, 'foo-${Env}-LambdaHandler', 'com.example.LambdaHandler::handleRequest']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,10,0,0,10
+DDmethod,case18-github.yaml,"****[Resource Type Errors: ['OAUTH', 'NO_ARTIFACTS', 'AWS::CodeBuild::Project', 'LINUX_CONTAINER', 'GITHUB', 'NO_CACHE']]
+****[Configuration Entry Errors: ['Resources.PHAWS::CodeBuild::Project.Properties.PHLINUX_CONTAINER.ImagePullCredentialsType', 'Resources.PHAWS::CodeBuild::Project.Properties.PHGITHUB.PHOAUTH.Type', 'Resources.PHAWS::CodeBuild::Project.Properties.Description', 'Resources.PHAWS::CodeBuild::Project.Properties.Name', 'Resources.PHAWS::S3::Bucket.Properties.BucketName', 'Resources.PHAWS::CodeBuild::Project.Properties.ServiceRole.Ref', 'Resources.PHAWS::CodeBuild::Project.Properties.PHLINUX_CONTAINER.ComputeType', 'Resources.PHAWS::CodeBuild::Project.Type', 'Resources.PHAWS::CodeBuild::Project.Properties.PHNO_CACHE.Type', 'Resources.PHAWS::CodeBuild::Project.Properties.BadgeEnabled', 'Resources.PHAWS::CodeBuild::Project.Properties.PHGITHUB.Location', 'Resources.PHAWS::CodeBuild::Project.Properties.PHNO_ARTIFACTS.Type', 'Resources.PHAWS::CodeBuild::Project.Properties.PHLINUX_CONTAINER.Image', 'Resources.PHAWS::CodeBuild::Project.Properties.Triggers.FilterGroups', 'Resources.PHAWS::CodeBuild::Project.Properties.EncryptionKey.Fn::Sub', 'Resources.PHAWS::CodeBuild::Project.Properties.PHLINUX_CONTAINER.PrivilegedMode', 'Resources.PHAWS::CodeBuild::Project.Properties.PHGITHUB.Type', 'Resources.PHAWS::CodeBuild::Project.Properties.PHLINUX_CONTAINER.Type', 'Resources.PHAWS::CodeBuild::Project.Properties.PHLINUX_CONTAINER.EnvironmentVariables', 'Resources.PHAWS::CodeBuild::Project.Properties.Triggers.Webhook']]
+*****[Configuration Entry Value Errors: ['Codebuild heic layer\n', 'photosai-codebuild-role', [{'Effect': 'Allow', 'Principal': {'Service': ['codebuild.amazonaws.com']}, 'Action': ['sts:AssumeRole']}], [{'PolicyName': 'codebuild-policy', 'PolicyDocument': {'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'], 'Resource': 'arn:aws:logs:*:*:*'}, {'Effect': 'Allow', 'Action': ['s3:PutObject', 's3:PutObjectAcl', 's3:GetObject'], 'Resource': {'Fn::Sub': 'arn:aws:s3:::${DeploymentBucket}/*'}}, {'Effect': 'Allow', 'Action': ['lambda:AddLayerVersionPermission', 'lambda:PublishLayerVersion', 'lambda:GetLayerVersion', 'lambda:DeleteLayerVersion', 'lambda:ListLayerVersions', 'lambda:ListLayers', 'lambda:RemoveLayerVersionPermission'], 'Resource': '*'}, {'Effect': 'Allow', 'Action': ['cloudformation:CreateChangeSet', 'cloudformation:DescribeStacks', 'cloudformation:DescribeStackEvents', 'cloudformation:DescribeChangeSet', 'cloudformation:ExecuteChangeSet'], 'Resource': '*'}]}}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",6,20,4,0,0,30
+DDmethod,case19-github.yaml,"****[Resource Type Errors: ['AWS::CertificateManager::Certificate']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::HttpApi.Properties.StageName.Ref', 'Resources.PHAWS::Serverless::HttpApi.Properties.Auth.Authorizers.OAuth2Authorizer.JwtConfiguration.audience', 'Resources.PHAWS::Serverless::HttpApi.Properties.CorsConfiguration.MaxAge', 'Resources.PHAWS::Serverless::HttpApi.Properties.CorsConfiguration.AllowMethods', 'Resources.PHAWS::CertificateManager::Certificate.Type', 'Resources.PHAWS::Serverless::HttpApi.Properties.Auth.Authorizers.OAuth2Authorizer.JwtConfiguration.issuer.Fn::ImportValue.Fn::Sub', 'Resources.PHAWS::CertificateManager::Certificate.Properties.DomainValidationOptions', 'Resources.PHAWS::Serverless::HttpApi.Properties.CorsConfiguration.AllowCredentials', 'Resources.PHAWS::CertificateManager::Certificate.Properties.ValidationMethod', 'Resources.PHAWS::CertificateManager::Certificate.Properties.DomainName.Fn::If', 'Resources.PHAWS::Serverless::HttpApi.Properties.Auth.Authorizers.OAuth2Authorizer.IdentitySource', 'Resources.PHAWS::Serverless::HttpApi.Properties.Domain.DomainName.Fn::If', 'Resources.PHAWS::Serverless::HttpApi.Properties.Auth.DefaultAuthorizer', 'Resources.PHAWS::Serverless::HttpApi.Properties.Domain.Route53.HostedZoneId.Fn::FindInMap', 'Resources.PHAWS::Serverless::HttpApi.Properties.CorsConfiguration.AllowHeaders', 'Resources.PHAWS::Serverless::HttpApi.Properties.Domain.SecurityPolicy', 'Resources.PHAWS::Serverless::HttpApi.Properties.Domain.CertificateArn.Ref']]
+*****[Configuration Entry Value Errors: [['AWS::Serverless-2016-10-31', {'Name': 'DatadogServerless', 'Parameters': {'stackName': {'Ref': 'AWS::StackName'}, 'apiKey': 'xxxxxxx', 'nodeLayerVersion': 88, 'extensionLayerVersion': 41, 'service': 'XXXX API', 'env': {'Ref': 'Env'}, 'tags': 'App:Xxxxx,Stack:XXXX'}}], 'Template for deploying API Gateway backed by lambda', 'Name of the application', ['Local', 'Dev', 'SIT', 'QA', 'Prod'], 'The Environment tag/naming pre/post-pend', 'Enter the name of the cognito user pool pipeline stack', [{'Ref': 'Env'}, 'Local'], '${Application}-shared-dependency-layer-${Env}', ['nodejs18.x'], 'src/dependencies/shared/nodejs/', 'nodejs18.x', ['http://localhost:4200', {'Fn::FindInMap': ['DomainName', {'Ref': 'Env'}, 'webUrl']}], '${Application}-get-anonymous-sms-send-page-url-${Env}', 'get-anonymous-sms-send-page-url.handler', 'src/handlers/AnonymousSmsSendPageUrl/get-anonymous-sms-send-page-url/', [{'Ref': 'SharedDependencyLayer'}], 'HttpApiGW', '/AnonymousSmsSendPageUrl/{WorkOrderId}/{AffiliateId}', 'HttpApiGW', '/anonymousSmsSendPageUrl/{WorkOrderId}/{AffiliateId}', 'https://${HttpApiGW.DomainName}']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,17,21,0,0,39
+DDmethod,case1-github.yaml,"****[Resource Type Errors: ['AllAtOnce']]
+****[Configuration Entry Errors: ['Globals.Api.MethodSettings', 'Resources.PHAWS::DynamoDB::Table.Properties.Tags', 'Globals.Function.AutoPublishAlias.Ref', 'Resources.PHAWS::DynamoDB::Table.Condition', 'Globals.Function.PHAllAtOnce.Type', 'Resources.PHAWS::DynamoDB::Table.Properties.GlobalSecondaryIndexes']]
+*****[Configuration Entry Value Errors: ['AWS Blueprint for SAM using NestJS and on-demand DynamoDB.  Single lambda serves entire API via proxy+. Supports CORS from ALL origins\n', 'The stage name, also the lambda alias', 'DDB_TABLENAME env var', 'test-SingleTable', 'The SSM parameter key for some secret value', '/stage/repo_name/branch/envs/SECRET_KEY', 'nodejs18.x', ""'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"", ""'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"", ""'600'"", [{'Fn::Equals': [{'Ref': 'StageName'}, 'staging']}], [{'Ref': 'StageName'}, 'local'], 'StageName', 'DDBTableName', [{'AttributeName': 'PK', 'AttributeType': 'S'}, {'AttributeName': 'SK', 'AttributeType': 'S'}, {'AttributeName': 'GSI1PK', 'AttributeType': 'S'}, {'AttributeName': 'GSI1SK', 'AttributeType': 'S'}], [{'AttributeName': 'PK', 'KeyType': 'HASH'}, {'AttributeName': 'SK', 'KeyType': 'RANGE'}], '${AWS::StackName}--Monolithic', 'dist/apig-lambda.handler', [{'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['dynamodb:Batch*', 'dynamodb:Describe*', 'dynamodb:Get*', 'dynamodb:Query', 'dynamodb:Scan', 'dynamodb:DeleteItem', 'dynamodb:UpdateItem', 'dynamodb:PutItem'], 'Resource': {'Fn::Sub': 'arn:aws:dynamodb:*:*:table/${DDBTableName}'}}]}], 'APIG', 'https://${APIG}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,6,21,0,0,28
+DDmethod,case20-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHKinesis.Properties.FilterCriteria.Filters', 'Resources.PHAWS::Kinesis::Stream.Properties.Name', 'Resources.PHAWS::Kinesis::Stream.Properties.RetentionPeriodHours']]
+*****[Configuration Entry Value Errors: ['AWS SAM Template FilterCriteria Testing', [{'PolicyName': 'allow-all-Access', 'PolicyDocument': {'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['*'], 'Resource': ['*']}]}}], ['LambdaRole', 'Arn'], 'def handler(event, context):\n  print(""Hello, world!"")\n', ['TestStream', 'Arn'], 1]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,3,6,0,0,9
+DDmethod,case21-github.yaml,"****[Resource Type Errors: ['PRIVATE', 'AWS::ApiGatewayV2::ApiMapping', 'AWS::ApiGateway::DomainName', 'AWS::Batch::JobDefinition', 'AWS::ECR::Repository', 'AWS::Route53::HostedZone::Id', 'container']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.ResourceRequirements', 'Resources.PHAWS::Batch::JobDefinition.Type', 'Resources.PHAWS::Serverless::Api.Properties.Models.MapGenesModel.oneOf', 'Resources.PHAWS::Batch::JobDefinition.Properties.PlatformCapabilities', 'Resources.PHAWS::Serverless::Api.Properties.Models.MapGenesModel.type', 'Resources.PHAWS::ApiGatewayV2::ApiMapping.Properties.ApiId.Ref', 'Globals.Function.VpcConfig.SubnetIds', 'Resources.PHAWS::ApiGateway::DomainName.Condition', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.properties.dataset_type.type', 'Resources.PHAWS::Serverless::Api.Properties.PHPRIVATE.VPCEndpointIds', 'Resources.PHAWS::ApiGatewayV2::ApiMapping.Properties.DomainName.Ref', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.Command', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.Volumes', 'Resources.PHAWS::Serverless::Api.Properties.Auth.ResourcePolicy.CustomStatements', 'Resources.PHAWS::Serverless::Api.Properties.PHPRIVATE.Type', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.LinuxParameters.Tmpfs', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Model', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.annotations.type', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.MountPoints', 'Resources.PHAWS::ApiGatewayV2::ApiMapping.Properties.ApiMappingKey.Fn::FindInMap', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Auth.InvokeRole', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateBody', 'Resources.PHAWS::Serverless::Api.Properties.CacheClusterSize', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.type', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHEventBridgeRule.Properties.Pattern.detail.jobDefinition', 'Resources.PHAWS::ApiGatewayV2::ApiMapping.Type', 'Resources.PHAWS::Serverless::Api.Properties.CacheClusterEnabled', 'Resources.PHAWS::ECR::Repository.Type', 'Resources.PHAWS::Batch::JobDefinition.Properties.Type', 'Globals.Function.VpcConfig.SecurityGroupIds', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.properties.expand.type', 'Resources.PHAWS::Serverless::Api.Properties.MinimumCompressionSize', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.limit.type', 'Resources.PHAWS::ApiGateway::DomainName.Properties.RegionalCertificateArn.Ref', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.properties.expand.enum', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.genes.type', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.offset.type', 'Parameters.PHAWS::Route53::HostedZone::Id.Type', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.Environment', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.JobRoleArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Required', 'Resources.PHAWS::ApiGatewayV2::ApiMapping.Properties.Stage.Ref', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.annotations.items', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHEventBridgeRule.Properties.Target.Id', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.Image.Fn::Join', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.agg.enum', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.genes.items', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.properties.dataset_type.enum', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.required', 'Resources.PHAWS::Serverless::Api.Properties.Models.GetDataModel.properties.agg.type', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.properties.offset.type', 'Resources.PHAWS::ApiGateway::DomainName.Properties.PHPRIVATE.Types', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.type', 'Resources.PHAWS::ApiGateway::DomainName.Type', 'Resources.PHAWS::Serverless::Api.Properties.Models.ListDatasetsModel.properties.limit.type', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.Secrets', 'Resources.PHAWS::ApiGateway::DomainName.Properties.DomainName.Ref', 'Resources.PHAWS::Batch::JobDefinition.Properties.ContainerProperties.ExecutionRoleArn.Fn::Sub', 'Resources.PHAWS::ECR::Repository.DeletionPolicy']]
+*****[Configuration Entry Value Errors: [['AWS::Serverless-2016-10-31', 'AWS::LanguageExtensions'], 'Mongodb database name', 'Mongodb collection name of metadata resources', 'AWS secret name containing Mongodb server secrets', 'AWS batch job queue name', 'vpc endpoint associated with said APIGW', '^vpce-[A-Za-z0-9]+$', '^arn:aws:acm:[A-Za-z0-9-]+:[0-9]+:certificate\\/[A-Za-z0-9-]+$', '^fs-[A-Za-z0-9]+$', 'fs-03c7b62b6598c3dc3', ['test', 'prod'], [{'Ref': 'Environment'}, 'prod'], [{'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': 'batch:Describe*', 'Resource': '*'}, {'Effect': 'Allow', 'Action': 'aoss:APIAccessAll', 'Resource': '*'}]}], ['aws.batch'], ['Batch Job State Change'], './functions/UpdateAwsBatchJobsOpensearchFunction', [{'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': ['logs:Get*', 'batch:Describe*'], 'Resource': '*'}, {'Effect': 'Allow', 'Action': 'aoss:APIAccessAll', 'Resource': '*'}]}], '/jobs/', 'MyRestApi', '/jobs/{jobid}', 'MyRestApi', [{'method.request.querystring.hours': {'Required': False, 'Caching': False}}, {'method.request.querystring.limit': {'Required': False, 'Caching': False}}, {'method.request.querystring.start_from_head': {'Required': False, 'Caching': False}}], '/jobs/{jobid}/logs', 'MyRestApi', './functions/GetJobsFunction', 2048, [{'AWSSecretsManagerGetSecretValuePolicy': {'SecretArn': {'Fn::Sub': 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}*'}}}, {'VPCAccessPolicy': {}}, {'S3CrudPolicy': {'BucketName': {'Ref': 'BaseBucketName'}}}, {'Version': '2012-10-17', 'Statement': [{'Effect': 'Allow', 'Action': 'batch:SubmitJob', 'Resource': [{'Ref': 'PostNewDatasetBatchJobDefinition'}, {'Fn::Sub': 'arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${JobQueue}'}]}, {'Effect': 'Allow', 'Action': 'batch:List*', 'Resource': '*'}]}], '/datasets/{datasetid}', 'MyRestApi', '/datasets/', 'MyRestApi', '/datasets/{datasetid}', 'MyRestApi', [{'method.request.querystring.dataset_type': {'Required': False}}, {'method.request.querystring.expand': {'Required': False}}, {'method.request.querystring.offset': {'Required': False}}, {'method.request.querystring.limit': {'Required': False}}, {'method.request.querystring.cnt': {'Required': False}}, {'method.request.querystring.organism': {'Required': False}}], '/datasets/', 'MyRestApi', '/datasets/{datasetid}/obs/annotations/', 'MyRestApi', '/datasets/{datasetid}/obs/annotations/{annotationid}', [{'method.request.path.datasetid': {'Required': True, 'Caching': True}}, {'method.request.path.annotationid': {'Required': True, 'Caching': True}}], 'MyRestApi', '/datasets/{datasetid}/var/ids/', [{'method.request.path.datasetid': {'Required': True, 'Caching': True}}, {'method.request.querystring.expand': {'Caching': True}}, {'method.request.querystring.offset': {'Caching': True}}, {'method.request.querystring.limit': {'Caching': True}}, {'method.request.querystring.cnt': {'Caching': True}}], 'MyRestApi', './functions/DatasetFunction', './functions/MapGenesFunction', [{'AWSSecretsManagerGetSecretValuePolicy': {'SecretArn': {'Fn::Sub': 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:neo4j-creds*'}}}, {'VPCAccessPolicy': {}}], '/genes/map/', 'MyRestApi', './functions/MapGenesFunction', 8192, 29, [{'AWSSecretsManagerGetSecretValuePolicy': {'SecretArn': {'Fn::Sub': 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}*'}}}, {'VPCAccessPolicy': {}}, {'S3CrudPolicy': {'BucketName': {'Ref': 'BaseBucketName'}}}], '/datasets/{datasetid}/data', 'MyRestApi', './functions/GetExpressionDataFunction', ['application/octet-stream'], ['tiledb-api${Suffix}', {'Suffix': {'Fn::FindInMap': ['EnvironmentMap', {'Ref': 'Environment'}, 'Suffix']}}], ""'Content-Type,Authorization,X-Amz-Date'"", ""'300'"", [{'HttpMethod': '*', 'LoggingLevel': 'INFO', 'ResourcePath': '/*', 'DataTraceEnabled': True, 'CachingEnabled': False, 'MetricsEnabled': True}], [{'Effect': 'Allow', 'Action': 'sts:AssumeRole', 'Principal': {'Service': 'ecs-tasks.amazonaws.com'}}], [{'PolicyName': 'root', 'PolicyDocument': {'Version': datetime.date(2012, 10, 17), 'Statement': [{'Effect': 'Allow', 'Action': 's3:*', 'Resource': [{'Fn::Sub': 'arn:aws:s3:::${BaseBucketName}/*'}, {'Fn::Sub': 'arn:aws:s3:::${BaseBucketName}'}]}, {'Effect': 'Allow', 'Action': 'secretsmanager:GetSecretValue', 'Resource': {'Fn::Sub': 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MongoSecretName}*'}}]}}], 'MyRestApi', 'Tiledb rest API ID', '${AWS::StackName}-RestApiId']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Properties.Handler', 'Resources.PHAWS::Serverless::Function.Properties.Runtime']]
+****[Configuration Value Depenency Errors: lacking []]",7,59,66,2,0,134
+DDmethod,case22-github.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::Stage', 'AWS::ApiGateway::DomainName', 'AWS::CertificateManager::Certificate', 'AWS::Route53::HostedZone', 'AWS::ApiGateway::BasePathMapping']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Domain.Route53.HostedZoneId.Ref', 'Resources.PHAWS::Serverless::Api.Properties.Domain.CertificateArn.Ref', 'Resources.PHAWS::CertificateManager::Certificate.Type', 'Resources.PHAWS::ApiGateway::BasePathMapping.DependsOn', 'Resources.PHAWS::ApiGateway::DomainName.Properties.DomainName', 'Resources.PHAWS::ApiGateway::Stage.Type', 'Resources.PHAWS::ApiGateway::BasePathMapping.Properties.RestApiId.Ref', 'Resources.PHAWS::ApiGateway::Stage.Properties.RestApiId.Ref', 'Resources.PHAWS::ApiGateway::BasePathMapping.Properties.DomainName.Ref', 'Resources.PHAWS::Serverless::Api.Properties.Domain.Route53.IpV6', 'Resources.PHAWS::ApiGateway::BasePathMapping.Type', 'Resources.PHAWS::CertificateManager::Certificate.Properties.DomainName', 'Resources.PHAWS::Serverless::Api.Properties.Domain.BasePath', 'Resources.PHAWS::Serverless::Api.Properties.Domain.EndpointConfiguration', 'Resources.PHAWS::Route53::HostedZone.Type', 'Resources.PHAWS::DynamoDB::Table.Properties.DeletionPolicy', 'Resources.PHAWS::ApiGateway::DomainName.Properties.CertificateArn.Ref', 'Resources.PHAWS::Serverless::Api.Properties.Domain.DomainName.Ref', 'Resources.PHAWS::Route53::HostedZone.Properties.Name', 'Resources.PHAWS::ApiGateway::DomainName.Type', 'Resources.PHAWS::ApiGateway::Stage.Properties.StageName', 'Resources.PHAWS::ApiGateway::BasePathMapping.Properties.BasePath']]
+*****[Configuration Entry Value Errors: [['AWS::LanguageExtensions', 'AWS::Serverless-2016-10-31'], [{'AttributeName': 'Id', 'AttributeType': 'S'}], [{'AttributeName': 'Id', 'KeyType': 'HASH'}], ""exports.handler = async (event) => {\n  const response = {\n    statusCode: 200,\n    body: JSON.stringify('Hello from Lambda!'),\n  };\n  return response;\n};\n"", 'Get', '/get', '3.0.1']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",5,22,7,0,0,34
+DDmethod,case23-github.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::GatewayResponse']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApiGateway::GatewayResponse.Type', 'Resources.PHAWS::ApiGateway::GatewayResponse.Properties.RestApiId.Ref', 'Resources.PHAWS::ApiGateway::GatewayResponse.Properties.ResponseType', 'Resources.PHAWS::ApiGateway::GatewayResponse.Properties.ResponseTemplates.text/html', 'Resources.PHAWS::ApiGateway::GatewayResponse.Properties.StatusCode']]
+*****[Configuration Entry Value Errors: ['MyNewStageName', '3.0', '2016-09-23T22:23:23Z', 'Simple Api', '/demo']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,5,5,0,0,11
+DDmethod,case24-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.OpenApiVersion.Ref']]
+*****[Configuration Entry Value Errors: [['AWS::LanguageExtensions', 'AWS::Serverless-2016-10-31'], '3.0.0', 'node16.x']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,3,0,0,4
+DDmethod,case25-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Domain.CertificateArn', 'Resources.PHAWS::Serverless::Api.Properties.Domain.DomainName', 'Resources.PHAWS::Serverless::Api.Properties.Domain.Route53.HostedZoneId', 'Resources.PHAWS::Serverless::Api.Properties.Domain.EndpointConfiguration']]
+*****[Configuration Entry Value Errors: ['apigateway-2402\nSample SAM Template for apigateway-2402\n', 'App-Prod-Web-One', [{'LoggingLevel': 'Info', 'ResourcePath': '/*', 'HttpMethod': '*'}], 'App-Prod-Web-Two', [{'LoggingLevel': 'Info', 'ResourcePath': '/*', 'HttpMethod': '*'}], 'App-Prod-Web-Three', [{'LoggingLevel': 'Info', 'ResourcePath': '/*', 'HttpMethod': '*'}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Type=AWS::Serverless::Function', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Type=Api']]",0,4,7,0,2,13
+DDmethod,case26-github.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::UsagePlan', 'AWS::ApiGateway::ApiKey', 'AWS::ApiGateway::UsagePlanKey']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApiGateway::ApiKey.Properties.Name.Fn::Sub', 'Resources.PHAWS::ApiGateway::ApiKey.Properties.Enabled', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.Description', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.UsagePlanId.Ref', 'Resources.PHAWS::ApiGateway::ApiKey.Properties.Description', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Type', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.KeyType', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.ApiStages', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.KeyId.Ref', 'Resources.PHAWS::ApiGateway::UsagePlan.Type', 'Resources.PHAWS::ApiGateway::ApiKey.Type', 'Resources.PHAWS::ApiGateway::UsagePlanKey.DependsOn']]
+*****[Configuration Entry Value Errors: ['Prod', 'StageName']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",3,12,2,0,0,17
+DDmethod,case27-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['sam-experiment\nSample SAM Template for sam-experiment\n', 64, [{'Ref': 'UtilsLayer'}, {'Ref': 'RequirementsLayer'}], 'utils-layer', 'utils', 'python3.9', 'requirements', 'python3.9', 'read/', 'read.lambda_handler', '/ediq', [{'Ref': 'UtilsLayer'}, {'Ref': 'RequirementsLayer'}], 'Common utils function Layer', 'UtilsLayer', '${AWS::StackName}-UtilsLayerArn', 'Layer containing libraries', 'RequirementsLayer', '${AWS::StackName}-RequirementsLayerArn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,18,0,0,18
+DDmethod,case28-github-error.yaml,"****[Resource Type Errors: ['AWS::Serverless::FunctionLayerVersion']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::FunctionLayerVersion.Properties.ContentUri', 'Resources.PHAWS::Serverless::FunctionLayerVersion.Metadata.BuildMethod', 'Resources.PHAWS::Serverless::FunctionLayerVersion.Properties.LayerName', 'Resources.PHAWS::Serverless::FunctionLayerVersion.Type', 'Resources.PHAWS::Serverless::FunctionLayerVersion.Properties.Description', 'Resources.PHAWS::Serverless::FunctionLayerVersion.Properties.RetentionPolicy', 'Resources.PHAWS::Serverless::FunctionLayerVersion.Properties.CompatibleRuntimes']]
+*****[Configuration Entry Value Errors: [[{'Ref': 'CommonDependenciesLayer'}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,7,1,0,0,9
+DDmethod,case29-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.FunctionCodeUri', 'Resources.PHAWS::Logs::LogGroup.UpdateReplacePolicy', 'Resources.PHAWS::Logs::LogGroup.DeletionPolicy', 'Resources.PHAWS::Serverless::LayerVersion.DeletionPolicy', 'Resources.PHAWS::Logs::LogGroup.Properties.RetentionInDays.Ref', 'Resources.PHAWS::Serverless::LayerVersion.UpdateReplacePolicy']]
+*****[Configuration Entry Value Errors: [[1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653], 'Insert the project name', 'lambda_function.lambda_handler', '/aws/lambda/${Namespace}-${ProjectName}', 'dependencies/', '${Namespace}-${ProjectName}', 'python3.8', '${Namespace}-${ProjectName}', 'LambdaRole.Arn', '${Namespace}-${ProjectName}-lambda']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Properties.Runtime']]
+****[Configuration Value Depenency Errors: lacking []]",0,6,10,1,0,17
+DDmethod,case2-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.DDBTable.Ref', 'Resources.PHAWS::S3::Bucket.Properties.NotificationConfiguration.EventBridgeConfiguration.EventBridgeEnabled', 'Resources.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.StockBuyerFunctionArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.StockSellerFunctionArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.StockCheckerFunctionArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::StateMachine.Properties.Events.PHEventBridgeRule.Properties.Pattern.detail.bucket.name', 'Resources.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.DDBPutItem.Fn::Sub', 'Resources.PHAWS::Serverless::StateMachine.Properties.Events.PHEventBridgeRule.Properties.Pattern.source']]
+*****[Configuration Entry Value Errors: ['steps-tutorial\nSample SAM Template for steps-tutorial\n', 'The name of the test bucket this template creates', 'statemachine/stock_trader.asl.json', ['Object Created'], [{'LambdaInvokePolicy': {'FunctionName': {'Ref': 'StockCheckerFunction'}}}, {'LambdaInvokePolicy': {'FunctionName': {'Ref': 'StockSellerFunction'}}}, {'LambdaInvokePolicy': {'FunctionName': {'Ref': 'StockBuyerFunction'}}}, {'DynamoDBWritePolicy': {'TableName': {'Ref': 'TransactionTable'}}}], 'functions/stock-checker/', 'functions/stock-seller/', 'functions/stock-buyer/', 'Id', [{'AllowedHeaders': ['*'], 'AllowedMethods': ['GET', 'PUT', 'HEAD'], 'AllowedOrigins': ['*']}], 'Stock Trading state machine ARN', 'StockTradingStateMachine', 'IAM Role created for Stock Trading state machine based on the specified SAM Policy Templates', 'StockTradingStateMachineRole.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,8,14,0,0,22
+DDmethod,case30-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['Testing idempotency timeouts', 2, 'expiration', 'IdempotencyFunction', True, [{'Ref': 'PowertoolsLayer'}], [{'DynamoDBCrudPolicy': {'TableName': {'Ref': 'IdempotencyTable'}}}], 'IdempotencyTable', 'MyLambdaLayer']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,9,0,0,9
+DDmethod,case31-github-error.yaml,"****[Resource Type Errors: ['AWS::Serverless']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless.Properties.Handler', 'Resources.PHAWS::Serverless.Type', 'Resources.PHAWS::Serverless::HttpApi.Properties.DefinitionBody.openapi', 'Resources.PHAWS::Serverless::HttpApi.Properties.CorsConfiguration.AllowMethods', 'Resources.PHAWS::Serverless.Properties.Events.PHHttpApi.ApiId.Ref', 'Resources.PHAWS::Serverless::HttpApi.Properties.AccessLogSettings.Format', 'Resources.PHAWS::Serverless::HttpApi.Properties.DefinitionBody.info.version', 'Resources.PHAWS::Serverless.Properties.Runtime', 'Resources.PHAWS::Serverless::HttpApi.Properties.DefinitionBody.paths./shopify/shipping_rates.post.responses.default.description', 'Resources.PHAWS::Serverless.Properties.Events.PHHttpApi.Properties.Path', 'Resources.PHAWS::Serverless::HttpApi.Properties.DefinitionBody.x-amazon-apigateway-importexport-version', 'Resources.PHAWS::Serverless.Properties.Events.PHHttpApi.Properties.Method', 'Resources.PHAWS::Serverless.Properties.CodeUri', 'Resources.PHAWS::Serverless.Properties.Events.PHHttpApi.Properties.PayloadFormatVersion', 'Resources.PHAWS::Serverless::HttpApi.Properties.AccessLogSettings.DestinationArn', 'Resources.PHAWS::Serverless::HttpApi.Properties.CorsConfiguration.AllowHeaders', 'Resources.PHAWS::Serverless.Properties.Events.PHHttpApi.Type', 'Resources.PHAWS::Serverless::HttpApi.Properties.DefinitionBody.info.title']]
+*****[Configuration Entry Value Errors: ['AltLinen', ['https://www.example.com'], [{'Effect': 'Allow', 'Principal': {'Service': 'apigateway.amazonaws.com'}, 'Action': ['sts:AssumeRole']}], 'HTTP API endpoint URL', 'https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,18,5,0,0,24
+DDmethod,case32-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Application.Properties.ApplicationLocation.ApplicationId', 'Resources.PHAWS::Serverless::Application.Properties.ApplicationLocation.SemanticVersion.Ref']]
+*****[Configuration Entry Value Errors: ['1.0.3']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,1,0,0,3
+DDmethod,case33-github-error.yaml,"****[Resource Type Errors: ['PRIVATE', 'StringNumber']]
+****[Configuration Entry Errors: ['Parameters.PHStringNumber.Type', 'Resources.PHAWS::Serverless::Api.Properties.PHPRIVATE.Type', 'Resources.PHAWS::Serverless::Api.Properties.PHPRIVATE.VPCEndpointIds']]
+*****[Configuration Entry Value Errors: ['somestagename']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",2,3,1,0,0,6
+DDmethod,case34-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['3.0.0', 'My API', '/newlocation']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,3,0,0,3
+DDmethod,case35-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['Dev', 'ApiGateway', 'python2.0', ""def handler(event, context):\n    return {'foo': 'bar'}\n""]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,4,0,0,4
+DDmethod,case36-github-error.yaml,"****[Resource Type Errors: ['AllAtOnce']]
+****[Configuration Entry Errors: ['Resources.PHAWS::CloudWatch::Alarm.Properties.Handler', 'Resources.PHAWS::Serverless::Function.Properties.PHAllAtOnce.Alarms', 'Resources.PHAWS::Serverless::Function.Properties.PHAllAtOnce.Type']]
+*****[Configuration Entry Value Errors: ['Environment type such as Dev, Prod, etc.', ['', [{'Ref': 'EnvrType'}, '-', 'SI-post-profile-image']], 'arn:aws:iam::45645654645645:role/aiportal-lambda-execution-role', 'lambdas/SI-post-profile-image', 'dev', 'AliasErrorMetricGreaterThanZero', [{'Name': 'FunctionName', 'Value': {'Ref': 'ProfilePostFunction'}}], 'LatestVersionErrorMetricGreaterThanZero', [{'Name': 'FunctionName', 'Value': {'Ref': 'ProfilePostFunction'}}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,3,9,0,0,13
+DDmethod,case37-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['CognitoAuthorizer']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Api.Type']]
+****[Configuration Value Depenency Errors: lacking []]",0,0,1,1,0,2
+DDmethod,case38-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['Dev', ""'OPTIONS,GET,POST,PUT,DELETE'"", ""'Content-Type,X-Amz-Date,Authorization,X-Api-Key, Access-Control-Allow-Origin'"", 'usersFacade.get', 'MyAPI', '/{apiVersionId}/users/{resourceId}', 'CustomLambdaTokenAuthorizer', 'usersFacade.updateUserInfo', 'MyAPI', '/{apiVersionId}/users/{resourceId}/userInfo', 'CustomLambdaTokenAuthorizer', 'AuthorizerFacade.validateToken', ['AmazonDynamoDBFullAccess', 'SecretsManagerReadWrite']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,13,0,0,13
+DDmethod,case39-github-error.yaml,"****[Resource Type Errors: ['AWS::Permission']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Permission.Properties.SourceArn.Fn::Sub', 'Resources.PHAWS::Permission.Type', 'Resources.PHAWS::Permission.Properties.Principal', 'Resources.PHAWS::Permission.Properties.SourceAccount.Ref', 'Resources.PHAWS::Permission.Properties.Action', 'Resources.PHAWS::Permission.Properties.FunctionName.Ref']]
+*****[Configuration Entry Value Errors: ['ruby3.3', 'My Function Arn', 'MyFunction.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,6,3,0,0,10
+DDmethod,case3-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['Test SAM App', 'test-sam-app', 'Developer', 'hello_world/', [{'SSMParameterWithSlashPrefixReadPolicy': {'ParameterName': '/test/parameter'}}]]]
+*****[Configuration Entry Depenency Errors: lacking ['Metadata.AWS::ServerlessRepo::Application.HomePageUrl', 'Metadata.AWS::ServerlessRepo::Application.SourceCodeUrl']]
+****[Configuration Value Depenency Errors: lacking []]",0,0,5,2,0,7
+DDmethod,case40-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['PHAWS::Serverless::Function.Properties.Handler', 'PHAWS::Serverless::Function.Properties.Environment.Variables.APIStage.Ref', 'Resources', 'PHAWS::Serverless::Function.Properties.Runtime', 'PHAWS::Serverless::Function.Type']]
+*****[Configuration Entry Value Errors: ['Name of the API stage to use for deployment', '[A-Za-z0-9-]*']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,5,2,0,0,7
+DDmethod,case41-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['hello_world/', 1024, [{'S3CrudPolicy': {'BucketName': 'mybucket'}}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,3,0,0,3
+DDmethod,case42-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.AlwaysDeploy', 'Resources.PHAWS::Serverless::Api.Properties.Cors']]
+*****[Configuration Entry Value Errors: ['MyCognitoUserPool', 'MyUserPoolClient', 'dev', 'CognitoAuthorizer', 'hello_world_function', 'hello_world/app.lambda_handler', 'python3.10', '/token', 'MyGatewayApi']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,9,0,0,11
+DDmethod,case43-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Events::EventBus.Properties.Name', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHEventBridgeRule.Properties.EventBridgeRuleName.Fn::Sub']]
+*****[Configuration Entry Value Errors: [['AWS::LanguageExtensions', 'AWS::Serverless-2016-10-31'], 'MyEventBus', ['FooBar']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,3,0,0,5
+DDmethod,case44-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: [500000, 'hello-world.handler', 'RestAPIGateway', 'development', 'hello-world.handler', ['RestAPIGateway']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,6,0,0,6
+DDmethod,case45-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['index.lambda', ""const AWS = require('aws-sdk');\nexports.handler = async (event) => {\n  console.log(JSON.stringify(event));\n};\n"", 'MyFunction', '${AWS::StackName}-FunctionArn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,4,0,0,4
+DDmethod,case46-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: [['app.hello_world'], ['fake'], '.', 'hello_world-v1']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,4,0,0,4
+DDmethod,case47-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['blobsprjct/', 'processBlob.lambda_handler', [{'S3ReadPolicy': {'BucketName': {'Fn::Sub': 'blobs-${AWS::AccountId}-${AWS::Region}'}}}, 'AmazonRekognitionFullAccess'], 'BlobsBucket']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::S3::Bucket.Type']]
+****[Configuration Value Depenency Errors: lacking ['Resources.PHAWS::S3::Bucket.Type=AWS::S3::Bucket']]",0,0,4,1,1,6
+DDmethod,case48-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::HttpApi.Properties.DisableExecuteApiEndpoint', 'Resources.PHAWS::Serverless::HttpApi.Properties.Description']]
+*****[Configuration Entry Value Errors: ['prod', 'index.handlerlambda', ""def handler(event, context):\n    return {'foo': 'bar'}\n"", 'ServerlessHttpApi', '/{proxy+}', 'ANY']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,6,0,0,8
+DDmethod,case49-github-error.yaml,"****[Resource Type Errors: ['AWS::Serverless']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless.Properties.Handler', 'Resources.PHAWS::Serverless.Properties.Events.PHApi.Properties.Method', 'Resources.PHAWS::Serverless.Type', 'Resources.PHAWS::Serverless.Properties.Runtime', 'Resources.PHAWS::Serverless.Properties.Events.PHApi.Properties.RestApiId.Ref', 'Resources.PHAWS::Serverless.Properties.Events.PHApi.Type', 'Resources.PHAWS::Serverless.Properties.Events.PHApi.Properties.Path']]
+*****[Configuration Entry Value Errors: [['AWS::LanguageExtensions', 'AWS::Serverless-2016-10-31'], [{'Ref': 'WithAuth'}, 'yes']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,7,2,0,0,10
+DDmethod,case4-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Models.mybody.type', 'Resources.PHAWS::Serverless::Api.Properties.Models.mybody.properties.myprop.type', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateBody', 'Resources.PHAWS::Serverless::Api.Properties.AlwaysDeploy', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateParameters', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Model']]
+*****[Configuration Entry Value Errors: ['def handler(event, context):\n  return {""statusCode"": 200, ""body"": ""hi""}\n', [{'method.request.querystring.myquerystring': {'Required': True}}, {'method.request.header.myheader': {'Required': True}}], 'https://${MyApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/prod/']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,6,3,0,0,9
+DDmethod,case50-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Auth.ApiKeyRequired']]
+*****[Configuration Entry Value Errors: ['MyFunctionHandler', 'dotnetcore3.1', 10, '/my_function', '/my_function']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,5,0,0,6
+DDmethod,case51-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['foo.handler']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Api.Type']]
+****[Configuration Value Depenency Errors: lacking []]",0,0,1,1,0,2
+DDmethod,case52-github-error.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: [[{'Ref': 'Foo'}, 'true'], 'bar.handler', 'python1.8']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,3,0,0,3
+DDmethod,case5-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['python3.9\nSample SAM Template for summarization-v2-lambda\n', '/summarize_t5', '/summarize_article', '/summarize_textrank', '/summarize_paragraphs', './app', 'API Gateway endpoint URL for Prod stage for Root route', 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/summarize_t5/', 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/summarize_article/', 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/summarize_textrank/', 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/summarize_paragraphs/']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,11,0,0,11
+DDmethod,case6-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: [""def handler(event, context):\n    return {'foo': 'bar'}\n"", 'MyQueue.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,2,0,0,2
+DDmethod,case7-github.yaml,"****[Resource Type Errors: ['MQ', 'AWS::AmazonMQ::Broker']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHMQ.Properties.Enabled', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHMQ.Properties.SourceAccessConfigurations', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHMQ.Properties.Broker.Fn::GetAtt', 'Resources.PHAWS::AmazonMQ::Broker.Properties.BrokerName.Fn::Sub', 'Resources.PHAWS::AmazonMQ::Broker.Properties.PubliclyAccessible', 'Resources.PHAWS::AmazonMQ::Broker.Properties.AutoMinorVersionUpgrade', 'Resources.PHAWS::AmazonMQ::Broker.Type', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHMQ.Properties.Queues', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHMQ.Type', 'Resources.PHAWS::AmazonMQ::Broker.Properties.DeploymentMode', 'Resources.PHAWS::AmazonMQ::Broker.Properties.Users', 'Resources.PHAWS::AmazonMQ::Broker.Properties.HostInstanceType', 'Resources.PHAWS::SecretsManager::Secret.Properties.GenerateSecretString.SecretStringTemplate', 'Resources.PHAWS::AmazonMQ::Broker.Properties.EngineVersion', 'Resources.PHAWS::AmazonMQ::Broker.Properties.EngineType']]
+*****[Configuration Entry Value Errors: ['MQ + Lambda', 32, 'exports.handler = async (event, context) => {\n  console.log(JSON.stringify(event))\n}\n', [0, {'Fn::GetAtt': 'HelloWorldBroker.AmqpEndpoints'}], 'HelloWorldSecret']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",2,15,5,0,0,22
+DDmethod,case8-github.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHSNS.Properties.RedrivePolicy.deadLetterTargetArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHSNS.Properties.SqsSubscription.QueueArn.Fn::GetAtt', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHSNS.Properties.SqsSubscription.QueueUrl.Ref']]
+*****[Configuration Entry Value Errors: [['MyDeadLetterQueue', 'Arn'], 5, 's3://bucket/key']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,3,3,0,0,6
+DDmethod,case9-github.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::UsagePlan', 'AWS::ApiGateway::ApiKey', 'AWS::ApiGateway::UsagePlanKey']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApiGateway::ApiKey.Properties.Name.Fn::Sub', 'Resources.PHAWS::ApiGateway::ApiKey.Properties.GenerateDistinctId', 'Resources.PHAWS::ApiGateway::ApiKey.Properties.Enabled', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.Description', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.UsagePlanName', 'Resources.PHAWS::ApiGateway::ApiKey.Properties.Description', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.UsagePlanId.Ref', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Type', 'Resources.PHAWS::Serverless::Api.Properties.CacheClusterSize', 'Resources.PHAWS::Serverless::Api.Properties.CacheClusterEnabled', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.KeyType', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.ApiStages', 'Resources.PHAWS::ApiGateway::UsagePlanKey.Properties.KeyId.Ref', 'Resources.PHAWS::ApiGateway::UsagePlan.Type', 'Resources.PHAWS::ApiGateway::ApiKey.Type']]
+*****[Configuration Entry Value Errors: ['MyRestApi', [{'LoggingLevel': 'INFO', 'MetricsEnabled': True, 'DataTraceEnabled': True, 'ResourcePath': '/*', 'HttpMethod': '*', 'CachingEnabled': False}], '3.0.0', ['image/jpeg', 'image/png', 'image/*', 'image/webp', 'image/apng', '*/*'], 'GET', 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyLambdaFunction.Arn}/invocations', ""exports.handler = async (event) => {\n  const response = {\n    statusCode: 200,\n    body: JSON.stringify('Hello from Lambda!'),\n  };\n  return response;\n};\n""]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",3,15,7,0,0,25
+DDmethod,TESTSelect1.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::RestApi']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApiGateway::RestApi.Properties.StageName', 'Resources.PHAWS::ApiGateway::RestApi.Type']]
+*****[Configuration Entry Value Errors: ['hello-world', 'RestAPIGateway', 'hello-world', ['RestAPIGateway']]]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Api.Type']]
+****[Configuration Value Depenency Errors: lacking []]",1,2,4,1,0,8
+DDmethod,TESTSelect10.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.EndpointConfiguration.VpcEndpointIds', 'Resources.PHAWS::Serverless::Api.Properties.Auth.ResourcePolicy.IpRangeWhitelist', 'Resources.PHAWS::Serverless::Api.Properties.EndpointConfiguration.Types']]
+*****[Configuration Entry Value Errors: ['Private AWS Api Gateway', 'Staging', 'hello_world/', 'AWSApiGateway']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,3,4,0,0,7
+DDmethod,TESTSelect11.yaml,"****[Resource Type Errors: ['AWS::ApiGateway::UsagePlan']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ApiGateway::UsagePlan.Properties.Quota.Limit', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.UsagePlanName', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.Throttle.BurstLimit', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.Throttle.RateLimit', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.Quota.Period', 'Resources.PHAWS::ApiGateway::UsagePlan.DependsOn', 'Resources.PHAWS::ApiGateway::UsagePlan.Type', 'Resources.PHAWS::ApiGateway::UsagePlan.Properties.Description']]
+*****[Configuration Entry Value Errors: ['Fancy Description', 'nodejs18.x', 'index.handle', 'test', 's3://mybucket/swagger.yml', '../packages/lambda/functions/serverlessServiceFunction', 'ServerlessService', '/path/with/{params}']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,8,8,0,0,17
+DDmethod,TESTSelect12.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.security.api_key.name', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.security.api_key.type', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.security.api_key.in']]
+*****[Configuration Entry Value Errors: ['ESB PackingList API', 'somefunction', '/mypath']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,3,3,0,0,6
+DDmethod,TESTSelect13.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Api.Properties.StageName', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Method', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Type', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.Runtime', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Api.Properties.DefinitionUri', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Api.Properties.Variables.LambdaFunctionName.Ref', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.Events.PHApi.Type', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RestApiId.Ref', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Path', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Api.Type', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.Handler', 'Resources.PHAWS::Serverless::Function.PHAWS::Serverless::Function.Properties.CodeUri', 'Resources.PHAWS::Serverless::Api.Properties.DefinitionUri']]
+*****[Configuration Entry Value Errors: ['AWS SAM template with API defined in an external Swagger file along with Lambda integrations and CORS configurations', 'index.serviceStatus', 'ServiceStatusFunctionApi', '/service/status']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,13,4,0,0,17
+DDmethod,TESTSelect14.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Lambda::Permission.DependsOn']]
+*****[Configuration Entry Value Errors: ['AWS SAM template with API defined in an external Swagger file along with Lambda integrations and CORS configurations', 'ConfigHandlerLambdaFunction']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,2,0,0,3
+DDmethod,TESTSelect15.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Function.Fn::Sub']]
+*****[Configuration Entry Value Errors: ['The deployment stage (e.g., dev, prod, etc.)']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,0,0,2
+DDmethod,TESTSelect16.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::DynamoDB::Table.Properties.Fn::Transform-----lacking Name properties']]
+*****[Configuration Entry Value Errors: ['Test', 'import json\ndef handler(event, context):\n  return {\n    ""statusCode"": 200,\n    ""body"": json.dumps({\n        ""message"": ""hello world"",\n    }),\n  }\n', 'python3.11', 'MyNewTable', [{'AttributeName': 'key', 'KeyType': 'HASH'}], [{'AttributeName': 'key', 'AttributeType': 'S'}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,6,0,0,7
+DDmethod,TESTSelect17.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Events.PHEventBridgeRule.Properties.RuleName', 'Resources.PHAWS::Serverless::Function.Events.PHEventBridgeRule.Type', 'Resources.PHAWS::Serverless::Function.Events.PHEventBridgeRule.Properties.Pattern.detail-type', 'Resources.PHAWS::Serverless::Function.Properties.ImageUri', 'Resources.PHAWS::Serverless::Function.Events.PHEventBridgeRule.Properties.Pattern.source']]
+*****[Configuration Entry Value Errors: [['blast-db-updater.lambda_handler'], '.', 'python3.11-v1']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,5,3,0,0,8
+DDmethod,TESTSelect18.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Variables.POWERTOOLS_SERVICE_NAME', 'Resources.PHAWS::Serverless::Function.Properties.Variables.POWERTOOLS_METRICS_NAMESPACE']]
+*****[Configuration Entry Value Errors: []]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,0,0,0,2
+DDmethod,TESTSelect19.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Timeout', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.SetStatusToFailedInDynamo-Arn.Fn::ImportValue', 'PHAWS::SQS::Queue.Properties.ContentBasedDeduplication', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Condition', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Type', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.SetStatusToCompletedInDynamo-Arn.Fn::ImportValue', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Events.PHSQS.Properties.Queue.Fn::GetAtt', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Events.PHSQS.Type', 'PHAWS::SQS::Queue.Properties.QueueName.Fn::If', 'PHAWS::SQS::Queue.CredentialDenicFifoQueueContainerized', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.Role.Fn::Sub', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.Name', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.MetricName', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Events.PHSQS.Properties.BatchSize', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.EvaluationPeriods', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.GetConnectionDetailsFromRds-Arn.Fn::ImportValue', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.Namespace', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.VpcConfig.SubnetIds', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Architectures', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.Dimensions', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.TreatMissingData', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Handler', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Type', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.FunctionName', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.Period', 'PHAWS::SQS::Queue.Properties.MessageRetentionPeriod', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.AlarmActions', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Environment.Variables.STEP_FUNCTION_ARN.Fn::GetAtt', 'PHAWS::SQS::Queue.Properties.FifoQueue', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.InlineCode', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.Threshold', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionUri', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.CodeUri', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Environment.Variables.ENVIRONMENT.Ref', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.Role.Fn::Sub', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Type', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.GetRequestDataFromDynamo-Arn.Fn::ImportValue', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.Statistic', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.SetStatusToInProgressInDynamo-Arn.Fn::ImportValue', 'PHAWS::SQS::Queue.PHAWS::CloudWatch::Alarm.Properties.ComparisonOperator', 'PHAWS::SQS::Queue.PHAWS::Serverless::StateMachine.Properties.DefinitionSubstitutions.CallDenicApi-Arn.Fn::GetAtt', 'PHAWS::SQS::Queue.Type', 'PHAWS::SQS::Queue.PHAWS::Serverless::Function.Properties.VpcConfig.SecurityGroupIds']]
+*****[Configuration Entry Value Errors: ['Calls Denic APIs and returns results back to tier 2', 'lambda_function.lambda_handler', ['prod', 'staging', 'dev'], [{'Ref': 'EnvType'}, 'prod'], [{'Ref': 'EnvType'}, 'staging'], [{'Ref': 'EnvType'}, 'dev'], [{'Fn::Condition': 'IsProduction'}, {'Fn::Condition': 'IsStaging'}]]]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Type']]
+****[Configuration Value Depenency Errors: lacking []]",0,43,7,1,0,51
+DDmethod,TESTSelect2.yaml,"****[Resource Type Errors: ['CONDITIONAL', 'AWS::Glue::Trigger']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Glue::Trigger.Properties.Actions', 'Resources.PHAWS::Glue::Trigger.Type', 'Resources.PHAWS::Glue::Trigger.Properties.Predicate.Conditions', 'Resources.PHAWS::Glue::Trigger.Properties.Description', 'Resources.PHAWS::Glue::Trigger.Properties.Name', 'Resources.PHAWS::Glue::Trigger.Properties.StartOnCreation', 'Resources.PHAWS::Glue::Trigger.Properties.Type']]
+*****[Configuration Entry Value Errors: []]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",2,7,0,0,0,9
+DDmethod,TESTSelect20.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHS3.Condition', 'Resources.PHAWS::S3::Bucket.Properties.BucketName']]
+*****[Configuration Entry Value Errors: ['Lambda that responds to S3 events', 'Does an existing bucket exist (not managed by cloudformation)', 'no', ['yes', 'no'], 'must specify yes or no.', [{'Ref': 'PreExistingBucket'}, 'no'], 'BucketEventConsumer.main.lambda_handler', 'bundle.zip', 'SomeBucket', [{'Name': 'suffix', 'Value': 'meta.json'}], 'NeedsSomeBucket']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Properties.Policies']]
+****[Configuration Value Depenency Errors: lacking []]",0,2,11,1,0,14
+DDmethod,TESTSelect21.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Version']]
+*****[Configuration Entry Value Errors: ['src/lambda-edge/check-auth/', 'bundle.handler', 'LambdaEdgeExecutionRole.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,3,0,0,4
+DDmethod,TESTSelect22.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.LoggingConfig.SystemLogLevel', 'Resources.PHAWS::Serverless::Function.Properties.LoggingConfig.LogGroup.Ref', 'Resources.PHAWS::Serverless::Function.Properties.LoggingConfig.ApplicationLogLevel', 'Resources.PHAWS::Serverless::Function.Properties.LoggingConfig.LogFormat']]
+*****[Configuration Entry Value Errors: ['service-cognito-login', 'lambda/service-cognito-login/', [{'Version': datetime.date(2012, 10, 17), 'Statement': [{'Sid': 'CloudWatchLogGroup', 'Action': ['logs:CreateLogStream', 'logs:PutLogEvents'], 'Resource': {'Fn::GetAtt': 'AuthLogGroup.Arn'}, 'Effect': 'Allow'}]}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,4,3,0,0,7
+DDmethod,TESTSelect23.yaml,"****[Resource Type Errors: ['PRIVATE']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.PHPRIVATE.VPCEndpointIds', 'Resources.PHAWS::Serverless::Api.Properties.PHPRIVATE.Type', 'Resources.PHAWS::Serverless::Api.Properties.Auth.ResourcePolicy.CustomStatements', 'Resources.PHAWS::Serverless::Api.Tags.Application.Ref']]
+*****[Configuration Entry Value Errors: ['${Env}-${Application}-PrivateApiResource', './target/index.sayHelloPrivatelyHandler', 'Bucket', 'PrivateApiResource']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,4,4,0,0,9
+DDmethod,TESTSelect24.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHEventBridgeRule.Properties.Name.Fn::Sub', 'Resources.PHAWS::Events::EventBus.Properties.Name']]
+*****[Configuration Entry Value Errors: [['AWS::LanguageExtensions', 'AWS::Serverless-2016-10-31'], 'exports.handler = async (event, context) => {\n  return {\n    statusCode: 200,\n    body: JSON.stringify({\n      message: ""hello world"",\n    }),\n  };\n};\n', 'MyEventBus', ['FooBar']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,4,0,0,6
+DDmethod,TESTSelect25.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['PHAWS::Serverless::Function.Type', 'PHAWS::Serverless::Function.LambdaName', 'PHAWS::Serverless::Function.Properties.FunctionName']]
+*****[Configuration Entry Value Errors: []]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,3,0,0,0,3
+DDmethod,TESTSelect26.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::StateMachine.Properties.Events.PHEventBridgeRule.Properties.Name']]
+*****[Configuration Entry Value Errors: [['Object Created']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,0,0,2
+DDmethod,TESTSelect27.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.EndpointConfiguration.Types']]
+*****[Configuration Entry Value Errors: ['${Stage}']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,0,0,2
+DDmethod,TESTSelect28.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.EphemeralStorage']]
+*****[Configuration Entry Value Errors: ['xyz', 'xyz::xyz::FunctionHandler', './xyz-app.zip', 'dotnetcore3.1']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,4,0,0,5
+DDmethod,TESTSelect29.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHSchedule.Properties.EventBusName']]
+*****[Configuration Entry Value Errors: ['def handler(event, context):\n  print(""Hello, world!"")\n', 'AWSLambdaExecute']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,2,0,0,3
+DDmethod,TESTSelect3.yaml,"****[Resource Type Errors: ['AWS::ServerLess::LayerVersion']]
+****[Configuration Entry Errors: ['Resources.PHAWS::ServerLess::LayerVersion.Properties.CompatibleRuntimes', 'Resources.PHAWS::ServerLess::LayerVersion.Properties.ContentUri', 'Resources.PHAWS::ServerLess::LayerVersion.Type', 'Resources.PHAWS::ServerLess::LayerVersion.Properties.RetentionPolicy', 'Resources.PHAWS::ServerLess::LayerVersion.Properties.LayerName', 'Resources.PHAWS::ServerLess::LayerVersion.Properties.Description', 'Resources.PHAWS::ServerLess::LayerVersion.Properties.CompatibleArchitectures']]
+*****[Configuration Entry Value Errors: ['lambda/src/lambdas/supplemental_items/', 'lambda_handler.lambda_handler', [{'Ref': 'DBSupportLayer'}], '/supplemental_items']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,7,4,0,0,12
+DDmethod,TESTSelect30.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Domain.Route53.HostedZoneId', 'Resources.PHAWS::Serverless::Api.Properties.Domain.DomainName', 'Resources.PHAWS::Serverless::Api.Properties.Domain.DomainEndpointConfiguration', 'Resources.PHAWS::Serverless::Api.Properties.CacheClusterEnabled', 'Resources.PHAWS::Serverless::Api.Properties.MinimumCompressionSize', 'Resources.PHAWS::Serverless::Api.Properties.Domain.CertificateArn']]
+*****[Configuration Entry Value Errors: ['s3://mybucket/openapi.yml', [{'ResourcePath': '/*', 'HttpMethod': '*', 'MetricsEnabled': False}], 'DEV', 'DEV']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,6,4,0,0,10
+DDmethod,TESTSelect31.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Role']]
+*****[Configuration Entry Value Errors: ['eap-inneed\n', 'eap-company-crud/', '/company', 'API Gateway endpoint URL for Prod stage for EAP functions', 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/company/']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,5,0,0,6
+DDmethod,TESTSelect32.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RestApiRootResourceId.Ref']]
+*****[Configuration Entry Value Errors: ['/service-a/hello']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,0,0,2
+DDmethod,TESTSelect33.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHSNS.Condition']]
+*****[Configuration Entry Value Errors: [['true', {'Ref': 'IsListening'}]]]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Properties.Handler']]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,1,0,3
+DDmethod,TESTSelect34.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RestApiId']]
+*****[Configuration Entry Value Errors: ['helloworld', 'Api version as a stage name', 'v1', 'HelloWorld', 'ApiGatewayStageName', 'def handler(event,context):\n  return {\n    ""body"": ""Hello from HelloWorldFunctionNoRole!  Your IP address is {0}"".format(event[""requestContext""][""identity""][""sourceIp""]),\n    ""headers"": {\n      ""Content-Type"": ""text/plain""\n    },\n    ""statusCode"": 200\n  }\n', '/helloworld', ['arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole', 'arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess'], 'HelloWorldFunctionInlineRole.Arn', 'def handler(event,context):\n  return {\n    ""body"": ""Hello from HelloWorldFunctionInline!  Your IP address is {0}"".format(event[""requestContext""][""identity""][""sourceIp""]),\n    ""headers"": {\n      ""Content-Type"": ""text/plain""\n    },\n    ""statusCode"": 200\n  }\n', '/helloworld-inline', 'HelloWorldFunctionPerm', 'def handler(event,context):\n  return {\n    ""body"": ""Hello from HelloWorldFunctionPerm!  Your IP address is {0}"".format(event[""requestContext""][""identity""][""sourceIp""]),\n    ""headers"": {\n      ""Content-Type"": ""text/plain""\n    },\n    ""statusCode"": 200\n  }\n', '/helloworld-permission', 'The API Gateway URL for this microservice', 'https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiGatewayStageName}']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,16,0,0,17
+DDmethod,TESTSelect35.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::LayerVersion.Metadata.BuildArchitecture']]
+*****[Configuration Entry Value Errors: ['C', ['A', 'B', 'C', 'D'], 'mylayer', ['fake', '${MyParam}'], 'myfunction', 'python3.11', ['fake']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,7,0,0,8
+DDmethod,TESTSelect36.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::StateMachine.Properties.Definition.States.PHTask.ResultPath']]
+*****[Configuration Entry Value Errors: ['def handler(event, context):\n  print(event)\n  return\n', 'myState', 'rLambda.Arn', [{'Statement': [{'Sid': 'Test', 'Effect': 'Allow', 'Action': ['lambda:Invoke*'], 'Resource': {'Fn::GetAtt': 'rLambda.Arn'}}]}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,4,0,0,5
+DDmethod,TESTSelect37.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Auth.ApiKeyRequired', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Required', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateBody', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateParameters', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateHeaders', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateQueryString', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Model']]
+*****[Configuration Entry Value Errors: ['GetLeaderboard', 'app/', 'read_leaderboard.lambda_handler', [{'S3FullAccessPolicy': {'BucketName': {'Ref': 'BucketName'}}}]]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,7,4,0,0,11
+DDmethod,TESTSelect38.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['bootstrap/', 'bootstrap', 'go.1x', 'makefile']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,4,0,0,4
+DDmethod,TESTSelect39.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['test-function\n', 'test-function/', ['AWSLambdaBasicExecutionRole', 'AWSLambdaVPCAccessExecutionRole', 'EC2DescribePolicy'], 'cron(0 8 * * ? *)']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,4,0,0,4
+DDmethod,TESTSelect4.yaml,"****[Resource Type Errors: ['AWS::Serverless::FunctionReference']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::FunctionReference.Properties.Events.PHApi.Properties.Path', 'Resources.PHAWS::Serverless::Application.Properties.Events.NestedFunctionName', 'Resources.PHAWS::Serverless::FunctionReference.Properties.Events.PHSQS.Properties.Queue.Fn::GetAtt', 'Resources.PHAWS::Serverless::FunctionReference.Properties.FunctionName.Fn::GetAtt', 'Resources.PHAWS::Serverless::FunctionReference.Properties.Events.PHApi.Properties.Method', 'Resources.PHAWS::Serverless::FunctionReference.Type', 'Resources.PHAWS::Serverless::FunctionReference.Properties.Events.PHSQS.Type', 'Resources.PHAWS::Serverless::FunctionReference.Properties.FunctionName.Fn::ImportValue', 'Resources.PHAWS::Serverless::FunctionReference.Properties.Events.PHSQS.Properties.BatchSize', 'Resources.PHAWS::Serverless::FunctionReference.Properties.Events.PHApi.Type']]
+*****[Configuration Entry Value Errors: ['MyQueueName', '<url>', '<app id>']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,10,3,0,0,14
+DDmethod,TESTSelect40.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['AW::Serverless-2016-10-31']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,1,0,0,1
+DDmethod,TESTSelect41.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RestApiId']]
+*****[Configuration Entry Value Errors: ['def lambda_handler(_, __):\n    return {\n        ""statusCode"": 200,\n        ""body"": ""hello world"",\n    }\n', 'python3.11']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,2,0,0,3
+DDmethod,TESTSelect42.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['AWS\n', 'SESBulkTemplatedCrudPolicy_v2']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,2,0,0,2
+DDmethod,TESTSelect43.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['test\n', 'ecs_call/', [{'EcsRunTaskPolicy': {'TaskDefinition': 'sample-batch-job:*'}}], 'ECS call Lambda Function ARN', 'ECSCallFunction.Arn', 'Implicit IAM Role created for ECS call function', 'ECSCallFunctionRole.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,7,0,0,7
+DDmethod,TESTSelect44.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHHttpApi.Properties.Auth.Authorizer']]
+*****[Configuration Entry Value Errors: ['MyFunction', './js/MyFunction/', '/mypath/{storeId}', 2]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,4,0,0,5
+DDmethod,TESTSelect45.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['see if SAM validate has a bug', 123456, 'App Id for the project used to tag the instance', 'a${AppId}-commonlib-layer', 'Common libraries for Migration Automation', 'dependencies/common']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,6,0,0,6
+DDmethod,TESTSelect46.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Auth.ResourcePolicy.AwsAccountWhitelist']]
+*****[Configuration Entry Value Errors: ['foo']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,0,0,2
+DDmethod,TESTSelect47.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Api.Properties.Cors']]
+*****[Configuration Entry Value Errors: ['0.0.1', 'example']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,2,0,0,3
+DDmethod,TESTSelect48.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['arn:aws:serverlessrepo:us-east-1:077246666028:applications/hello-world', None]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,2,0,0,2
+DDmethod,TESTSelect49.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['foobar', 'deploy_jb_app.handler', 'arn:aws:iam::${AWS::AccountID}:role/lambda-deploy-jb-app', 'Deploy JB App Function', 'DeployJBApp.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,5,0,0,5
+DDmethod,TESTSelect5.yaml,"****[Resource Type Errors: ['AWS::Lambda::Url']]
+****[Configuration Entry Errors: ['Resources.PHAWS::Lambda::Url.Properties.TargetFunctionArn.Fn::GetAtt', 'Resources.PHAWS::Lambda::Url.Type', 'Resources.PHAWS::Lambda::Url.Properties.AuthType', 'Resources.PHAWS::Lambda::Permission.Properties.FunctionUrlAuthType']]
+*****[Configuration Entry Value Errors: ['signer/', 'lambda:InvokeFunctionUrl', 'Signer', '*']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",1,4,4,0,0,9
+DDmethod,TESTSelect50.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['ESB PackingList API', 'io.andrewohara.pets.ListPetsHandler', './pets-api/build/libs/pets-api.jar', '/pets']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Api.Type']]
+****[Configuration Value Depenency Errors: lacking []]",0,0,4,1,0,5
+DDmethod,TESTSelect51.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['s3://sam-demo-bucket/todo_list.zip', 'index.restapi', 'MyApi', 'MyApi', 'get', 'LambdaAuthorizer', '3.0']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Type', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.Method']]
+****[Configuration Value Depenency Errors: lacking []]",0,0,7,2,0,9
+DDmethod,TESTSelect54.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Required', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.ValidateBody', 'Resources.PHAWS::Serverless::Function.Properties.Events.PHApi.Properties.RequestModel.Model']]
+*****[Configuration Entry Value Errors: ['controllers/accounts.create', '/accounts', 'XX', 'LambdaRole.Arn']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Api.Type']]
+****[Configuration Value Depenency Errors: lacking []]",0,3,4,1,0,8
+DDmethod,TESTSelect55.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::HttpApi.Properties.StageName.Ref', 'Resources.PHAWS::SQS::Queue.Description']]
+*****[Configuration Entry Value Errors: ['AudioMatch backend services', 'Template stage, such as ""dev"" or ""prod"", for which resources are provisioned and deployed.', ['dev', 'prod'], 'python3.7', 'Dependencies for Lambda functions', 'libs/', 'Backend for API', './backend', 'apihandler.handler', 'BackendLambdaRole.Arn', 'BackendDeadLetterQueue.Arn', [{'Ref': 'LibrariesLayer'}], '/count/references/{amid}/{type}', 'BackendHttpAPI']]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Api.Type']]
+****[Configuration Value Depenency Errors: lacking []]",0,2,14,1,0,17
+DDmethod,TESTSelect56.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: []]
+*****[Configuration Entry Value Errors: ['SAM Template for the Monologue Repo at Example', './web-ui/build', '/{proxy+}', 'ANY', 'ExampleHttpApi', 'ANY', 'ExampleHttpApi', '/api/hello', 'get', 'ExampleHttpApi', './api/hey/hello_world', 'python3.11-v1', '/api/ho', 'ANY', 'ExampleHttpApi', './api/ho/hello_world', 'python3.11-v1', 'ExampleFunction.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,0,18,0,0,18
+DDmethod,TESTSelect57.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.ImageUri']]
+*****[Configuration Entry Value Errors: [384, 'redox_etls.test.test.lambda_handler', ['ETLLambdasRole', 'Arn'], ['sg-091aab03629326710'], ['subnet-0cad98dc984619df4'], 'arn:aws:sns:us-east-1:153975004783:redox-events-production', '/.', 'testupdateschedule-9957142c3297-latest', 'TestUpdateSchedule']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,9,0,0,10
+DDmethod,TESTSelect58.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.ImageUri.Ref']]
+*****[Configuration Entry Value Errors: ['Lambda function to execute ECS Compose-X CFN Macro', 'ecs-compose-x-macro-${AWS::Region}']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,2,0,0,3
+DDmethod,TESTSelect6.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Lambda::LayerVersion.Properties.ContentUri', 'Resources.PHAWS::Lambda::LayerVersion.Properties.LayerName']]
+*****[Configuration Entry Value Errors: [['ruby2.5']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,2,1,0,0,3
+DDmethod,TESTSelect7.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHSQS.Properties.FunctionResponseType']]
+*****[Configuration Entry Value Errors: [""def bar(event, context):\n  print('hello')\n"", 'bar', 'MyQueue.Arn']]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,3,0,0,4
+DDmethod,TESTSelect8.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::Function.Properties.Events.PHS3.Id.Fn::Sub', 'Resources.PHAWS::S3::Bucket.Properties.BucketName']]
+*****[Configuration Entry Value Errors: ['mylambdafunction-${StageName}', 'Mybucket', 'vvod-backend-app.zip', 2048, [{'Name': 'prefix', 'Value': 'videos/'}]]]
+*****[Configuration Entry Depenency Errors: lacking ['Resources.PHAWS::Serverless::Function.Properties.Policies']]
+****[Configuration Value Depenency Errors: lacking []]",0,2,5,1,0,8
+DDmethod,TESTSelect9.yaml,"****[Resource Type Errors: []]
+****[Configuration Entry Errors: ['Resources.PHAWS::Serverless::StateMachine.Properties.Events.PHEventBridgeRule.Properties.Name']]
+*****[Configuration Entry Value Errors: [['Object Created']]]
+*****[Configuration Entry Depenency Errors: lacking []]
+****[Configuration Value Depenency Errors: lacking []]",0,1,1,0,0,2
+DDmethod,TESTSelect52.yaml,CodeUri: !If CreateProdResources,,,,,,
+DDmethod,TESTSelect53.yaml,AutoPublishAlias: !Ref: Stage,,,,,,

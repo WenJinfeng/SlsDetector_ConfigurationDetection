@@ -1,0 +1,30 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  DBSupportLayer:
+    Type: AWS::ServerLess::LayerVersion
+    Properties:
+      LayerName: DataBase_Support_Layer
+      Description: DB (Aurora::PostgreSQL, SQLAlchemy, Alembic) support layer
+      ContentUri: ../layers/support/
+      CompatibleRuntimes:
+        - python3.9
+      CompatibleArchitectures:
+        - x86_64
+      RetentionPolicy: Retain
+  SupplementalItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/src/lambdas/supplemental_items/
+      Handler: lambda_handler.lambda_handler
+      Layers:
+        - !Ref DBSupportLayer
+      Runtime: python3.9
+      Environment:
+        Variables:
+          PG_ENGINE_URL: ""
+      Events:
+        SupplementalItemsGet:
+          Type: Api
+          Properties:
+            Path: "/supplemental_items"
+            Method: GET

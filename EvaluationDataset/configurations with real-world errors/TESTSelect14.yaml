@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM template with API defined in an external Swagger file along with Lambda integrations and CORS configurations
+Resources:
+  ConfigLambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    DependsOn:
+      - MyAwesomeApi
+      - ConfigHandlerLambdaFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ConfigHandlerLambdaFunction
+      Principal: apigateway.amazonaws.com

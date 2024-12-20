@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Calls Denic APIs and returns results back to tier 2
+
+Globals:
+  Function:
+    Runtime: python3.8
+    MemorySize: 128
+    Timeout: 20
+    Handler: lambda_function.lambda_handler
+
+Parameters:
+  EnvType:
+    Default: dev
+    Type: String
+    AllowedValues:
+      - prod
+      - staging
+      - dev
+    
+Conditions:
+  IsProduction: !Equals 
+    - !Ref EnvType
+    - prod
+
+  IsStaging: !Equals
+    - !Ref EnvType
+    - staging
+
+  IsDev: !Equals
+     - !Ref EnvType
+     - dev
+
+  IsStagingOrProduction: !Or
+    - !Condition IsProduction
+    - !Condition IsStaging
+
+Resources:
+  CredentialDenicFifoQueueContainerized:
+  Type: AWS::SQS::Queue
+  Properties:
+    QueueName: !If [IsDev, tier_3_credential_id_530_containerized.fifo, tier_3_credential_id_437_containerized.fifo]
+    ContentBasedDeduplication: false
+    FifoQueue: true
+    MessageRetentionPeriod: 2400
+
+  StartMicroservice:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: start-tier-3-denic
+      InlineCode: |
+        import json
+        import boto3
+        import os
+
+        def lambda_handler(event, context):
+            operation_id = event['Records'][0]['body']
+            sfn = boto3.client('stepfunctions')
+            sfn.start_execution(
+                    stateMachineArn = os.environ['STEP_FUNCTION_ARN'],
+                    input=json.dumps(operation_id)
+                )
+
+            return {
+                'body': operation_id
+            }
+      Handler: index.lambda_handler
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/main-lambda
+      Architectures: [arm64]
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvType
+          STEP_FUNCTION_ARN: !GetAtt MainStateMachine.Arn
+      Events:
+        Credential530Event:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt CredentialDenicFifoQueueContainerized.Arn
+            BatchSize: 1
+
+  StateMachineFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProduction
+    Properties:
+      AlarmActions: 
+        - !ImportValue sns-topic-step-function-failures
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !GetAtt MainStateMachine.Arn
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Threshold: 0
+      MetricName: ExecutionsFailed
+      Namespace: AWS/States
+      Period: 60
+      TreatMissingData: notBreaching
+
+  StateMachineTimedOutAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProduction
+    Properties:
+      AlarmActions: 
+        - !ImportValue sns-topic-step-function-failures
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !GetAtt MainStateMachine.Arn
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Threshold: 0
+      MetricName: ExecutionsTimedOut
+      Namespace: AWS/States
+      Period: 60
+      TreatMissingData: notBreaching
+
+  StateMachineThrottledAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: IsProduction
+    Properties:
+      AlarmActions: 
+        - !ImportValue sns-topic-step-function-failures
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !GetAtt MainStateMachine.Arn
+      EvaluationPeriods: 1
+      Statistic: Sum
+      Threshold: 0
+      MetricName: ExecutionsThrottled
+      Namespace: AWS/States
+      Period: 60
+      TreatMissingData: notBreaching
+
+  MainStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: tier-3-denic
+      DefinitionUri: ./step-functions/tier-3-denic.asl.json
+      DefinitionSubstitutions:
+        CallDenicApi-Arn: !GetAtt CallDenicApi.Arn
+        GetRequestDataFromDynamo-Arn: !ImportValue global-get-request-data-from-dynamo
+        GetConnectionDetailsFromRds-Arn: !ImportValue global-get-connection-details-from-rds
+        SetStatusToInProgressInDynamo-Arn: !ImportValue global-set-status-to-in-progress-in-dynamo
+        SetStatusToCompletedInDynamo-Arn: !ImportValue global-set-status-to-completed-in-dynamo
+        SetStatusToFailedInDynamo-Arn: !ImportValue global-set-status-to-failed-in-dynamo
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/main-step-function
+
+  CallDenicApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: call-denic-api
+      CodeUri: ./lambdas/call-denic-api
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/main-lambda
+      Architectures: [arm64]
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvType
+      Timeout: 300
+      VpcConfig:
+        SecurityGroupIds:
+          - !ImportValue vpc-sg
+        SubnetIds:
+          - !ImportValue private-subnet-1
+          - !ImportValue private-subnet-2
+        

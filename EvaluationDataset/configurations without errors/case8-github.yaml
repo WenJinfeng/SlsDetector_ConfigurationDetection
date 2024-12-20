@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+
+  MyFunctionTopicEventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      RedrivePolicy: 
+        deadLetterTargetArn: 
+          Fn::GetAtt: 
+            - "MyDeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+
+  MyDeadLetterQueue:
+    Type: AWS::SQS::Queue
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://bucket/key
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Timeout: 60
+      Events:
+        TopicEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref Topic
+            RedrivePolicy:
+              deadLetterTargetArn: !GetAtt QueueSNSDlq.Arn
+            SqsSubscription:
+              QueueArn: 
+                Fn::GetAtt: 
+                  - MyFunctionTopicEventQueue
+                  - "Arn"
+              QueueUrl: !Ref MyFunctionTopicEventQueue

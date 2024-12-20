@@ -1,0 +1,29 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  TestUpdateSchedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageUri: 153975004783.dkr.ecr.us-east-1.amazonaws.com/athena-schedule-builder:testupdateschedule-9957142c3297-latest
+      MemorySize: 384
+      Handler: redox_etls.test.test.lambda_handler
+      Runtime: python3.8
+      Role:
+        Fn::GetAtt:
+        - ETLLambdasRole
+        - Arn
+      VpcConfig:
+        SecurityGroupIds:
+        - sg-091aab03629326710
+        SubnetIds:
+        - subnet-0cad98dc984619df4
+      Events:
+        ScheduleNew:
+          Type: SNS
+          Properties:
+            Topic: arn:aws:sns:us-east-1:153975004783:redox-events-production
+    Metadata:
+      DockerContext: /.
+      DockerTag: testupdateschedule-9957142c3297-latest
+      Dockerfile: Dockerfile
+      SamResourceId: TestUpdateSchedule

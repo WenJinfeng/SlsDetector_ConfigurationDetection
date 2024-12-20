@@ -1,0 +1,24 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
+      Auth:
+        UsagePlan:
+          CreateUsagePlan: PER_API
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref ApiGateway
+      Runtime: python3.9
+      Handler: index.handler
+      InlineCode: |
+        def handler(event, context):
+            return {'foo': 'bar'}

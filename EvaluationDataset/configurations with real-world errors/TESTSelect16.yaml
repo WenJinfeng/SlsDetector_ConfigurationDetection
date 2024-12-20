@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform:
+  - AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: "Test"
+      InlineCode: |
+        import json
+        def handler(event, context):
+          return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "message": "hello world",
+            }),
+          }
+      Handler: index.handler
+      Runtime: python3.11
+      Architectures:
+        - arm64
+  
+  MyNewTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "MyNewTable"
+      KeySchema:
+        - AttributeName: key
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: key
+          AttributeType: S
+      Fn::Transform: TestMacro

@@ -1,0 +1,18 @@
+Transform: AWS::Serverless-2016-10-31
+Mappings: 
+  StageToName: 
+    ApiType: 
+      test: REGIONAL
+      prod: EDGE
+Parameters:
+  Stage:
+    Type: String
+    Default: test
+Resources:
+  ApiName:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub '${Stage}'
+      EndpointConfiguration:   
+        Types:
+          - !FindInMap [StageToName, ApiType, !Ref Stage]

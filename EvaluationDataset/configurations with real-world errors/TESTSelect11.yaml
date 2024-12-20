@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Fancy Description"
+
+Mappings:
+  Constants:
+    ServerlessService:
+      Version: 0.0.1
+
+Globals:
+  # Sets global settings for ALL Lambda functions
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 30
+    Handler: index.handle
+
+Resources:
+  ServerlessService:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: test
+      DefinitionBody:
+          'Fn::Transform':
+            Name: 'AWS::Include'
+            Parameters:
+              Location: s3://mybucket/swagger.yml
+
+  ServerlessServiceDefaultUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: ServerlessServicetestStage
+    Properties:
+      Description: Default Serverless-Service Usage Plan
+      Quota:
+        Limit: 5000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 40
+        RateLimit: 20
+      UsagePlanName: serverless-service-default-plan
+
+  ServerlessServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../packages/lambda/functions/serverlessServiceFunction
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessService
+            Path: /path/with/{params}
+            Method: POST

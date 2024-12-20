@@ -1,0 +1,11 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.9
+      Handler: app.handler
+      Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: payment
+        POWERTOOLS_METRICS_NAMESPACE: ServerlessAirline

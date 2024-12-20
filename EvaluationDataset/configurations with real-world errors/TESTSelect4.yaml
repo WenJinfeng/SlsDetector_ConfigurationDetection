@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+
+Resources:
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: MyQueueName
+      VisibilityTimeout: 30 
+      
+  NestedStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: <url>
+
+  NestedFunctionExample:
+    Type: AWS::Serverless::FunctionReference
+    Properties:
+      FunctionName: !GetAtt NestedStack.Outputs.NestedFunctionName
+      Events: 
+        GetRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+
+  NestedApp1:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: <app id>
+        SemanticVersion: 1.0.0
+      Events:
+        NestedFunctionName: # This tells SAM to use !GetAtt NestedApp.Outputs.NestedFunctionName whenever we need the function name
+          - Type: SQS
+            Properties:
+              Queue: !GetAtt MyQueue.Arn
+              BatchSize: 10
+          - Type: Api
+            Properties:
+              Path: /
+              Method: GET
+
+  # Assumes other stack exports function name as ExportedFunctionName
+  ImportValueExample:
+    Type: AWS::Serverless::FunctionReference
+    Properties:
+      FunctionName: !ImportValue ExportedFunctionName
+      Events: 
+        SQSTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt MyQueue.Arn
+            BatchSize: 10

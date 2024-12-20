@@ -1,0 +1,30 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  Foo:
+    Default: "false"
+    Type: String
+Conditions:
+  UseApiKey:
+    Fn::Equals:
+      - !Ref Foo
+      - "true"
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Auth:
+        ApiKeyRequired: !If [UseApiKey, true, false]
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # InlineCode: foo
+      Handler: bar.handler
+      Runtime: python3.8
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+            RestApiId: !Ref MyApi

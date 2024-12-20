@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: foobar
+
+Globals:
+  Function:
+    Timeout: 300
+
+Parameters:
+  env:
+    Type: String
+
+Resources:
+  DeployJBApp:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: deploy_jb_app.handler
+      Runtime: python3.7
+      Role: !Sub "arn:aws:iam::${AWS::AccountID}:role/lambda-deploy-jb-app"
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref env
+
+Outputs:
+    DeployJBAppFunction:
+      Description: "Deploy JB App Function"
+      Value: !GetAtt DeployJBApp.Arn

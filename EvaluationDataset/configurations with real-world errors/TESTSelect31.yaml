@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  eap-inneed
+
+Globals:
+  Function:
+    Timeout: 3
+    Environment:
+      Variables:
+        TABLE_NAME: inneedEap
+        AWS_REGION_DYNAMODB: us-west-2
+    
+
+Resources:
+  EAPCompanyCRUDFunction:
+    Type: AWS::Serverless::Function
+    Role: "arn:aws:iam::596343339730:role/LambdaS3ReadDynamoDBFull"
+    Properties:
+      CodeUri: eap-company-crud/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        CompanyDetails:
+          Type: Api 
+          Properties:
+            Path: /company
+            Method: get
+
+Outputs:
+  EAPApi:
+    Description: "API Gateway endpoint URL for Prod stage for EAP functions"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/company/"

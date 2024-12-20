@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyAPIApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Domain:
+        CertificateArn: arn:aws:acm:us-east-1:123456789012:certificate/abcd1234-5678-90ef-ghij-klmnopqrstuv
+        DomainName: api.example.com
+        DomainEndpointConfiguration: EDGE
+        Route53:
+          HostedZoneId: ABCD
+      CacheClusterEnabled: false
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: 's3://mybucket/openapi.yml'
+      EndpointConfiguration: REGIONAL
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          MetricsEnabled: false
+      MinimumCompressionSize: 10
+      Name: 'DEV'
+      StageName: 'DEV'

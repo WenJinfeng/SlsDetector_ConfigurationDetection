@@ -1,0 +1,53 @@
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  EnvrType:
+    Type: String
+    Description: "Environment type such as Dev, Prod, etc."
+
+Resources:
+  ProfilePostFunction:
+    Type: "AWS::Serverless::Function"
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs18.x
+      FunctionName: !Join ["", [ !Ref EnvrType ,"-", "SI-post-profile-image" ] ]
+      Role: 'arn:aws:iam::45645654645645:role/aiportal-lambda-execution-role'
+      CodeUri: lambdas/SI-post-profile-image
+      AutoPublishAlias: dev
+      DeploymentPreference:
+        Type: AllAtOnce
+        Alarms:
+          - !Ref AliasErrorMetricGreaterThanZeroAlarm
+          - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
+
+  AliasErrorMetricGreaterThanZeroAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Handler: index.handler
+      AlarmName: "AliasErrorMetricGreaterThanZero"
+      MetricName: "Errors"
+      Namespace: "AWS/Lambda"
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ProfilePostFunction
+
+  LatestVersionErrorMetricGreaterThanZeroAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "LatestVersionErrorMetricGreaterThanZero"
+      MetricName: "Errors"
+      Namespace: "AWS/Lambda"
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ProfilePostFunction

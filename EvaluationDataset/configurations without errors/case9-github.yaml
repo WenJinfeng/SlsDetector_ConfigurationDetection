@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  RestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: MyRestApi
+      StageName: Prod
+      Auth:
+        ApiKeyRequired: true
+      EndpointConfiguration: REGIONAL
+      CacheClusterEnabled: false
+      CacheClusterSize: "0.5"
+      MethodSettings:
+        - LoggingLevel: "INFO"
+          MetricsEnabled: true
+          DataTraceEnabled: true
+          ResourcePath: "/*"
+          HttpMethod: "*"
+          CachingEnabled: false
+      DefinitionBody:
+        openapi: 3.0.0
+        info:
+          version: '1.0'
+          title: !Ref AWS::StackName
+        schemes:
+          - https
+        x-amazon-apigateway-api-key-source: "HEADER"
+        # specify the types API should treat as binary
+        x-amazon-apigateway-binary-media-types:
+          - image/jpeg
+          - image/png
+          - image/*
+          - image/webp
+          - image/apng
+          - "*/*"
+        paths:
+          "/hello":
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: GET
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyLambdaFunction.Arn}/invocations
+                passthroughBehavior: when_no_match
+              responses: {}
+
+  ApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      Description: CloudFront Only
+      UsagePlanName: CloudFront_Only
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: !Ref RestApi.Stage
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${AWS::StackName}-CloudFront-ApiKey"
+      Description: "CloudFront API Key"
+      Enabled: true
+      GenerateDistinctId: false
+
+  ApiKeyUsagePlan:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiUsagePlan
+
+  MyLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: |
+        exports.handler = async (event) => {
+          const response = {
+            statusCode: 200,
+            body: JSON.stringify('Hello from Lambda!'),
+          };
+          return response;
+        };
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 128
+
+      Events:
+        GetApi:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+            RestApiId:
+              Ref: RestApi

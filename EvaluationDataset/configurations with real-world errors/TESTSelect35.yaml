@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  MyParam:
+    Type: String
+    Default: C
+    AllowedValues: [A, B, C, D]
+
+Resources:
+  MyLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: mylayer
+      CompatibleRuntimes:
+        - provided.al2
+      CompatibleArchitectures:
+        - fake
+        - ${MyParam}
+    Metadata:
+      BuildMethod: makefile
+      BuildArchitecture: fake
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: myfunction
+      Handler: app.lambdaHandler
+      Runtime: python3.11
+      Architectures:
+        - fake
+      MemorySize: 128
+
+
+
+
+        

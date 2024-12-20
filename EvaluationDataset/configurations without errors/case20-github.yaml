@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM Template FilterCriteria Testing
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: ['sts:AssumeRole']
+            Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+        Version: '2012-10-17'
+      Policies:
+        - PolicyName: allow-all-Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "*"
+                Resource:
+                  - "*"
+  TestStream:
+    Type: AWS::Kinesis::Stream
+    Properties: 
+      Name: TestStream
+      RetentionPeriodHours: 1
+      ShardCount: 1
+
+  TestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: python3.9
+      Timeout: 120
+      Role:
+        Fn::GetAtt: [LambdaRole, Arn]
+
+      InlineCode: |
+        def handler(event, context):
+          print("Hello, world!")
+      Events:
+        Kinesis:
+          Type: Kinesis
+          Properties:
+            Stream: 
+              Fn::GetAtt: 
+              - TestStream
+              - Arn
+            BatchSize: 1
+            FilterCriteria:
+              Filters:
+                - Pattern: "{\"body\" : {\"a\": [1, 2]}}"

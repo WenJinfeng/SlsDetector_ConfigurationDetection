@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  rLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: python3.6
+      InlineCode: |
+        def handler(event, context):
+          print(event)
+          return
+
+
+  rTestMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition: 
+        StartAt: myState
+        States:
+          myState:
+            Type: Task
+            Resource:  !GetAtt rLambda.Arn
+            ResultPath: null
+            End: true
+      Policies:
+      - Statement:
+        - Sid: Test
+          Effect: Allow
+          Action:
+          - lambda:Invoke*
+          Resource: !GetAtt rLambda.Arn

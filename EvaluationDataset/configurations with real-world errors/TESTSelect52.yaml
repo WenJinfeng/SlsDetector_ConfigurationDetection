@@ -1,0 +1,14 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  Stage:
+    Type: String
+    Description: Which stage the code is in
+    Default: test
+    AllowedValues:
+      - test
+      - prod
+Resources:
+  HelloWorldSQSFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      AutoPublishAlias: !Ref: Stage

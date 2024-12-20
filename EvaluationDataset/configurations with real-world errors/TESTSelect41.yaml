@@ -1,0 +1,24 @@
+Resources:
+  CustomAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.lambda_handler
+      InlineCode: >
+        def lambda_handler(_, __):
+            return {
+                "statusCode": 200,
+                "body": "hello world",
+            }
+      Runtime: python3.11
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            RestApiId: CustomAPI
+            Path: /hello
+            Method: GET

@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ESB PackingList API
+
+Resources:
+  XyZFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: somefunction
+      Handler: lambda.handler
+      Runtime: python3.6
+      Events:
+        MyEvent:
+          Type: Api
+          Properties:
+            Path: /mypath
+            Method: GET
+          security:
+            api_key:
+              type: "apiKey"
+              name: "x-api-key"
+              in: "header"

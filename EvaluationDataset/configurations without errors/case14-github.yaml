@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        DefaultAuthorizer: MyAuthorizerV1
+        Authorizers:
+          MyAuthorizerV1:
+            UserPoolArn: !GetAtt  MyCognitoUserPool.Arn
+          MyAuthorizerV2:
+            UserPoolArn: !GetAtt  MyCognitoUserPool.Arn
+            AuthorizationScopes:
+              - 'aws.cognito.signin.user.admin'
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs18.x
+      InlineCode: |
+        exports.handler = async (event, context, callback) => {
+          return {
+            statusCode: 200,
+            body: 'Success'
+          }
+        }
+      Events:
+        MyEventV1:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /test
+            Method: get
+            Auth:
+              Authorizer: MyAuthorizerV1
+        MyEventV2:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /v2/test
+            Method: get
+            Auth:
+              Authorizer: MyAuthorizerV2
+
+  MyCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: MyCognitoUserPoolRandomName
+
+
+  MyCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: MyCognitoUserPool
+      ClientName: MyCognitoUserPoolClient
+      GenerateSecret: false
+
+  MyFirstApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - MyUsagePlan
+    Properties:
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref MyApi
+          StageName: Prod
+
+  MyUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref MyApi
+          Stage: Prod
+
+  MyUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: 
+        Ref: MyFirstApiKey
+      UsagePlanId:
+        Ref: MyUsagePlan
+      KeyType: API_KEY

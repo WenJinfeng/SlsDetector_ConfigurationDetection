@@ -1,0 +1,12 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MacroLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: live
+      Description: Lambda function to execute ECS Compose-X CFN Macro
+      ImageUri: !Ref ECSComposeXMacroUri
+      Timeout: 30
+      FunctionName: !Sub "ecs-compose-x-macro-${AWS::Region}"
+      Tags:
+        Name: !Sub "ecs-compose-x-macro-${AWS::Region}"

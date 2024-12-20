@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  sam-app
+
+  Sample SAM Template for sam-app
+
+Resources:
+
+  AWSApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Auth:
+        ResourcePolicy:
+          IpRangeWhitelist: 10.0.0.0/24
+      Name: Private AWS Api Gateway
+      EndpointConfiguration: 
+        Types: 
+          - PRIVATE
+        VpcEndpointIds:
+          - !Ref ApiGatewayVPCEndpoint
+      StageName: Staging
+
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello_world/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
+            RestApiId: !Ref AWSApiGateway
+
+# Outputs: {}

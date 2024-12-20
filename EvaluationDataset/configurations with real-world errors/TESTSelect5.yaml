@@ -1,0 +1,24 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Signer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: signer/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+
+  SignerUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Signer.Arn
+
+  SignerUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !Ref Signer
+      Principal: "*"
+      FunctionUrlAuthType: NONE

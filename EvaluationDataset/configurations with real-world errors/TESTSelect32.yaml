@@ -1,0 +1,19 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello-world/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /service-a/hello
+            RestApiRootResourceId: !Ref MyApi
+            Method: get
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod 

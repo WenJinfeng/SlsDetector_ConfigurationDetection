@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+
+Resources:
+  CreateAccountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: controllers/accounts.create
+      Events:
+        CreateAccount:
+          Type: Api
+          Properties:
+            Path: /accounts
+            Method: post
+            RestApiId: !Ref XX
+            RequestModel:
+              Model: Account
+              Required: true
+              ValidateBody: true
+      Role: !GetAtt LambdaRole.Arn
+  

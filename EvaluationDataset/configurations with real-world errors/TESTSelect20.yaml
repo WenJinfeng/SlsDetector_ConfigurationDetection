@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Lambda that responds to S3 events
+
+Parameters:
+    PreExistingBucket:
+        Description: "Does an existing bucket exist (not managed by cloudformation)"
+        Type: String
+        Default: 'no'
+        AllowedValues:
+            - 'yes'
+            - 'no'
+        ConstraintDescription: must specify yes or no.
+
+Conditions:
+  NeedsSomeBucket: !Equals [ !Ref PreExistingBucket, 'no' ]
+
+Resources:
+    BucketEventConsumer:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: BucketEventConsumer.main.lambda_handler
+            Runtime: python3.8
+            CodeUri: bundle.zip
+            Events:
+                CreateMetaEvent:
+                    Condition: NeedsSomeBucket
+                    Type: S3
+                    Properties:
+                        Bucket: !Ref SomeBucket
+                        Events: "s3:ObjectCreated:*"
+                        Filter:
+                            S3Key:
+                                Rules:
+                                    -
+                                        Name: suffix
+                                        Value: meta.json
+    SomeBucket:
+        Condition: NeedsSomeBucket
+        Type: "AWS::S3::Bucket"
+        Properties:
+            BucketName: 'some-bucket-somewhere'
+        DeletionPolicy: Retain

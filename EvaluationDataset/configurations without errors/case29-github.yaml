@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+
+  CWLogsRetention:
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
+    Type: Number
+
+  Namespace:
+    Type: String
+
+  ProjectName:
+    Description: 'Insert the project name'
+    Type: String
+
+Globals:
+  Function:
+    Handler: lambda_function.lambda_handler
+    MemorySize: 128
+    Runtime: python3.8
+    Timeout: 30
+
+Resources:
+
+  LambdaFunctionLogGroup:
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Type: AWS::Logs::LogGroup
+    Properties:
+      # LogGroupName: !Sub '/aws/lambda/${LambdaFunction}'
+      LogGroupName: !Sub '/aws/lambda/${Namespace}-${ProjectName}'
+      RetentionInDays: !Ref CWLogsRetention
+
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      CompatibleRuntimes: [python3.8]
+      ContentUri: dependencies/
+      Description: !Sub 'The Lambda Layer ${ProjectName}'
+      LayerName: !Sub '${Namespace}-${ProjectName}'
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.8
+
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Description: !Sub '${Namespace}-${ProjectName}'
+      FunctionName: !Sub '${Namespace}-${ProjectName}'
+      Tracing: Active
+      Layers:
+        - !Ref LambdaLayer
+      Role: !GetAtt LambdaRole.Arn
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      RoleName: !Sub '${Namespace}-${ProjectName}-lambda'

@@ -1,0 +1,12 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  StockTradingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Events:
+       MyEvent:
+         Type: EventBridgeRule
+         Properties:
+           Name: foobar
+           Pattern:
+             detail-type: ["Object Created"]

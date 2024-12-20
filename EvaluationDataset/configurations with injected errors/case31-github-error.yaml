@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: AltLinen
+
+Resources:
+  MyHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      AccessLogSettings:
+        DestinationArn: arn:aws:logs:us-west-2:847756679349:log-group:anewone
+        Format: "$context.requestId"
+      CorsConfiguration:
+        AllowMethods:
+          - POST
+        AllowHeaders:
+          - "Content-Type"
+        AllowOrigins:
+          - https://www.example.com
+      DefinitionBody:
+        openapi: "3.0.1"
+        info:
+          title: "Alt Linen Backend"
+          version: "1.0.0"
+        paths:
+          /shopify/shipping_rates:
+            post:
+              responses:
+                default:
+                  description: "Default response"
+        x-amazon-apigateway-importexport-version: "1.0"
+
+  MyHttpApiRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "apigateway.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+
+  ShippingRatesLambda:
+    Type: AWS::Serverless
+    Properties:
+      CodeUri: hello_world/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        APIPost:
+          Type: HttpApi
+          ApiId: !Ref MyHttpApi
+          Properties:
+            Path: /shopify/shipping_rates
+            Method: POST
+            PayloadFormatVersion: "2.0"
+
+Outputs:
+  ApiEndpoint:
+    Description: "HTTP API endpoint URL"
+    Value: !Sub "https://${MyHttpApi}.execute-api.${AWS::Region}.amazonaws.com"

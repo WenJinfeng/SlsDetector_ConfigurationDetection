@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: 'AudioMatch backend services'
+
+Parameters:
+  Stage:
+    Type: String
+    Description: 'Template stage, such as "dev" or "prod", for which resources are provisioned and deployed.'
+    AllowedValues: ['dev','prod']
+    Default: 'dev'
+
+Resources:
+  BackendHttpAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: openapi.yaml
+
+  LibrariesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Metadata:
+      BuildMethod: python3.7
+    Properties:
+      Description: 'Dependencies for Lambda functions'
+      RetentionPolicy: Delete
+      ContentUri: libs/
+      CompatibleRuntimes:
+        - python3.7
+
+  BackendLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: 'Backend for API'
+      CodeUri: ./backend
+      Handler: apihandler.handler
+      Role: !GetAtt BackendLambdaRole.Arn
+      Runtime: python3.7
+      Timeout: 180
+      MemorySize: 512
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt BackendDeadLetterQueue.Arn
+      Layers:
+        - !Ref LibrariesLayer
+      Events:
+        CountReferences:
+          Type: Api
+          Properties:
+            Method: get
+            Path: /count/references/{amid}/{type}
+            RestApiId: !Ref BackendHttpAPI
+
+  
+  BackendDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Description: 'Dead Letter Queue for BackendLambda failed invocations'

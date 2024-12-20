@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Testing idempotency timeouts
+Globals:
+    Function:
+        Timeout: 2
+
+Resources:
+  IdempotencyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -   AttributeName: id
+            AttributeType: S
+      KeySchema:
+        -   AttributeName: id
+            KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiration
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+
+  IdempotencyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: IdempotencyFunction
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: python3.9
+      MemorySize: 512
+      Layers: 
+        - !Ref PowertoolsLayer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdempotencyTable
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+          POWERTOOLS_SERVICE_NAME: example
+          DYNAMODB_TABLE: !Ref IdempotencyTable
+
+  PowertoolsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: MyLambdaLayer
+      ContentUri: layer/
+      CompatibleRuntimes:
+        - python3.9

@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 
+  - AWS::Serverless-2016-10-31
+  - Name: DatadogServerless
+    Parameters:
+      stackName: !Ref "AWS::StackName"
+      apiKey: "xxxxxxx"
+      nodeLayerVersion: 88 
+      extensionLayerVersion: 41
+      service: "XXXX API" 
+      env: !Ref Env 
+      tags: "App:Xxxxx,Stack:XXXX" 
+      
+
+Description: Template for deploying API Gateway backed by lambda
+
+Parameters:
+  Application:
+    Type: String
+    Description: Name of the application
+  Env:
+    Type: String 
+    AllowedValues:
+      - "Local"
+      - "Dev"
+      - "SIT"
+      - "QA"
+      - "Prod"
+    Description: "The Environment tag/naming pre/post-pend"
+  CognitoStack: 
+    Type: String
+    Description: Enter the name of the cognito user pool pipeline stack
+
+Conditions:
+  isLocalDev: !Equals 
+    - !Ref Env
+    - Local
+
+Mappings:
+  DomainName:
+    Local: 
+      ApiName: xxxxxx-api-anon.aws-opg-dev01.xxxxx.com
+      webUrl: https://xxxxxx.aws-opg-dev01.xxxxx.com
+      Zone: aws-opg-dev01.xxxxx.com.
+      ZoneId: XXXXX
+    Dev:
+      ApiName: xxxxxx-api-anon.aws-opg-dev01.xxxxx.com
+      webUrl: https://xxxxxx.aws-opg-dev01.xxxxx.com
+      Zone: aws-opg-dev01.xxxxx.com.
+      ZoneId: XXXXX
+    SIT:
+      ApiName: xxxxxx-api-anon.aws-opg-sit.xxxxx.com
+      webUrl: https://xxxxxx.aws-opg-sit.xxxxx.com
+      Zone: aws-opg-sit.xxxxx.com.
+      ZoneId: XXXX
+    QA:
+      ApiName: xxxxxx-api-anon.aws-opg-qa01.xxxxx.com
+      webUrl: https://xxxxxx.aws-opg-qa01.xxxxx.com
+      Zone: aws-opg-qa01.xxxxx.com.
+      ZoneId: XXXX
+    Prod:
+      ApiName: xxxxxx-api-anon.xxxx.com
+      webUrl: https://xxxxxx.xxxx.com
+      Zone: xxx.com.
+      ZoneId: XXXXXXXX
+  Cognito:
+    Local: 
+      ClientId: 'xxxx'
+      Secret: 'xxxx'
+    Dev:
+      ClientId: 'xxxx'
+      Secret: 'xxxx'
+    SIT: 
+      ClientId: 'xxxxx'
+      Secret: 'xxxx'
+    QA:
+      ClientId: 'xxxx'
+      Secret: 'xxxx'
+    Prod:
+      ClientId: 'xxxx'
+      Secret: 'xxxx'
+
+Resources:
+  SharedDependencyLayer: 
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${Application}-shared-dependency-layer-${Env}"
+      CompatibleRuntimes: 
+        - nodejs18.x
+      ContentUri: src/dependencies/shared/nodejs/
+    Metadata:
+      BuildMethod: nodejs18.x
+
+  ApiDomainCert:
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: !If 
+        - isLocalDev
+        - !Sub aff-api-${Application}.aws-opg-dev01.xxxxx.com
+        - !FindInMap [DomainName, !Ref Env, ApiName]
+      ValidationMethod: DNS 
+      DomainValidationOptions:
+        - 
+          HostedZoneId: !FindInMap [DomainName, !Ref Env, ZoneId]
+          DomainName: !If 
+            - isLocalDev
+            - !Sub aff-api-${Application}.aws-opg-dev01.xxxxxx.com
+            - !FindInMap [DomainName, !Ref Env, ApiName]
+      
+  HttpApiGW:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Env
+      Auth:
+        Authorizers:
+          OAuth2Authorizer:
+            JwtConfiguration:
+              issuer:
+                Fn::ImportValue: 
+                  Fn::Sub: "${CognitoStack}-ProviderURL"
+              audience:
+                - !FindInMap [Cognito, !Ref Env, ClientId]
+            IdentitySource: $request.header.Authorization
+        DefaultAuthorizer: OAuth2Authorizer
+      CorsConfiguration: 
+        AllowOrigins:
+          - "http://localhost:4200"
+          - !FindInMap [DomainName, !Ref Env, webUrl] 
+        AllowHeaders:
+          - authorization
+          - content-type
+          - version
+          - client
+        AllowMethods:
+          - "*"
+        MaxAge: 600
+        AllowCredentials: true
+      Domain: 
+        CertificateArn: !Ref ApiDomainCert
+        DomainName: !If 
+          - isLocalDev
+          - !Sub aff-api-${Application}.aws-opg-dev01.xxxx.com
+          - !FindInMap [DomainName, !Ref Env, ApiName]
+        Route53: 
+          HostedZoneId: !FindInMap [DomainName, !Ref Env, ZoneId]   
+        SecurityPolicy: TLS_1_2
+     
+  GetAnonymousSmsSendPageUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        !Sub '${Application}-get-anonymous-sms-send-page-url-${Env}'
+      Handler: get-anonymous-sms-send-page-url.handler
+      CodeUri: src/handlers/AnonymousSmsSendPageUrl/get-anonymous-sms-send-page-url/
+      Runtime: nodejs18.x
+      Timeout: 60
+      MemorySize: 1024
+      Layers: 
+        - !Ref SharedDependencyLayer
+      Events:
+        ApiCall:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGW
+            Path: /AnonymousSmsSendPageUrl/{WorkOrderId}/{AffiliateId}
+            Method: GET
+        ApiCall2:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApiGW
+            Path: /anonymousSmsSendPageUrl/{WorkOrderId}/{AffiliateId}
+            Method: GET
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${HttpApiGW.DomainName}"

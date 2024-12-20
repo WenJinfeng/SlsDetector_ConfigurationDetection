@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ProcessBlobFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: blobsprjct/
+      Handler: processBlob.lambda_handler
+      Runtime: python3.8
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub "blobs-${AWS::AccountId}-${AWS::Region}"
+        - AmazonRekognitionFullAccess
+      Events:
+        BlobsBucket:
+          Type: S3
+          Properties:
+            Bucket: !Ref BlobsBucket
+            Events: s3:ObjectCreated:*

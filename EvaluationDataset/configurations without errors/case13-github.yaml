@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  TestLogGroupName:
+    Type: 'AWS::Logs::LogGroup'
+    DeletionPolicy: Delete
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: 'TestLogGroupName-RandomName'
+
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      OpenApiVersion: 3.0.1
+      StageName: Prod
+      AccessLogSetting:
+        DestinationArn: !GetAtt TestLogGroupName.Arn
+        Format: $context.requestId
+      Models:
+        User:
+          type: object
+          properties:
+            username:
+              type: string
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs16.x
+      InlineCode: |
+        exports.handler = async (event, context, callback) => {
+          return {
+            statusCode: 200,
+            body: 'Success'
+          }
+        }
+      Events:
+        Noneapi:
+          Type: Api
+          Properties:
+            RequestModel:
+              Model: User
+              Required: true
+            RestApiId:
+              Ref: MyApi
+            Method: get
+            Path: /none

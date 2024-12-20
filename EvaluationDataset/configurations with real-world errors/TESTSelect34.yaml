@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: helloworld
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  ApiGatewayStageName:
+    Type: String
+    Description: Api version as a stage name
+    Default: v1
+
+Resources:
+  HelloWorldApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: HelloWorld
+      StageName: !Ref ApiGatewayStageName
+      EndpointConfiguration: EDGE
+
+
+  HelloWorldFunctionNoRole:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: |
+        def handler(event,context):
+          return {
+            "body": "Hello from HelloWorldFunctionNoRole!  Your IP address is {0}".format(event["requestContext"]["identity"]["sourceIp"]),
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "statusCode": 200
+          }
+      Handler: "index.handler"
+      Runtime: "python3.8"
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Path: /helloworld
+            Method: GET
+            RestApiId: HelloWorldApi
+
+  ###############################
+  ### IN-LINE IAM ROLE SPECIFIED
+  ###############################
+  HelloWorldFunctionInlineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      - "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
+
+  HelloWorldFunctionInline:
+    Type: AWS::Serverless::Function
+    Properties:
+      Role: !GetAtt HelloWorldFunctionInlineRole.Arn
+      InlineCode: |
+        def handler(event,context):
+          return {
+            "body": "Hello from HelloWorldFunctionInline!  Your IP address is {0}".format(event["requestContext"]["identity"]["sourceIp"]),
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "statusCode": 200
+          }
+      Handler: "index.handler"
+      Runtime: "python3.8"
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Path: /helloworld-inline
+            Method: GET
+            RestApiId: HelloWorldApi
+
+  ###############################
+  ### PERMISSION (WITH DEFAULT)
+  ###############################
+  HelloWorldLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref HelloWorldFunctionPerm
+      Principal: apigateway.amazonaws.com
+
+  HelloWorldFunctionPerm:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: |
+        def handler(event,context):
+          return {
+            "body": "Hello from HelloWorldFunctionPerm!  Your IP address is {0}".format(event["requestContext"]["identity"]["sourceIp"]),
+            "headers": {
+              "Content-Type": "text/plain"
+            },
+            "statusCode": 200
+          }
+      Handler: "index.handler"
+      Runtime: "python3.8"
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            Path: /helloworld-permission
+            Method: GET
+            RestApiId: HelloWorldApi
+
+Outputs:
+  ApiUrl:
+    Description: "The API Gateway URL for this microservice"
+    Value: !Sub https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiGatewayStageName}

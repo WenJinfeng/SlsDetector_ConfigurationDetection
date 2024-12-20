@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: see if SAM validate has a bug
+
+Parameters:
+  AppId:
+    Type: String
+    Default: 123456
+    Description: App Id for the project used to tag the instance
+
+Resources:
+
+  CommonLibLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "a${AppId}-commonlib-layer"
+      Description: Common libraries for Migration Automation
+      ContentUri: dependencies/common
+      CompatibleRuntimes:
+        - python3.8

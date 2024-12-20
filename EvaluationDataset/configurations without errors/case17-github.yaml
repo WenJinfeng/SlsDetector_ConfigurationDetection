@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+
+Description:
+  Foo service.
+
+Parameters:
+  Env:
+    Description: The token identifying the deployment environment, such as "dev", "dev3", or "dev-jdoe".
+    Type: String
+    AllowedPattern: '\w[\w-]*'
+    ConstraintDescription: The development environment identifier must only use word characters and dashes.
+
+Globals:
+  Function:
+    Runtime: java17
+    Architectures: [x86_64]
+    MemorySize: 800
+    Timeout: 4
+
+Resources:
+  LambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "foo-${Env}-LambdaHandler"
+      CodeUri: !Sub s3://deployment-bucket-${Env}-name-123/helloworld.app.zip # I changed this to point to my own bucket
+      Handler: com.example.LambdaHandler::handleRequest

@@ -1,0 +1,26 @@
+Transform: AWS::Serverless-2016-10-31
+Description: Everbridge Contact integration pipeline
+Parameters:
+  EnvType:
+    Description: Environment type.
+    Default: test
+    Type: String
+    AllowedValues:
+      - prod
+      - test
+    ConstraintDescription: must specify prod or test.
+Conditions:
+  CreateProdResources: !Equals
+    - !Ref EnvType
+    - prod
+Resources:
+  ContactIntegrationApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 256
+      Timeout: 900
+      Runtime: python3.9
+      Architectures:
+        - arm64
+      Handler: app.lambda_handler
+      CodeUri: !If CreateProdResources [functions/prod/app/,functions/dev/app/]

@@ -1,0 +1,30 @@
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  MyFunc:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'mylambdafunction-${StageName}'
+      Handler: handler.lambda_handler
+      Runtime: python3.9
+      CodeUri:
+        Bucket: Mybucket
+        Key: vvod-backend-app.zip
+      Timeout: 900
+      MemorySize: 2048
+      Events:
+        S3VideoUploadEvent:
+          Type: S3
+          Id: !Sub "mylambdafunction-${StageName}:videos.handlers.s3.handle_upload"
+          Properties:
+            Bucket: !Ref S3Bucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: videos/
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-bucket-name

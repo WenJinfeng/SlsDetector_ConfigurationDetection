@@ -1,0 +1,10 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  CheckAuthHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/lambda-edge/check-auth/
+      Handler: bundle.handler
+      Role: !GetAtt LambdaEdgeExecutionRole.Arn
+      Timeout: 5
+      Version: 2 

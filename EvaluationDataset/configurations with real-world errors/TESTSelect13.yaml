@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM template with API defined in an external Swagger file along with Lambda integrations and CORS configurations
+Resources:
+  ServiceStatusFunctionApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionUri: swagger.yml
+      StageName: Prod
+      Variables:
+        LambdaFunctionName: !Ref ServiceStatusFunction
+
+  ServiceStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: index.serviceStatus
+      Runtime: nodejs18.x
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServiceStatusFunctionApi
+            Path: /service/status
+            Method: GET
+      
+    CreateMemberShipCardFunctionApi:
+      Type: AWS::Serverless::Api
+      Properties:
+        DefinitionUri: swagger.yml
+        StageName: Prod
+        Variables:
+          LambdaFunctionName: !Ref CreateMemberShipCardFunction
+      
+    CreateMemberShipCardFunction:
+      Type: AWS::Serverless::Function
+      Properties:
+        CodeUri: ./
+        Handler: index.createMemberShipCard
+        Runtime: nodejs18.x
+        Events:
+          ProxyApiRoot:
+            Type: Api
+            Properties:
+              RestApiId: !Ref CreateMemberShipCardFunctionApi
+              Path: /comp/membershipcard
+              Method: POST
