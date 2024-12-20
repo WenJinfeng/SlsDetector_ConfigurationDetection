@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless function to stream access logs of Application Load Balancer (ALB) from S3 to Amazon Kinesis Firehose.
+
+  This SAM template creates the Lambda function, IAM role, and new S3 bucket with enabled events notifications to this Lambda function.
+
+  You will need to send your ALB access logs to this newly created S3 Bucket. To enable access logging for ALB:
+  http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#enable-access-logging
+
+Parameters:
+  S3ALBLogsBucketName:
+    Type: String
+    Description: Name of S3 bucket that will store access logs
+  S3Prefix:
+    Type: String
+    Description: Optional prefix to limit the notifications to objects with keys that start with matching characters. e.g. uploadedImages/
+    Default: ""
+  S3Suffix:
+    Type: String
+    Description: Optional suffix to limit the notifications to objects with keys that end with matching characters. e.g. .log.gz
+    Default: ".log.gz"
+  DeliveryStreamName:
+    Type: String
+    Description: Kinesis Firehose delivery stream to sends logs to
+
+Resources:
+  AlbToKinesisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Stream ALB events from S3 to Amazon Kinesis Firehose
+      CodeUri: ./
+      Handler: main
+      Runtime: go1.x
+      MemorySize: 512
+      Timeout: 30
+      Policies:
+      - FirehoseWritePolicy:
+          DeliveryStreamName: !Ref DeliveryStreamName
+      - S3ReadPolicy:
+          BucketName: !Ref S3ALBLogsBucketName
+      Environment:
+        Variables:
+          DELIVERY_STREAM_NAME: !Ref DeliveryStreamName
+      Events:
+        LogUpload:
+          Type: S3
+          Properties:
+            Bucket: !Ref S3Bucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: prefix
+                  Value: !Sub "${S3Prefix}"
+                - Name: suffix
+                  Value: !Sub "${S3Suffix}"
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3ALBLogsBucketName
+
+Outputs:
+  AlbToKinesisFunctionArn:
+    Description: The logs processor ARN
+    Value: !GetAtt AlbToKinesisFunction.Arn
+  S3Bucket:
+    Description: S3 Bucket for ALB access logs
+    Value: !Ref S3Bucket

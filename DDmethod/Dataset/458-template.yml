@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+- AWS::Serverless-2016-10-31
+- AWS::CodeStar
+
+Parameters:
+  ProjectId:
+    Type: String
+    Description: Serverless repository app for cosuming MWS alerts.
+
+# Enable blue/green deployments using this Globals section. For instructions, see the AWS CodeStar User Guide:
+# https://docs.aws.amazon.com/codestar/latest/userguide/how-to-modify-serverless-project.html?icmpid=docs_acs_rm_tr
+#
+# Globals:
+#   Function:
+#     AutoPublishAlias: live
+#     DeploymentPreference:
+#       Enabled: true
+#       Type: Canary10Percent5Minutes
+
+Resources:
+  MWSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: 'MWSQueue'
+        
+  MWSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription: 
+        #Subscription takes a list of subscriptions
+        -
+          #replace user@email.com below with the email that should be notified with the alerts
+          Endpoint: 'user@email.com'
+          Protocol: 'email'
+      TopicName: 'MWSTopic'
+      DisplayName: 'MWSTopic'
+  
+  XMLParser:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: XMLParser.lambda_handler
+      Runtime: python3.6
+      FunctionName: 'MWSAlertsXMLParser'
+      Description: 'Consumes SQS message and pareses XML'
+      Role:
+        Fn::ImportValue:
+          !Join ['-', [!Ref 'ProjectId', !Ref 'AWS::Region', 'LambdaTrustRole']]
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: 'MWSTopic'
+        - SQSPollerPolicy:
+            QueueName: 'MWSQueue'
+        - LambdaInvokePolicy:
+            FunctionName: 'MWSAlertsXMLParser'
+        
+      Events:
+        SQSIncoming:
+          Type: SQS
+          Properties:
+            Queue: !Join [':', [!GetAtt 'MWSQueue.Arn']]
+            BatchSize: 10
+      Environment:
+        Variables:
+          MWSQUEUE: !Ref 'MWSQueue'
+          MWSMAXMSG: 10
+          MWSTOPIC: !Ref 'MWSTopic'
+          
+Outputs:
+  QueueURL:
+    Description: 'URL of the SQS Queue that recieves the MWS push notifications.'
+    Value: !Ref 'MWSQueue'
+        
+  QueueARN:
+    Description: 'ARN of the SQS Queue that recieves the MWS push notifications.'
+    Value: !Join [':', [!GetAtt 'MWSQueue.Arn']]
+                
+  QueueName:
+    Description: 'Name of the SQS Queue that recieves the MWS push notifications.'
+    Value: !Join [':', [!GetAtt 'MWSQueue.QueueName']]

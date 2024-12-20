@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Cisco CSR Lambda functions and IAM role
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Author: Cisco Systems Inc
+    Description: Cisco Configurator Lambda
+    Labels:
+    - Transit VPC with CSR and TGW
+    LicenseUrl: s3://csr1000v-tgw-transit-vpc-solution/6fdc8d5b3baeb1fe6869c5f716ca241c
+    Name: CiscoConfiguratorTGWTransitVPC
+    ReadmeUrl: s3://csr1000v-tgw-transit-vpc-solution/8ef025094687fbfd0b09bc1698405b08
+    SemanticVersion: 2.0.0
+    SourceCodeUrl: https://csr1000v-tgw-transit-vpc-solution.s3.amazonaws.com/
+    SpdxLicenseId: NA
+Parameters:
+  LambdaRole:
+    Type: String
+    Description: Cisco Configurator lambda role ARN
+  FunctionName:
+    Type: String
+    Description: Lambda function name
+  Description:
+    Type: String
+    Description: Description for lambda function
+  SecurityGroupIds:
+    Type: String
+    Description: SecurityGroupId for lambda function
+  VPCPubSub1:
+    Type: String
+    Description: VPCPubSub1 for lambda function
+  VPCPubSub2:
+    Type: String
+    Description: VPCPubSub2 for lambda function
+Resources:
+  CiscoConfigFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName:
+        Ref: FunctionName
+      Code:
+        S3Bucket: <%REPO_BUCKET%>
+        S3Key: 7e55083b-9e4e-4721-ad03-818d9fddf516
+      Handler: transit_vpc_push_cisco_config/lambda_function.lambda_handler
+      Runtime: python3.7
+      Timeout: 300
+      MemorySize: 128
+      Description:
+        Ref: Description
+      Role:
+        Ref: LambdaRole
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: SecurityGroupIds
+        SubnetIds:
+        - Ref: VPCPubSub1
+        - Ref: VPCPubSub2
+      Environment:
+        Variables:
+          CONFIG_FILE: transit_vpc_config.txt
+          LOG_LEVEL: INFO
+Outputs:
+  CiscoConfigFunctionArn:
+    Description: CiscoConfigFunction ARN
+    Value:
+      Fn::GetAtt:
+      - CiscoConfigFunction
+      - Arn

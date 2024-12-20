@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  base-lambda for Amazon Chime SDK PSTN Audio
+Resources:
+  PSTNAudioHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Demo Amazon Chime PSTN Audio Handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: c66e57c7-bf49-4517-abf8-523056445627
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Timeout: 1
+      Architectures:
+      - arm64
+    Metadata:
+      SamResourceId: PSTNAudioHandler
+Outputs:
+  PSTNAudioHandler:
+    Description: PSTNAudioHandler Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - PSTNAudioHandler
+      - Arn
+  PSTNAudioHandlerIamRole:
+    Description: Implicit IAM Role created for PSTNAudioHandler function
+    Value:
+      Fn::GetAtt:
+      - PSTNAudioHandlerRole
+      - Arn

@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Epsagon Logs Sender'
+Parameters:
+  EpsagonLogsKinesis:
+    Type: String
+  AWSSecretID:
+    Type: String
+  AWSSecretKey:
+    Type: String
+  Region:
+    Type: String
+  Stage:
+    Type: String
+Resources:
+  EpsagonLogsSender:
+    Properties:
+      CodeUri: s3://epsagon-logs-sender/cloudwatch_log_sender.zip
+      Environment:
+        Variables:
+          EPSAGON_KINESIS:
+            Ref: EpsagonLogsKinesis
+          AWS_ID:
+            Ref: AWSSecretID
+          AWS_KEY:
+            Ref: AWSSecretKey
+          REGION:
+            Ref: Region
+          STAGE:
+            Ref: Stage
+      Handler: cloudwatch_log_sender.handler
+      MemorySize: 128
+      Runtime: python3.6
+      Timeout: 60
+    Type: AWS::Serverless::Function

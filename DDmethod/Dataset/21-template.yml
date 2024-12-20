@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Lambda Layer for awscli
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Fn::Sub: ${AWS::StackName}
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 7eeed476-4c2b-4ea6-a6d5-005c61b64bee
+      CompatibleRuntimes:
+      - provided
+      LicenseInfo: Available under the MIT-0 license.
+      RetentionPolicy: Retain
+Outputs:
+  LayerVersionArn:
+    Description: ARN for the published Layer version
+    Value:
+      Ref: LambdaLayer
+    Export:
+      Name:
+        Fn::Sub: LayerVersionArn-${AWS::StackName}

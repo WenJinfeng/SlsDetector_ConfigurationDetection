@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  SalesforceInstanceUrl:
+    Type: String
+    Description: 'The service URL used to make Salesforce queries. If using My Domain,
+      looks like this: https://<your-domain>.my.salesforce.com. If not using My Domains,
+      looks like this: https://na50.salesforce.com/.'
+  SkillID:
+    Default: ''
+    Type: String
+    Description: 'The Alexa Skill ID to restrict access to this Lambda. Note: this
+      can be provided in the Lambda UI via function triggers too.'
+Description: An AWS Serverless Specification template to deploy a private Alexa for Business skill with Salesforce integration.
+Resources:
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+      - KeyType: HASH
+        AttributeName: sessionid
+      - KeyType: RANGE
+        AttributeName: s_order
+      TableName: alexa-skill-transcribe
+      AttributeDefinitions:
+      - AttributeName: sessionid
+        AttributeType: S
+      - AttributeName: s_order
+        AttributeType: N
+      ProvisionedThroughput:
+        WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+  AlexaSalesforceNotesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: A Lambda function provides a transcription for Salesforce Chatter attached to a sales opportunity.
+      Policies:
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+            - tableName: alexa-skill-transcribe
+          Effect: Allow
+      MemorySize: 128
+      Environment:
+        Variables:
+          SKILL_ID:
+            Ref: SkillID
+          INSTANCE_URL:
+            Ref: SalesforceInstanceUrl
+      Handler: index.handler
+      Timeout: 3
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 28b6347c-b01c-49d7-905b-7081440ef716
+      Runtime: nodejs6.10
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SalesforceResourceAccessManagementMicroService:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: A simple backend (read/write to DynamoDB) with a RESTful API endpoint using Amazon API Gateway.
+      MemorySize: 512
+      Environment:
+        Variables:
+          USERNAME: ms@url.com
+          SQS_QUEUE_URL: https://sqs.us-east-2.amazonaws.com/746395938386/SalesforceLogWrite
+          LOG_TO_SALESFORCE: 'false'
+          SECURITY_TOKEN: XXXXXXXXXXXXXXXXXXX
+          LOG_TO_DYNAMO_DB: 'true'
+          DYNAMO_LOGGING_TABLE_NAME: Salesforce_Log_Store
+          CLIENT_ID: 3MVG9uudbyLbNPZOhNtnVU4sJJ99q.MEmwtVRUgFsi8_N2hfncn1tksCX6fLwgul6JulFYvzXKfCAfXbHpBb_
+          CLIENT_SECRET: '2769659440955332907'
+          SALESFORCE_LOG_OBJECT_NAME: gmsd__AWS_Log__c
+          PUSH_TO_SQS: 'true'
+          PASSWORD: PASSWORD
+          DYNAMO_ACCESS_TABLE_NAME: Salesforce_Access_Store
+          ENABLE_LOGGING: 'true'
+      Handler: index.handler
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: bd861b30-d53d-4f5f-8d19-083676ea299a
+      Runtime: nodejs8.10
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /{salesforce+}
+            RestApiId:
+              Ref: ServerlessRestApi
+            Method: ANY
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      __MANAGE_SWAGGER: true
+      DefinitionBody:
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /{salesforce+}:
+            x-amazon-apigateway-any-method:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SalesforceResourceAccessManagementMicroService.Arn}/invocations
+              responses: {}
+        swagger: '2.0'
+      StageName: Prod
+Description: A simple backend (read/write to DynamoDB) with a RESTful API endpoint using Amazon API Gateway.

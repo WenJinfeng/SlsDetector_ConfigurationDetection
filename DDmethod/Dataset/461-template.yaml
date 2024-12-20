@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  requestd-fetch-and-process
+  Fetch ELB Logs from S3 and push them to Elasticsearch
+Globals:
+  Function:
+    Timeout: 15
+Parameters:
+  StageNameParameter:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - stage
+    - prod
+    Description: The environment for the endpoint
+  IndexAliasParameter:
+    Type: String
+    Default: api-logger-calls
+    Description: The alias of the search index
+  IndexDatePatternParameter:
+    Type: String
+    Default: '%Y.%m.%d'
+    Description: The date pattern for creating indices. Should match that of the application.
+  SourceBucketARNParameter:
+    Type: String
+    Default: The ARN of the S3 bucket from which to fetch and process files.
+  ElasticsearchUrlParameter:
+    Type: String
+    Description: The URL, including the scheme, username, password and port, for the Elasticsearch instance to push to.
+  ElasticsearchDebugParameter:
+    Type: Number
+    Default: 0
+    Description: Flag to indicate if Elasticsearch calls should be logged.
+  PipelineParameter:
+    Type: String
+    Default: elb_pipeline
+    Description: The Elasticsearch ingestion pipeline to be used for data transforms.
+Resources:
+  FetchAndProcessFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 89cefd22-36e3-49b2-a15a-951cf7ed3419
+      Handler: app.lambda_handler
+      Runtime: ruby2.7
+      Environment:
+        Variables:
+          APP_ENV:
+            Ref: StageNameParameter
+          INDEX_ALIAS:
+            Ref: IndexAliasParameter
+          INDEX_DATE_PATTERN:
+            Ref: IndexDatePatternParameter
+          ELASTICSEARCH_URL:
+            Ref: ElasticsearchUrlParameter
+          ELASTICSEARCH_DEBUG:
+            Ref: ElasticsearchDebugParameter
+          PIPELINE:
+            Ref: PipelineParameter
+    Metadata:
+      SamResourceId: FetchAndProcessFunction
+Outputs:
+  FetchAndProcessFunction:
+    Description: Fetch and Process Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - FetchAndProcessFunction
+      - Arn

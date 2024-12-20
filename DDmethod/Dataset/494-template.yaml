@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This file contains code that instruments handled exception and creates custom tag & context for Python3.8
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+Resources:
+  CustomTagandContextFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: custom_tag_and_context
+      Description: This file contains code that instruments handled exception and creates custom tag & context
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 1513e80a-00f1-4a2d-a70c-0da6e4540a73
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          ENV_VAR: Test Value
+      Events:
+        CustomTagandContextFunction:
+          Type: Api
+          Properties:
+            Path: /custom_tag_and_context
+            Method: get
+Outputs:
+  CustomTagandContextApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/custom_tag_and_context/
+  CustomTagandContextFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - CustomTagandContextFunction
+      - Arn

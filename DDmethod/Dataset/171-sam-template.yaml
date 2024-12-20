@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+
+Parameters:
+    YelpClientSecret:
+        Type: String
+    YelpClientID:
+        Type: String
+
+
+Resources:
+  AlexaYelpRestaurant:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python2.7
+      CodeUri:
+        Bucket: #Bucketname Goes Here#
+        Key: #Lambda deployment package name#
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+      Environment:
+        Variables:
+          YELP_CLIENT_SECRET: !Ref YelpClientSecret
+          YELP_CLIENT_ID: !Ref YelpClientID

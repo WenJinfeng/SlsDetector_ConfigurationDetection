@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Environment variables"
+        Parameters:
+          - 01-PLATFORM
+          - 02-HOST
+          - 03-PORT
+          - 04-NAME
+          - 05-TABLE
+          - 06-COLUMN
+          - 07-USER
+          - 08-PASSWORD
+    ParameterLabels:
+      01PLATFORM:
+        default: "PLATFORM"
+      02HOST:
+        default: "HOST"
+      03PORT:
+        default: "PORT"
+      04NAME:
+        default: "NAME"
+      05TABLE:
+        default: "TABLE"
+      06COLUMN:
+        default: "COLUMN"
+      07USER:
+        default: "USER"
+      08PASSWORD:
+        default: "PASSWORD"
+Parameters:
+  01PLATFORM:
+    Description:  "The SQL platform were the database is hosted, can be one of the following: 'mssql', 'mysql', 'pg', 'oracle', 'sqlite' or 'websql'"
+    Type: String
+    AllowedPattern: "mysql|mssql|pg|oracle|sqlite|websql"
+  02HOST:
+    Description: The URL of the server where the database is hosted.
+    Type: String
+  03PORT:
+    Description: The port to access the above server with.
+    Type: String
+    AllowedPattern: "\\d+"
+  04NAME:
+    Description: Name of the SQL database where the button JSON will be saved.
+    Type: String
+  05TABLE:
+    Description: Name of the table where the button JSON will be saved.
+    Type: String
+  06COLUMN:
+    Description: Name of the column where the button JSON will be saved.
+    Type: String
+  07USER:
+    Description: Username of an account that has INSERT priveleges to the SQL database.
+    Type: String
+    NoEcho: true
+  08PASSWORD:
+    Description: The password for the USER above.
+    Type: String
+    NoEcho: true
+Resources:
+  rev11attiotsql:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: 'A Lambda Function to write the JSON payload from an IOT button message to a external SQL database column.'
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: nodejs8.10
+      Timeout: 10
+      CodeUri: 's3://revolution11pushsql/revolution11pushsql.zip'
+      Environment:
+        Variables:
+          DB_PLATFORM: !Ref 01PLATFORM
+          DB_HOST: !Ref 02HOST
+          DB_PORT: !Ref 03PORT
+          DB_NAME: !Ref 04NAME
+          DB_TABLE: !Ref 05TABLE
+          DB_COLUMN: !Ref 06COLUMN
+          DB_USER: !Ref 07USER
+          DB_PASS: !Ref 08PASSWORD

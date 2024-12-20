@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: City Biking - Bike Share Alexa Skill
+Resources:
+  alexacitybikingskill:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: cf-templates-1iknw594i2ij1-us-east-1
+        S3Key: lambda.zip
+      Description: City Biking - Bike Share Alexa Skill
+      Tags:
+        - Value: SAM
+          Key: 'lambda:createdBy'
+      MemorySize: 128
+      Handler: index.handler
+      Role: !GetAtt 
+        - alexacitybikingskillRole
+        - Arn
+      Timeout: 7
+      Runtime: nodejs8.10
+  alexacitybikingskillRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+  alexacitybikingskillAlexaTriggerPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:invokeFunction'
+      FunctionName: !Ref alexacitybikingskill
+      Principal: alexa-appkit.amazon.com

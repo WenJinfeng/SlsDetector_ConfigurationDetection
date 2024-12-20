@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  cf-shared-apigwv2
+  
+  SAM Template for cf-shared-apigwv2 Macro
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: SharedApiGatewayV2
+    Description: Support for Shared ApiGatewayV2 in the AWS SAM framework
+    Author: Marko Radinovic
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['cfn', 'macro', 'cloudformation', 'lambda', 'serverless', 'apigateway', 'httpapi', 'sam']
+    HomePageUrl: https://github.com/4-cube/cf-shared-apigwv2
+    SourceCodeUrl: https://github.com/4-cube/cf-shared-apigwv2
+
+Resources:
+  SharedApiGatewayV2MacroFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: cf-shared-apigwv2
+      Runtime: go1.x
+      Tracing: Active
+
+  Macro:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: SharedApiGatewayV2
+      FunctionName: !Ref SharedApiGatewayV2MacroFunction
+
+Outputs:
+  SharedApiGatewayV2MacroFunction:
+    Description: "Shared Api Gateway V2 Macro Function"
+    Value: !GetAtt SharedApiGatewayV2MacroFunction.Arn
+  SharedApiGatewayV2MacroFunctionIamRole:
+    Description: "Implicit IAM Role created for SharedApiGatewayV2Macro Function"
+    Value: !GetAtt SharedApiGatewayV2MacroFunctionRole.Arn

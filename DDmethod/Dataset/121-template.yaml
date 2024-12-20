@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  LayerName:
+    Type: String
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Lambda Layer for node
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 3553b024-c1aa-4287-92e2-8e2d610a208c
+      CompatibleRuntimes:
+      - nodejs8.10
+      - nodejs10.x
+      - nodejs12.x
+      LicenseInfo: Available under the MIT-0 license.
+      RetentionPolicy: Retain
+Outputs:
+  LayerVersionArn:
+    Description: ARN for the published Layer version
+    Value:
+      Ref: LambdaLayer
+    Export:
+      Name:
+        Fn::Sub: LayerVersionArn-${AWS::StackName}

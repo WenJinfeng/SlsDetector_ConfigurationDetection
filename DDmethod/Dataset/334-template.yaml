@@ -1,0 +1,18 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: signalfx-lambda-python-wrapper
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 847ed1fd-6f8a-40a9-8a5a-12439e54a092
+      CompatibleRuntimes:
+      - python2.7
+      - python3.6
+      - python3.7
+      - python3.8
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

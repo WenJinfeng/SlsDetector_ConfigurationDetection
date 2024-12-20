@@ -1,0 +1,15 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: layerdataexchangesdk
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: ee1148a4-a239-4e78-b778-12d16ccbc550
+      CompatibleRuntimes:
+      - python3.7
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

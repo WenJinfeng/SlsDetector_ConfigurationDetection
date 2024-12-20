@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  F5 Distributed Cloud Bot Defense Connector v2.0.695 for Amazon CloudFront CDN allows you to defend against malicious bots. Ensure safe, fast, and seamless user experiences.
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  F5BotDefense:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Zip
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 0e408a5f-4769-44f1-b221-0257cbac42ea
+      Handler: index.handler
+      Runtime: nodejs16.x
+      Architectures:
+      - x86_64
+    Metadata:
+      SamResourceId: F5BotDefense

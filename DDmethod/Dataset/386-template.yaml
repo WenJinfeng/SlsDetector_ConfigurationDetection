@@ -1,0 +1,16 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: otel-lambda-java-wrapper
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: b403e2e7-efa3-4140-9613-746d8b4cfe0b
+      CompatibleRuntimes:
+      - java8
+      - java11
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

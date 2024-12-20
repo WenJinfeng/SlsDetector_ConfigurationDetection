@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  sam-with-layers
+  Sample SAM Template for sam-with-layers
+Parameters:
+  validateLambdaIamRoleArn:
+    Type: String
+Resources:
+  ipvalidationLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: "import cfnresponse\nimport logging\nimport ipaddress\ndef check_public(ip_addr):\n\
+        \    for ip in ip_addr:\n        if(ip.strip() == '0.0.0.0/0'):\n        \
+        \    validity = True\n            continue\n        if not (ipaddress.ip_address(ip.strip().split('/')[0]).is_global):\n\
+        \            validity = False\n            break\n        else:\n        \
+        \    validity = True\n    return validity\ndef check_private(ip_addr):\n \
+        \   return ipaddress.ip_address(ip_addr).is_private\ndef check_overlap(network_1,\
+        \ network_2):\n    return ipaddress.ip_network(network_1).overlaps(ipaddress.ip_network(network_2))\n\
+        def check_vpc_validity(net):\n    allowed_cidr_blocks = ['10.0.0.0/8', '172.16.0.0/12',\
+        \ '192.168.0.0/16', '100.64.0.0/10', '198.19.0.0/16']\n    net_mask_num =\
+        \ int(net.split('/')[1])\n    if(net_mask_num >= 16):        \n        for\
+        \ block in allowed_cidr_blocks:\n            if(ipaddress.ip_network(net).subnet_of(ipaddress.ip_network(block))):\n\
+        \                validity = True\n                break\n            else:\n\
+        \                validity = False\n    else:\n        validity = False\n \
+        \   return validity\ndef check_subnet(net, subnet):\n    return ipaddress.ip_network(subnet).subnet_of(ipaddress.ip_network(net))\n\
+        def check_eks_network_validity(net):\n    allowed_cidr_blocks = ['10.0.0.0/8',\
+        \ '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', '198.19.0.0/16']\n \
+        \   for block in allowed_cidr_blocks:\n        if(ipaddress.ip_network(net).subnet_of(ipaddress.ip_network(block))):\n\
+        \            validity = True\n            break\n        else:\n         \
+        \   validity = False\n    return validity\ndef handler(event, context):\n\
+        \  eks_cidr = event['ResourceProperties']['eksCidr']\n  vpc_cidr = event['ResourceProperties']['vpcCidr']\n\
+        \  pub_subnet_1 = event['ResourceProperties']['pubSubnet1']\n  pub_subnet_2\
+        \ = event['ResourceProperties']['pubSubnet2']\n  pvt_subnet_1 = event['ResourceProperties']['pvtSubnet1']\n\
+        \  pvt_subnet_2 = event['ResourceProperties']['pvtSubnet2']\n  logger = logging.getLogger(__name__)\n\
+        \  logger.debug(event)\n  status = cfnresponse.SUCCESS\n  try:\n    # Check\
+        \ if subnets are within VPC CIDR\n    valid_subnets = check_subnet(vpc_cidr,\
+        \ pub_subnet_1) and check_subnet(vpc_cidr, pub_subnet_2) and check_subnet(vpc_cidr,\
+        \ pvt_subnet_1) and check_subnet(vpc_cidr, pvt_subnet_2)\n    # Check if EKS\
+        \ cluster Network is within allowed blocks\n    EKS_net_valid = check_eks_network_validity(eks_cidr)\n\
+        \    # Check for Overlap of EKS network and VPC block\n    overlap_check =\
+        \ check_overlap(vpc_cidr, eks_cidr)\n    # print(valid_subnets, EKS_net_valid,\
+        \ overlap_check)\n    vpc_check = check_vpc_validity(vpc_cidr)\n    if(valid_subnets\
+        \ and EKS_net_valid and not overlap_check and vpc_check):\n        networkCheckPassed\
+        \ = True\n        logging.debug(\"Networks Verified\")\n    else:\n      \
+        \  networkCheckPassed = False\n        logging.debug(\"Network Verification\
+        \ Failed\")\n        status = cfnresponse.FAILED\n  except Exception:\n  \
+        \    logging.error('Unhandled exception', exc_info=True)\n      status = cfnresponse.FAILED\n\
+        \  finally:\n      cfnresponse.send(event, context, status, {}, None)\n"
+      Handler: index.handler
+      Runtime: python3.7
+      Timeout: 30
+      Role:
+        Ref: validateLambdaIamRoleArn
+Outputs:
+  ipvalidationLambdaArn:
+    Description: TagElb Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ipvalidationLambda
+      - Arn

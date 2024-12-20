@@ -1,0 +1,75 @@
+Description: |
+  sam-app
+  Sample SAM Template for sam-app
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  HelloWorldApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  HelloWorldFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunctionRole
+      - Arn
+  HelloWorldFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunction
+      - Arn
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      __MANAGE_SWAGGER: true
+      DefinitionBody:
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /hello:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations
+              responses: {}
+        swagger: '2.0'
+      StageName: Prod
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          PARAM1: VALUE
+      Handler: app.lambda_handler
+      Timeout: 3
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 36b8d90e-5b2c-484c-a189-1d43011f6b41
+      Runtime: python3.6
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            RestApiId:
+              Ref: ServerlessRestApi
+            Method: get
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: my-test-app
+    Author: fjfjfjfjfjfj
+    Labels:
+    - my-test-app
+    SourceCodeUrl: https://github.com/test/test
+    LicenseUrl: s3://sam-publish-bug-bash/4e288fd34d94ee716f323468107053c1
+    SemanticVersion: 0.0.1
+    ReadmeUrl: s3://sam-publish-bug-bash/8b2af8968d32003777a46c8bf6582c0b
+    HomePageUrl: https://github.com/test/test
+    Description: description

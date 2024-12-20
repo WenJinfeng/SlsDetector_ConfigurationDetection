@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Serverless Application Model for AWS-Support to create case, get case status, email case report, notify TAM and create required utilities
+Resources:
+  AWSCreateSupportCase:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Lambda function to create support case using boto3 support api
+      Runtime: python3.6
+      Handler: lambda_function.lambda_handler
+      CodeUri: s3://aws-support-bot/zip/AWSCreateSupportCase.zip
+      Policies:
+        - "AWSLambdaBasicExecutionRole"
+        - "AWSSupportAccess"
+        - "AmazonS3FullAccess"
+      MemorySize: 128
+      Timeout: 300
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+  
+  AWSGetSupportCaseStatus:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Lambda function to get support case status using boto3 support api
+      Runtime: python3.6
+      Handler: lambda_function.lambda_handler
+      CodeUri: s3://aws-support-bot/zip/AWSGetSupportCaseStatus.zip
+      Policies:
+        - "AWSLambdaBasicExecutionRole"
+        - "AWSSupportAccess"
+        - "AmazonS3FullAccess"
+      MemorySize: 128
+      Timeout: 300
+      Environment:
+        Variables:
+          bucketName: supportbotemailverify
+          verifyEmailFileName: emailreport.json
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+  
+  AWSEmailCaseReport:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Lambda function to get email case report using boto3 support api & SES
+      Runtime: python3.6
+      Handler: lambda_function.lambda_handler
+      CodeUri: s3://aws-support-bot/zip/AWSEmailCaseReport.zip
+      Policies:
+        - "AWSLambdaBasicExecutionRole"
+        - "AWSSupportAccess"
+        - "AmazonSESFullAccess"
+      MemorySize: 128
+      Timeout: 300
+      Environment:
+        Variables:
+          bucketName: supportbotemailverify
+          verifyEmailFileName: notifytam.json
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+  
+  AWSSupportBotEmailVerify:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Utility Lambda function to validate email address uploaded against a specific S3 bucket with a specific file suffix
+      Runtime: python3.6
+      Handler: lambda_function.lambda_handler
+      CodeUri: s3://aws-support-bot/zip/AWSSupportBotEmailVerify.zip
+      Policies:
+        - "AWSLambdaBasicExecutionRole"
+        - "AWSSupportAccess"
+        - "AmazonS3FullAccess"
+        - "AmazonSESFullAccess"
+      MemorySize: 128
+      Timeout: 300
+      Events:
+        AWSSupportBotEmailReportEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref SupportBotEmailVerify
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: suffix
+                  Value: emailreport.json
+        AWSSupportBotNotifyTAMEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref SupportBotEmailVerify
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: suffix
+                  Value: notifytam.json
+  SupportBotEmailVerify:
+    Type: AWS::S3::Bucket

@@ -1,0 +1,31 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  EncryptedValue:
+    Type: String
+    Description: A value for the encrypted options lambda to decrypt
+
+Resources:
+  EncryptedOptions:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: EncryptedOptions::Lambdajection.Examples.EncryptedOptions.Handler::Run
+      Runtime: dotnet6
+      FunctionName: lambdajection-encryptedoptions
+      Timeout: 300
+      CodeUri: ../../bin/Examples/EncryptedOptions/Release/net6.0/publish/
+      MemorySize: 512
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        # Replace this with the ARN of a policy containing the kms:Decrypt permission
+        - !ImportValue lambdajection-infrastructure:EncryptionKeyDecryptPolicyArn
+      Environment:
+        Variables:
+          # Replace the value here with a KMS-encrypted string
+          Lambda__EncryptedValue: !Ref EncryptedValue
+
+Outputs:
+  InputPayload:
+    Value: "{}"
+
+  ExpectedOutput:
+    Value: '"Example Encrypted Value"'

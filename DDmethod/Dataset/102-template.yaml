@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 39a93aa5-5094-4d62-afb5-8b85c74c8db5
+      Runtime: nodejs10.x

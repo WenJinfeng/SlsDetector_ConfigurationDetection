@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  TopicDisplayNameParameter:
+    Type: String
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+        LambdaConfigurations:
+        - Function:
+            Fn::GetAtt:
+            - PublishSNSTopicForS3
+            - Arn
+          Event: s3:ObjectCreated:*
+        - Function:
+            Fn::GetAtt:
+            - PublishSNSTopicForS3
+            - Arn
+          Event: s3:ObjectRemoved:*
+    DependsOn:
+    - PublishSNSTopicForS3S3BucketEventPermission
+  PublishSNSTopicForS3:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 5
+      MemorySize: 128
+      Environment:
+        Variables:
+          TOPIC_ARN:
+            Ref: SNSTopic
+      Handler: PublishSNSTopicForS3.lambda_handler
+      Policies:
+      - Statement:
+        - Action:
+          - sns:Publish
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:${topicName}
+            - topicName:
+                Fn::GetAtt:
+                - SNSTopic
+                - TopicName
+          Effect: Allow
+      - Statement:
+        - Action:
+          - sns:ListSubscriptionsByTopic
+          - sns:CreateTopic
+          - sns:SetTopicAttributes
+          - sns:Subscribe
+          - sns:Publish
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:${topicName}*
+            - topicName:
+                Fn::GetAtt:
+                - SNSTopic
+                - TopicName
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 08f327f4-0909-4836-afb2-77d8fadbffb2
+      Runtime: python3.6
+      Events:
+        S3BucketEvent:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: S3Bucket
+            Events:
+            - s3:ObjectCreated:*
+            - s3:ObjectRemoved:*
+  SNSTopic:
+    Type: AWS::SNS::Topic

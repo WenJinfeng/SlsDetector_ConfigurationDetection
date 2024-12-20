@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A Serverless applictation to log file details in DynamoDB
+Parameters:
+  DynamoDBTableName:
+    Default: pwc-filelogtable
+    Description: Enter the table name for the dynamoDBTable. Default is target-dynamo-table.
+    Type: String
+  S3BucketName:
+    Default: pwc-logfilesource
+    Description: Enter bucket name as source for dynamodb
+    Type: String
+Resources:
+  S3ToDynamoDB:
+    Properties:
+      CodeUri: s3://aws-sam-test-1/9d5697ef2595db14a098a4eebbf4427e
+      Description: This lambda function will log the filenames from S3 in a DynamoDB
+        table
+      Environment:
+        Variables:
+          DynamoDBTableName:
+            Fn::Sub: ${DynamoDBTableName}
+      Events:
+        S3TriggerEvent:
+          Properties:
+            Bucket:
+              Ref: SourceBucket
+            Events:
+            - s3:ObjectCreated:*
+          Type: S3
+      FunctionName:
+        Fn::Sub: ${AWS::StackName}_S3ToDynamoDB
+      Handler: S3ToDynamo::S3Parse.StartupProgram::ProcessS3Events
+      MemorySize: 1024
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: DynamoDBTableName
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: DynamoDBTableName
+      Runtime: dotnetcore2.0
+      Tags:
+        CreatedBy: turjac591
+        Project: SAM Repository
+      Timeout: 300
+    Type: AWS::Serverless::Function
+  SourceBucket:
+    Properties:
+      BucketName:
+        Fn::Sub: ${S3BucketName}
+    Type: AWS::S3::Bucket
+  TargetDynamoTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: TimeStamp
+        AttributeType: S
+      KeySchema:
+      - AttributeName: TimeStamp
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: '1'
+        WriteCapacityUnits: '1'
+      TableName:
+        Fn::Sub: ${DynamoDBTableName}
+    Type: AWS::DynamoDB::Table
+Transform: AWS::Serverless-2016-10-31

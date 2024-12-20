@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless microservice using API Gateway, Lambda, and DynamoDB
+Parameters:
+  TableName:
+    Type: String
+Globals:
+  Function:
+    Runtime: python3.9
+    MemorySize: 512
+    Environment:
+      Variables:
+        TABLE_NAME:
+          Ref: TableName
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: microservice-api-lambda-dynamodb
+    Description: Serverless microservice using API Gateway, Lambda, and DynamoDB. The Python Lambda service is invoked by API Gateway and implements DynamoDB CRUD operations. For encrypted environment variables, see the instructions in the function code.
+    Author: Bernd Straehle
+    Labels: ['serverless', 'sam', 'apigateway', 'lambda', 'dynamodb', 'python']
+    SpdxLicenseId: GPL-3.0-or-later
+    LicenseUrl: LICENSE
+    ReadmeUrl: README-SAR.md
+    HomePageUrl: https://github.com/bstraehle
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/bstraehle/aws-api-lambda-dynamodb
+Resources:
+  myLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      CodeUri: .
+      Description: Serverless microservice using API Gateway, Lambda, and DynamoDB
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+  myDynamoDBTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName:
+        Ref: TableName

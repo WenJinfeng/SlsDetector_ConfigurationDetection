@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Policies:
+      - Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:GetBucketLocation
+          - s3:GetObjectVersion
+          - s3:GetLifecycleConfiguration
+          Resource:
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}
+            - bucketName: ryfeus-spacy
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}/*
+            - bucketName: ryfeus-spacy
+          Effect: Allow
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a9255d15-1347-4b11-b8b4-c5fdc54a7b1e
+      Runtime: python2.7
+      MemorySize: 1024

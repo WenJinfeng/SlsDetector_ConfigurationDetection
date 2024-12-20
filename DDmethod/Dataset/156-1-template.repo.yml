@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+  siteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs10.x
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: urlTable
+      Events:
+        root:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+        getProxy:
+          Type: Api
+          Properties:
+            Path: '/{proxy+}'
+            Method: get
+        postProxy:
+          Type: Api
+          Properties:
+            Path: '/{proxy+}'
+            Method: post
+      Environment:
+        Variables:
+          URL_TABLE:
+            Ref: urlTable
+  urlTable:
+    Type: AWS::Serverless::SimpleTable

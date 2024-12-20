@@ -1,0 +1,18 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: cfnresponse
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: ad751a01-c982-475f-b9ce-bb830492e980
+      CompatibleRuntimes:
+      - python2.7
+      - python3.6
+      - python3.7
+      - python3.8
+Outputs:
+  LambdaLayer:
+    Value:
+      Ref: LambdaLayer

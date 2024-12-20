@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: serverless-leaderboard
+Transform:
+- AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Runtime: nodejs12.x
+    Timeout: 180
+    Environment:
+      Variables:
+        ENDPOINT: YOUR_ENDPOINT
+        PORT: YOUR_PORT
+        PASSWORD: YOUR_PASSWORD
+  Api:
+    Cors:
+      AllowMethods: '''OPTIONS,POST,GET'''
+      AllowHeaders: '''Content-Type'''
+      AllowOrigin: '''*'''
+Resources:
+  submitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/submit.handler
+      Description: The function to submit a new score.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /submit
+            Method: POST
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: cd0df32c-538c-49ef-9ff2-5d6fcdc04c48
+  listFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/list.handler
+      Description: The function to list the scores.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: cd0df32c-538c-49ef-9ff2-5d6fcdc04c48
+  rankFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/rank.handler
+      Description: The function to get the rank for a user.
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /rank
+            Method: GET
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: cd0df32c-538c-49ef-9ff2-5d6fcdc04c48
+Outputs:
+  WebEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/

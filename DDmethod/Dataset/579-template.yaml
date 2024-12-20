@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Log2Sentry
+
+  Lambda for logging an Exception to Sentry
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+
+Resources:
+  Log2Sentry:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: dist/
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          SENTRY_DSN: ""
+      Events:
+        Log2Sentry:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /Log2Sentry
+            Method: post

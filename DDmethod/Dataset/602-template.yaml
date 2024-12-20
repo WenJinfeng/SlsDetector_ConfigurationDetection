@@ -1,0 +1,96 @@
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: signed-links-cognito
+    Description:  Generate signed links for CloudFormation<->S3 sources
+    Author: Alexey Vidanov
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['cognito','signed', 'links','api', 'gateway','cloudfront','s3','secure','restricted', 'access']
+    HomePageUrl: https://github.com/vidanov/lambda-nodejs-signed-links
+    SemanticVersion: 0.0.3
+    SourceCodeUrl: https://github.com/vidanov/lambda-nodejs-signed-links/cognito-version
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Signed links configuration"
+        Parameters: 
+          - cloudFrontDomain
+          - cloudFrontkeypairId
+          - cloudFrontprivateKeyString
+          - cognitoUserPoolArn
+          - defaultLifeTime
+          - maximumLifeTime
+
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+    cloudFrontDomain:
+        Description: 'Required. The name of you CloudFront domain.'
+        Type: 'String'
+        Default: ''
+    cloudFrontkeypairId:
+        Description: 'Required. CloudFront keypair Id'
+        Type: 'String'
+        Default: ''
+    cloudFrontprivateKeyString:
+        Description: 'Required. CloudFront privateKey String.'
+        Type: 'String'
+        Default: ''
+    cognitoUserPoolArn:
+        Description: 'Required. Cognito UserPoolArn.'
+        Type: 'String'
+        Default: ''
+    defaultLifeTime:
+        Description: 'Required. Default link lifetime in minutes.'
+        Type: 'Number'
+        Default: '10'
+    maximumLifeTime:
+        Description: 'Required. Maximum link lifetime in minutes. The value in the link will be overrided if it is bigger than this.'
+        Type: 'Number'
+        Default: '600'
+
+
+Resources:
+  SignedLinksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: './lambda'
+      Description: 'Generate signed links for CloudFormation<->S3 sources'
+      Handler: index.handler
+      Runtime: nodejs8.10
+      MemorySize: 512
+      Environment:
+        Variables:
+          cloudFrontDomain: !Ref cloudFrontDomain
+          cloudFrontkeypairId: !Ref cloudFrontkeypairId
+          cloudFrontprivateKeyString: !Ref cloudFrontprivateKeyString
+          defaultLifeTime: !Ref defaultLifeTime
+          maximumLifeTime: !Ref maximumLifeTime
+      Events:
+        ApiEvent:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /signed_link
+            Method: get
+            RestApiId: !Ref ApiGatewayApi
+            Auth:
+              Authorizer: CognitoAuth # OPTIONAL
+  ApiGatewayApi:
+     Type: AWS::Serverless::Api
+     Properties:
+       StageName: Prod
+       Cors:
+        AllowHeaders: "'Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization'" 
+        AllowOrigin: "'*'"
+       Auth:
+        DefaultAuthorizer: CognitoAuth # OPTIONAL
+        Authorizers:
+          CognitoAuth:
+            UserPoolArn: !Ref cognitoUserPoolArn
+            Identity: # OPTIONAL
+              Header: Authorization # OPTIONAL; Default: 'Authorization'
+        AddDefaultAuthorizerToCorsPreflight: False
+           
+

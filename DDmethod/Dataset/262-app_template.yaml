@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: EventWriter
+    Description: "A serverless app that receives and stores events to an S3 bucket."
+    Author: William Weiss
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ["events", "s3"]
+    HomePageUrl: https://github.com/wweiss/aws-serverless-event-writer
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/wweiss/aws-serverless-event-writer
+
+Parameters:
+  S3Bucket:
+    Type: String
+    Description: Name of the S3 Bucket to write events to.
+  EventKey:
+    Type: String
+    Default: ''
+    Description: (Optional) Fixed key to write events to in the S3 Bucket.
+  EventKeyPrefix:
+    Type: String
+    Default: ''
+    Description: (Optional) If a fixed key is not defined, this prefix will be added to the dynamic key.
+  EventKeySuffix:
+    Type: String
+    Default: ''
+    Description: (Optional) If a fixed key is not defined, this suffix will be appended to the dynamic key.
+  EventContentType:
+    Type: String
+    Default: ''
+    Description: (Optional) Expected content type of events to be written.  Used when writing the event to the S3 Bucket.
+  LoggingLevel:
+    Type: String
+    Default: error
+    AllowedValues:
+      - error
+      - warn
+      - info
+      - verbose
+      - debug
+      - silly
+    Description: (Optional) The level of logging desired (error, warn, info, verbose, debug or silly).
+
+Resources:
+  EventWriter:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs14.x
+      CodeUri: ./dist/index.js
+      Handler: index.handler
+      Tracing: Active
+      MemorySize: 512
+      Timeout: 60
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3Bucket
+          EVENT_KEY: !Ref EventKey
+          EVENT_KEY_PREFIX: !Ref EventKeyPrefix
+          EVENT_KEY_SUFFIX: !Ref EventKeySuffix
+          EVENT_CONTENT_TYPE: !Ref EventContentType
+          LOGGING_LEVEL: !Ref LoggingLevel
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3Bucket
+
+Outputs:
+  EventWriterFunctionName:
+    Value: !Ref EventWriter
+    Export:
+      Name: !Sub ${AWS::StackName}-EventWriterFunctionName
+  EventWriterFunctionArn:
+    Value: !GetAtt EventWriter.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-EventWriterFunctionArn

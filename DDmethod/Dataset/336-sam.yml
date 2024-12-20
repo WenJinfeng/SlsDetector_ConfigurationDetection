@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Format a Twitter tweet into a Slack message.'
+Resources:
+  SlackMessageSnsTopic:
+    Type: 'AWS::SNS::Topic'
+  TwitterEventPublisher:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handlers/twitter_to_slack_message.handler
+      Runtime: python3.6
+      Description: Publish a Twitter event as a Slack formatted message.
+      MemorySize: 128
+      Timeout: 30
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+          AWS_SNS_TOPIC_ARN:
+            Ref: SlackMessageSnsTopic
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName:
+              Fn::GetAtt:
+                - SlackMessageSnsTopic
+                - TopicName
+Outputs:
+  SlackMessageSnsTopicArn:
+    Description: AWS SNS Topic ARN
+    Value:
+      Ref: SlackMessageSnsTopic
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-SlackMessageSnsTopicArn

@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  S3Bucket:
+    Type: String
+  S3Prefix:
+    Type: String
+  S3Region:
+    Type: String
+Description: ''
+Resources:
+  GuardDutyForwarder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Policies:
+      - Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:GetBucketLocation
+          - s3:GetObjectVersion
+          - s3:PutObject
+          - s3:GetLifecycleConfiguration
+          - s3:PutLifecycleConfiguration
+          Resource:
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}
+            - bucketName:
+                Ref: S3Bucket
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}/*
+            - bucketName:
+                Ref: S3Bucket
+          Effect: Allow
+      MemorySize: 128
+      Environment:
+        Variables:
+          S3_REGION:
+            Ref: S3Region
+          S3_BUCKET:
+            Ref: S3Bucket
+          S3_PREFIX:
+            Ref: S3Prefix
+      Handler: forwarder
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 99c10187-54ce-405f-a5e7-4b7a15e092ad
+      Runtime: go1.x
+      Events:
+        StreamEvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+              - aws.guardduty
+Transform: AWS::Serverless-2016-10-31

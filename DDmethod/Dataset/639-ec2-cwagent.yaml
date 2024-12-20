@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CloudWatch alarm for Amazon EC2 using CloudWatch Agent
+
+Parameters:
+  CustomAlarmName:
+    Type: String
+    Default: ''
+    Description: The custom alram name
+  DiskUsedPercentThreshold:
+    Type: Number
+    Default: 100
+    MinValue: 0
+    MaxValue: 100
+    Description: The threshold of disk used percent [required]
+  FileSystemType:
+    Type: String
+    Default: xfs
+    AllowedPattern: .+
+    Description: A file system type the target instance [required]
+  ImageId:
+    Type: AWS::EC2::Image::Id
+    Description: A image id the target instance [required]
+  InstanceId:
+    Type: AWS::EC2::Instance::Id
+    Description: A instance id the target instance [required]
+  InstanceType:
+    Type: String
+    AllowedPattern: .+
+    Description: A instance type of the target instance [required]
+  StorageDeviceName:
+    Type: String
+    Default: nvme0n1p1
+    AllowedPattern: .+
+    Description: A volume device name of the target storage [required]
+  StoragePath:
+    Type: String
+    Default: /
+    AllowedPattern: .+
+    Description: A volume device path of the target storage [required]
+  MemUsedPercentThreshold:
+    Type: Number
+    Default: 100
+    MinValue: 0
+    MaxValue: 100
+    Description: The threshold of memory used percent [required]
+  SNSTopicArn:
+    Type: String
+    AllowedPattern: .+
+    Description: The SNS topic ARN [required]
+
+Conditions:
+  CreateCustomAlarmName: !Not [ !Equals [ !Ref CustomAlarmName, '' ] ]
+
+Resources:
+  EC2DiskUsedPercent:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref SNSTopicArn
+      AlarmDescription: '*EC2* で *ディスクの使用率が上昇* しています。このエラーの詳細は、<https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html|CloudWatch エージェントを使用した Amazon EC2 Instances インスタンスとオンプレミスサーバーからのメトリクスとログの収集> をご覧ください。'
+      AlarmName: !If
+        - CreateCustomAlarmName
+        - !Sub Warning-${CustomAlarmName}-EC2-DiskUsedPercent
+        - Warning-EC2-DiskUsedPercent
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref InstanceId
+        - Name: ImageId
+          Value: !Ref ImageId
+        - Name: InstanceType
+          Value: !Ref InstanceType
+        - Name: device
+          Value: !Ref StorageDeviceName
+        - Name: fstype
+          Value: !Ref FileSystemType
+        - Name: path
+          Value: !Ref StoragePath
+      EvaluationPeriods: 1
+      MetricName: disk_used_percent
+      Namespace: CWAgent
+      OKActions:
+        - !Ref SNSTopicArn
+      Period: 60
+      Statistic: Sum
+      Threshold: !Ref DiskUsedPercentThreshold
+      TreatMissingData: notBreaching
+  EC2MemUsedPercent:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref SNSTopicArn
+      AlarmDescription: '*EC2* で *メモリの使用率が上昇* しています。このエラーの詳細は、<https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html|CloudWatch エージェントを使用した Amazon EC2 Instances インスタンスとオンプレミスサーバーからのメトリクスとログの収集> をご覧ください。'
+      AlarmName: !If
+        - CreateCustomAlarmName
+        - !Sub Warning-${CustomAlarmName}-EC2-MemUsedPercent
+        - Warning-EC2-MemUsedPercent
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      DatapointsToAlarm: 1
+      Dimensions:
+        - Name: InstanceId
+          Value: !Ref InstanceId
+        - Name: ImageId
+          Value: !Ref ImageId
+        - Name: InstanceType
+          Value: !Ref InstanceType
+      EvaluationPeriods: 1
+      MetricName: mem_used_percent
+      Namespace: CWAgent
+      OKActions:
+        - !Ref SNSTopicArn
+      Period: 60
+      Statistic: Sum
+      Threshold: !Ref MemUsedPercentThreshold
+      TreatMissingData: notBreaching

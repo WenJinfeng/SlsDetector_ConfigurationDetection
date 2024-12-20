@@ -1,0 +1,16 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: signalfx-lambda-nodejs-wrapper
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 5be00677-b970-4a28-a39c-0c6604115d76
+      CompatibleRuntimes:
+      - nodejs10.x
+      - nodejs12.x
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

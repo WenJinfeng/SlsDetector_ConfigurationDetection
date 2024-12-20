@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  polite-little-serverless-app
+
+  Sample SAM Template for polite-little-serverless-app
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: polite-little-serverless-app
+    Description: A sample application, used to demonstrate how to deploy apps using SAR.
+    Author: mcnamarabrian
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: ./LICENSE
+    ReadmeUrl: README.md
+    Labels: ['sample']
+    HomePageUrl: https://github.com/mcnamarabrian/polite-little-serverless-app
+    SemanticVersion: 0.0.3
+    SourceCodeUrl: https://github.com/mcnamarabrian/polite-little-serverless-app
+
+Resources:
+  PoliteGreetingFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: polite-greeting/
+      Handler: app.lambda_handler
+      Runtime: python3.6
+
+Outputs:
+  PoliteGreetingFunction:
+    Description: "Polite Greeting Lambda Function ARN"
+    Value: !GetAtt PoliteGreetingFunction.Arn
+  PoliteGreetingFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt PoliteGreetingFunction.Arn

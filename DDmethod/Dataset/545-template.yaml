@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  SeveritySetting:
+    Default: 4.0
+    Type: String
+    Description: What is the lowest severity level you want published (0.0-3.9 Low;  4.0-6.9 Medium; 7.0-8.9 High)
+  HookURL:
+    Type: String
+    NoEcho: true
+    Description: Please enter the FULL webhook URL (click copy from Chime)
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ChimeNotifierLambdaFn:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          CHIMEWEBHOOK:
+            Ref: HookURL
+          SEVERITY:
+            Ref: SeveritySetting
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 347721bb-3997-4c76-8255-4eff9d38b476
+      Handler: index.handler
+      Events:
+        CloudWatchEventRule:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+              - aws.guardduty
+              detail-type:
+              - GuardDuty Finding
+      Runtime: nodejs6.10

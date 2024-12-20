@@ -1,0 +1,37 @@
+Transform: AWS::Serverless-2016-10-31
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: slack-publish
+    Description: Publish SNS Topic Message to Slack URL
+    Author: lhitchon
+    SpdxLicenseId: MIT
+    LicenseUrl: s3://yondercloud-sar-us-east-1/0a02b12907cb7b10614effc6364550e8
+    ReadmeUrl: s3://yondercloud-sar-us-east-1/5ec451eb1d77a3fe5a4717fc3c7b8e6a
+    SemanticVersion: 0.1.0
+    SourceCodeUrl: https://github.com/yondercloud/slack-publish
+Parameters:
+  SlackUrl:
+    Type: String
+  TopicArn:
+    Type: String
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: ${AWS::StackName}
+      Runtime: nodejs10.x
+      Handler: post.handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: bc94f5d2-05d2-4684-b386-ab593eefef7d
+      Environment:
+        Variables:
+          URL:
+            Ref: SlackUrl
+      Events:
+        Message:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: TopicArn

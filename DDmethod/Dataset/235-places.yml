@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  HereApiKey:
+    Type: String
+    Description: HERE Location Services API Key (https://developer.here.com/faqs#access-control)
+
+Resources:
+  PlacesFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: nodejs12.x
+      Handler: places.placesGET
+      Description: 'A lambda function to find (e.g., search for name, type, category), discover (e.g., look into address, contact info) and interact with POI information (e.g., enable user reviews, photos).'
+      Environment:
+        Variables:
+          HERE_API_KEY: !Ref HereApiKey
+      Events:
+        GET:
+          Type: Api
+          Properties:
+            Path: /places/api/{resourcePath+}
+            Method: get
+Outputs:
+  HereApiURL:
+    Description: "AWS API Gateway URL for HERE Places API."
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

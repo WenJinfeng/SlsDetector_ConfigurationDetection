@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This file contains code that consumes memory limit for lambda for Python3.8
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+Resources:
+  OutofMemoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: out_of_memory
+      Description: This file contains code that consumes memory limit for lambda
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 3077735c-b4e6-4bf7-a856-50d7452609ea
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        OutofMemoryFunction:
+          Type: Api
+          Properties:
+            Path: /out_of_memory
+            Method: get
+Outputs:
+  OutofMemoryApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/out_of_memory/
+  OutofMemoryFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - OutofMemoryFunction
+      - Arn

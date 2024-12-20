@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Elastic Serverless Forwarder
+  SAM Template for the application, not intended to be deployed on its own
+Parameters:
+  ElasticServerlessForwarderS3ConfigFile:
+    Type: String
+  ElasticServerlessForwarderSSMSecrets:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderKMSKeys:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderSQSEvents:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderS3SQSEvents:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderKinesisEvents:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderCloudWatchLogsEvents:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderS3Buckets:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderSecurityGroups:
+    Type: CommaDelimitedList
+  ElasticServerlessForwarderSubnets:
+    Type: CommaDelimitedList
+Resources:
+  ElasticServerlessForwarderContinuingDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName:
+        Fn::Join:
+        - '-'
+        - - elastic-serverless-forwarder-continuing-dlq
+          - Fn::Select:
+            - 4
+            - Fn::Split:
+              - '-'
+              - Fn::Select:
+                - 2
+                - Fn::Split:
+                  - /
+                  - Ref: AWS::StackId
+      VisibilityTimeout: 910
+    Metadata:
+      SamResourceId: ElasticServerlessForwarderContinuingDLQ
+  ElasticServerlessForwarderContinuingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName:
+        Fn::Join:
+        - '-'
+        - - elastic-serverless-forwarder-continuing-queue
+          - Fn::Select:
+            - 4
+            - Fn::Split:
+              - '-'
+              - Fn::Select:
+                - 2
+                - Fn::Split:
+                  - /
+                  - Ref: AWS::StackId
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+          - ElasticServerlessForwarderContinuingDLQ
+          - Arn
+        maxReceiveCount: 1
+      VisibilityTimeout: 910
+    Metadata:
+      SamResourceId: ElasticServerlessForwarderContinuingQueue
+  ElasticServerlessForwarderReplayDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName:
+        Fn::Join:
+        - '-'
+        - - elastic-serverless-forwarder-replay-dlq
+          - Fn::Select:
+            - 4
+            - Fn::Split:
+              - '-'
+              - Fn::Select:
+                - 2
+                - Fn::Split:
+                  - /
+                  - Ref: AWS::StackId
+      VisibilityTimeout: 910
+    Metadata:
+      SamResourceId: ElasticServerlessForwarderReplayDLQ
+  ElasticServerlessForwarderReplayQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName:
+        Fn::Join:
+        - '-'
+        - - elastic-serverless-forwarder-replay-queue
+          - Fn::Select:
+            - 4
+            - Fn::Split:
+              - '-'
+              - Fn::Select:
+                - 2
+                - Fn::Split:
+                  - /
+                  - Ref: AWS::StackId
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+          - ElasticServerlessForwarderReplayDLQ
+          - Arn
+        maxReceiveCount: 3
+      VisibilityTimeout: 910
+    Metadata:
+      SamResourceId: ElasticServerlessForwarderReplayQueue
+  ApplicationElasticServerlessForwarder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 900
+      MemorySize: 512
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 78c26176-d827-4a56-b45c-ab6584ab2584
+      Runtime: python3.9
+      Architectures:
+      - x86_64
+      Handler: main_aws.handler
+      Environment:
+        Variables:
+          S3_CONFIG_FILE:
+            Ref: ElasticServerlessForwarderS3ConfigFile
+          SQS_CONTINUE_URL:
+            Ref: ElasticServerlessForwarderContinuingQueue
+          SQS_REPLAY_URL:
+            Ref: ElasticServerlessForwarderReplayQueue
+      Events:
+        SQSContinuingEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - ElasticServerlessForwarderContinuingQueue
+              - Arn
+            BatchSize: 10
+            Enabled: true
+    Metadata:
+      SamResourceId: ApplicationElasticServerlessForwarder
+  Fn::Transform:
+    Type: AWS::CloudFormation::Macro
+    Name: elastic-serverless-forwarder-macro
+    Metadata:
+      SamResourceId: Fn::Transform

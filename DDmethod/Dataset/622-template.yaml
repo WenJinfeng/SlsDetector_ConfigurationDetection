@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  sam-with-layers
+  Sample SAM Template for sam-with-layers
+Parameters:
+  validateLambdaIamRoleArn:
+    Type: String
+Resources:
+  s3NameTransformFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: |
+        import cfnresponse
+        import logging
+        def handler(event, context):
+          BucketName=event['ResourceProperties']['BucketName']
+          logger = logging.getLogger(__name__)
+          logger.debug(event)
+          status = cfnresponse.SUCCESS
+          try:
+              transformedBucketName=BucketName.lower()
+          except Exception:
+              logging.error('Unhandled exception', exc_info=True)
+              status = cfnresponse.FAILED
+          finally:
+              response_data= {"transformeds3BucketName": transformedBucketName}
+              cfnresponse.send(event, context, status, response_data, None)
+      Handler: index.handler
+      Runtime: python3.7
+      Timeout: 30
+      Role:
+        Ref: validateLambdaIamRoleArn
+Outputs:
+  s3NameTransformFunctionArn:
+    Description: GetCaller Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - s3NameTransformFunction
+      - Arn

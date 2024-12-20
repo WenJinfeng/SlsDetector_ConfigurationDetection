@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+        LambdaConfigurations:
+        - Function:
+            Fn::GetAtt:
+            - PublishSNSTopicForS3
+            - Arn
+          Event: s3:ObjectCreated:*
+    DependsOn:
+    - PublishSNSTopicForS3S3BucketEventPermission
+  PublishSNSTopicForS3:
+    Type: AWS::Serverless::Function
+    Properties:
+      Policies:
+      - Statement:
+        - Action:
+          - sns:Publish
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:${topicName}
+            - topicName:
+                Fn::GetAtt:
+                - SNSTopic
+                - TopicName
+          Effect: Allow
+      - Statement:
+        - Action:
+          - sns:ListSubscriptionsByTopic
+          - sns:CreateTopic
+          - sns:SetTopicAttributes
+          - sns:Subscribe
+          - sns:Publish
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:${topicName}*
+            - topicName:
+                Fn::GetAtt:
+                - SNSTopic
+                - TopicName
+          Effect: Allow
+      - Statement:
+        - Action:
+          - rekognition:DetectFaces
+          - rekognition:DetectLabels
+          - rekognition:DetectModerationLabels
+          - rekognition:DetectText
+          Resource: '*'
+          Effect: Allow
+      MemorySize: 128
+      Environment:
+        Variables:
+          TOPIC_ARN:
+            Ref: SNSTopic
+      Handler: SNS_Image_Labels_Rekognition_S3.lambda_handler
+      Timeout: 100
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: b19b8417-d394-42a4-959e-d098ad3e4950
+      Runtime: python3.6
+      Events:
+        S3BucketEvent:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: S3Bucket
+            Events:
+            - s3:ObjectCreated:*
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: S3_Image_Labels_and_Text

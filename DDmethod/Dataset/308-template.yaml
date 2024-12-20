@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  ApiDataTable:
+    Description: DynamoDB Table(Update ARN in both Lambda's.)
+    Value:
+      Fn::GetAtt:
+      - ApiDataTable
+      - Arn
+  lexBot:
+    Description: lexBot Function
+    Value:
+      Fn::GetAtt:
+      - lexBot
+      - Arn
+  ApiUrl:
+    Description: API Gateway endpoint URL for DataScraperLambda
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: ServerlessRestApi
+        - .execute-api.
+        - Ref: AWS::Region
+        - .amazonaws.com/Prod/test
+  DataScraperLambda:
+    Description: Data Scraping Lambda Function
+    Value:
+      Fn::GetAtt:
+      - DataScraperLambda
+      - Arn
+Description: Anti-Trafficking Bot
+Resources:
+  ApiDataTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      ProvisionedThroughput:
+        WriteCapacityUnits: 1
+        ReadCapacityUnits: 1
+      PrimaryKey:
+        Type: String
+        Name: id
+  lexBot:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: lexBot
+      Policies:
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+            - tableName:
+                Ref: ApiDataTable
+          Effect: Allow
+      MemorySize: 128
+      Environment:
+        Variables:
+          ApiDataTable:
+            Ref: ApiDataTable
+      Handler: lex-bot.lambda_handler
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 96aa3ea5-9382-4f9e-aedd-be4adc123ec0
+      Runtime: python3.6
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      __MANAGE_SWAGGER: true
+      DefinitionBody:
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /test:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DataScraperLambda.Arn}/invocations
+              responses: {}
+        swagger: '2.0'
+      StageName: Prod
+  DataScraperLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DataScraperLambda
+      Policies:
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+            - tableName:
+                Ref: ApiDataTable
+          Effect: Allow
+      MemorySize: 128
+      Environment:
+        Variables:
+          ApiDataTable:
+            Ref: ApiDataTable
+      Handler: scraper.lambda_handler
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 195fd2ad-4f13-4681-ba12-68d1bd100fe8
+      Runtime: python3.6
+      Events:
+        MyEndpoint:
+          Type: Api
+          Properties:
+            Path: /test
+            RestApiId:
+              Ref: ServerlessRestApi
+            Method: get
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  sam-with-layers
+  Sample SAM Template for sam-with-layers
+Parameters:
+  validateLambdaIamRoleArn:
+    Type: String
+Resources:
+  ipvalidationExistingVpcLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: "import logging\nimport sys\nimport boto3,ipaddress\nimport cfnresponse\n\
+        \nstdout_handler = logging.StreamHandler(sys.stdout)\nhandlers = [stdout_handler]\n\
+        \nlogging.basicConfig(\n    level=logging.INFO,\n    handlers=handlers\n)\n\
+        LOGGER = logging.getLogger('Atlan_VPC_CHECK')\nLOGGER.setLevel(logging.DEBUG)\n\
+        ec2 = boto3.resource('ec2')\n\n\ndef check_public(ip_addr):\n    for ip in\
+        \ ip_addr:\n        if(ip.strip() == '0.0.0.0/0'):\n            validity =\
+        \ True\n            continue\n        if not (ipaddress.ip_address(ip.strip().split('/')[0]).is_global):\n\
+        \            validity = False\n            break\n        else:\n        \
+        \    validity = True\n    return validity\ndef check_private(ip_addr):\n \
+        \   return ipaddress.ip_address(ip_addr).is_private\ndef check_overlap(network_1,\
+        \ network_2):\n    return ipaddress.ip_network(network_1).overlaps(ipaddress.ip_network(network_2))\n\
+        def check_vpc_validity(net):\n    allowed_cidr_blocks = ['10.0.0.0/8', '172.16.0.0/12',\
+        \ '192.168.0.0/16', '100.64.0.0/10', '198.19.0.0/16']\n    net_mask_num =\
+        \ int(net.split('/')[1])\n    if(net_mask_num >= 16):        \n        for\
+        \ block in allowed_cidr_blocks:\n            if(ipaddress.ip_network(net).subnet_of(ipaddress.ip_network(block))):\n\
+        \                validity = True\n                break\n            else:\n\
+        \                validity = False\n    else:\n        validity = False\n \
+        \   return validity\ndef check_subnet(net, subnet):\n    return ipaddress.ip_network(subnet).subnet_of(ipaddress.ip_network(net))\n\
+        def check_eks_network_validity(net):\n    allowed_cidr_blocks = ['10.0.0.0/8',\
+        \ '172.16.0.0/12', '192.168.0.0/16', '100.64.0.0/10', '198.19.0.0/16']\n \
+        \   for block in allowed_cidr_blocks:\n        if(ipaddress.ip_network(net).subnet_of(ipaddress.ip_network(block))):\n\
+        \            validity = True\n            break\n        else:\n         \
+        \   validity = False\n    return validity\n\n\ndef verify_vpc(event,context,vpc_id):\n\
+        \    vpc = ec2.Vpc(vpc_id)\n    try:\n        vpc.load()\n        return True\n\
+        \    except Exception as e:\n        LOGGER.info(e)\n        cfnresponse.send(event,\
+        \ context, cfnresponse.FAILED, {}, None)\n        return False\n\ndef verify_subnet(event,context,vpc_id,subnet_ids):\n\
+        \    vpc = ec2.Vpc(vpc_id)\n    vpc_subnets=[]\n    try:\n        subnet_iterator\
+        \ = vpc.subnets.all()\n        for subnet in subnet_iterator:\n          \
+        \  vpc_subnets.append(str(subnet.id))\n    except Exception as e:\n      \
+        \  LOGGER.error(\"Unhandled Exception\")\n        LOGGER.error(e)\n      \
+        \  return False\n    \n    for subnet_id in subnet_ids:\n        if subnet_id\
+        \ in vpc_subnets:\n            pass\n        else:\n            LOGGER.error(\"\
+        Subnet: \"+subnet_id+\" Not associated with vpc: \"+vpc_id)\n            cfnresponse.send(event,\
+        \ context, cfnresponse.FAILED, {}, None)\n            return False\n    LOGGER.info(\"\
+        All subnets passed\")\n    return True\n\n\ndef verify_route_tables(event,context,vpc_id,rtb_ids):\n\
+        \    vpc = ec2.Vpc(vpc_id)\n    vpc_rtbs=[]\n    try:\n        rtb_iterator\
+        \ = vpc.route_tables.all()\n        for rtb in rtb_iterator:\n           \
+        \ vpc_rtbs.append(str(rtb.id))\n    except Exception as e:\n        LOGGER.error(\"\
+        Unhandled Exception\")\n        LOGGER.error(e)\n        return False\n  \
+        \  \n    for rtb_id in rtb_ids:\n        if rtb_id in vpc_rtbs:\n        \
+        \    pass\n        else:\n            LOGGER.error(\"Routetable: \"+rtb_id+\"\
+        \ Not associated with vpc: \"+vpc_id)\n            cfnresponse.send(event,\
+        \ context, cfnresponse.FAILED, {}, None)\n            return False\n    LOGGER.info(\"\
+        All Routetable passed\")\n    return True\n\ndef handler(event,context):\n\
+        \    LOGGER.info(event)\n\n    eks_cidr = event['ResourceProperties']['eksCidr']\n\
+        \    vpc_id = event['ResourceProperties']['vpcid']\n    pub_subnet_1_id =\
+        \ event['ResourceProperties']['pubSubnet1']\n    pub_subnet_2_id = event['ResourceProperties']['pubSubnet2']\n\
+        \    pvt_subnet_1_id = event['ResourceProperties']['pvtSubnet1']\n    pvt_subnet_2_id\
+        \ = event['ResourceProperties']['pvtSubnet2']\n    pub_rtb_id = event['ResourceProperties']['pubrtb']\n\
+        \    pvt_rtb_id = event['ResourceProperties']['pvtrtb']\n\n    if not verify_vpc(event,context,vpc_id):\n\
+        \        cfnresponse.send(event, context, cfnresponse.FAILED, {}, None)\n\
+        \        LOGGER.info(\"Exiting Function\")\n        exit()\n    if not verify_subnet(event,context,vpc_id,[pub_subnet_1_id,pub_subnet_2_id,pvt_subnet_1_id,pvt_subnet_2_id]):\n\
+        \        cfnresponse.send(event, context, cfnresponse.FAILED, {}, None)\n\
+        \        LOGGER.info(\"Exiting Function Subnets\")\n        exit()\n    if\
+        \ not verify_route_tables(event,context,vpc_id,[pub_rtb_id,pvt_rtb_id]):\n\
+        \        cfnresponse.send(event, context, cfnresponse.FAILED, {}, None)\n\
+        \        LOGGER.info(\"Exiting Function Routetable\")\n        exit()\n\n\
+        \    vpc_cidr = ec2.Vpc(vpc_id).cidr_block\n    pub_subnet_1 = ec2.Subnet(pub_subnet_1_id).cidr_block\n\
+        \    pub_subnet_2 = ec2.Subnet(pub_subnet_2_id).cidr_block\n    pvt_subnet_1\
+        \ = ec2.Subnet(pvt_subnet_1_id).cidr_block\n    pvt_subnet_2 = ec2.Subnet(pvt_subnet_2_id).cidr_block\n\
+        \n    print(str(vpc_cidr))\n    print(str(pub_subnet_1))\n    print(str(pub_subnet_2))\n\
+        \    print(str(pvt_subnet_1))\n    print(str(pvt_subnet_2))\n    status =\
+        \ cfnresponse.SUCCESS\n    try:\n        # Check if subnets are within VPC\
+        \ CIDR\n        valid_subnets = check_subnet(vpc_cidr, pub_subnet_1) and check_subnet(vpc_cidr,\
+        \ pub_subnet_2) and check_subnet(vpc_cidr, pvt_subnet_1) and check_subnet(vpc_cidr,\
+        \ pvt_subnet_2)\n        # Check if EKS cluster Network is within allowed\
+        \ blocks\n        EKS_net_valid = check_eks_network_validity(eks_cidr)\n \
+        \       # Check for Overlap of EKS network and VPC block\n        overlap_check\
+        \ = check_overlap(vpc_cidr, eks_cidr)\n        # print(valid_subnets, EKS_net_valid,\
+        \ overlap_check)\n        vpc_check = check_vpc_validity(vpc_cidr)\n     \
+        \   if(valid_subnets and EKS_net_valid and not overlap_check and vpc_check):\n\
+        \            networkCheckPassed = True\n            LOGGER.info(\"Networks\
+        \ Verified\")\n        else:\n            networkCheckPassed = False\n   \
+        \         LOGGER.error(\"Network Verification Failed\")\n            status\
+        \ = cfnresponse.FAILED\n    except Exception as e:\n        LOGGER.error('Unhandled\
+        \ exception')\n        LOGGER.error(e)\n        status = cfnresponse.FAILED\n\
+        \    finally:\n        LOGGER.info(\"Final\")\n        cfnresponse.send(event,\
+        \ context, status, {}, None)\n"
+      Handler: index.handler
+      Runtime: python3.7
+      Timeout: 60
+      Role:
+        Ref: validateLambdaIamRoleArn
+Outputs:
+  ipvalidationExistingVpcArn:
+    Description: Ip Validation Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ipvalidationExistingVpcLambda
+      - Arn

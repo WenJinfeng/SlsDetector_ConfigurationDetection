@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  AWS SDK for pandas Lambda Layer (Python 3.9)
+Parameters:
+  LayerName:
+    Description: Name of the Layer
+    Type: String
+    Default: AWSSDKPandas-Python39
+  ExportName:
+    Description: Name of the export
+    Type: String
+    Default: aws-sdk-pandas-py3-9
+Resources:
+  WranglerLayer39:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 497f058f-e974-4806-b682-9d3449fb5c93
+      Description: AWS SDK for pandas Lambda Layer - 3.3.0 (Python 3.9)
+      LicenseInfo: Apache 2.0
+      CompatibleRuntimes:
+      - python3.9
+    Metadata:
+      SamResourceId: WranglerLayer39
+Outputs:
+  WranglerLayer39Arn:
+    Value:
+      Ref: WranglerLayer39
+    Export:
+      Name:
+        Ref: ExportName

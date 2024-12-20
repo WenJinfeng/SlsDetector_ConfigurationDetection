@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  OnesieBazaarProfiles:
+    Type: AWS::Serverless::SimpleTable
+    Properties: {}
+  BabyClothesMarketplace:
+    Type: AWS::Serverless::SimpleTable
+    PrimaryKey:
+      Type: String
+      Name: itemId
+    Properties: {}
+  OnesieBazaar:
+    Type: AWS::Serverless::Function
+    Description: Main function for Onesie Bazaar
+    Policies: AmazonDynamoDBFullAccess
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 16d15f08-b14d-475b-9be7-ae7719b2a8dd
+      Handler: index.handler
+      Runtime: nodejs6.10

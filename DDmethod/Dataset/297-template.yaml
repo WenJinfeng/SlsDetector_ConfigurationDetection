@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Pushes CWL logs to SumoLogic.
+Resources:
+  sumologicprocesslogs:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: .
+      Description: Pushes CWL logs to SumoLogic.
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - CloudWatchPutMetricPolicy: {}

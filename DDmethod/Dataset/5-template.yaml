@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Pushes logs and metrics from AWS to Datadog.
+Resources:
+  loglambdaddfunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Pushes logs and metrics from AWS to Datadog.
+      Handler: lambda_function.lambda_handler
+      MemorySize: 1024
+      Runtime: python3.7
+      Timeout: 120
+      Layers:
+      - Fn::Sub: arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Python37:3
+      - Fn::Sub: arn:aws:lambda:${AWS::Region}:464622532012:layer:Datadog-Trace-Forwarder-Python37:1
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: df98c40a-428a-465d-b5ed-f75b144e71ec

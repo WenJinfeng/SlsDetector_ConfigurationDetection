@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  APIPostEndpoint:
+    Description: https endpoint for uploading .txt file
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: ServerlessRestApi
+        - .execute-api.
+        - Ref: AWS::Region
+        - .amazonaws.com/Prod/getWordCount
+Description: Creates an API endpoint with Lambda integration which accepts a .txt file and returns an object with word counts
+Resources:
+  serverlessWordCounter:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Description: Counts occurrences of unique words in a text file
+      Timeout: 60
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f6d9dfe6-62c6-49fe-99a4-624ba5285487
+      Runtime: python2.7
+      MemorySize: 512
+      Events:
+        wordCounterApi:
+          Type: Api
+          Properties:
+            Path: /getWordCount
+            Method: POST
+Transform: AWS::Serverless-2016-10-31

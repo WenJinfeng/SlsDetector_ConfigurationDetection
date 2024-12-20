@@ -1,0 +1,16 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ThumbnailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      Handler: index.handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: b71edc58-4cd8-45ee-ab2b-e1bce6e9501d
+      Events:
+        ThumbnailApi:
+          Type: Api
+          Properties:
+            Path: /thumbnail
+            Method: GET

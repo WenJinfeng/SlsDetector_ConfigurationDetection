@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Protego splunk integration process lambda with SAR.
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Author: ProtegoLabs
+    Description: Protego Splunk Integration SAR
+    Labels:
+    - serverless
+    - protego
+    - splunk
+    Name: ProtegoSplunkNotificationSAR
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/protegolabs/SplunkNotificationSAR
+    SpdxLicenseId: Apache-2.0
+Parameters:
+  ProtegoAccountId:
+    Type: String
+  SplunkToken:
+    Type: String
+  SplunkUrl:
+    Type: String
+Resources:
+  ProtegoSplunkNotificationProcess:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 4b8bec5a-e793-4012-8445-8feb92fb0c33
+      Description: Splunk Notification Sender Lambda
+      Environment:
+        Variables:
+          SPLUNK_TOKEN:
+            Ref: SplunkToken
+          SPLUNK_URL:
+            Ref: SplunkUrl
+      Events:
+        Splunknotievents:
+          Properties:
+            FilterPattern: ''
+            LogGroupName:
+              Fn::Sub: /aws/lambda/ProtegoLogGroup-${ProtegoAccountId}
+          Type: CloudWatchLogs
+      FunctionName:
+        Fn::Sub: ProtegoSplunkLambda-${ProtegoAccountId}
+      Handler: protego_notification_engine.handler
+      Runtime: nodejs10.x
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

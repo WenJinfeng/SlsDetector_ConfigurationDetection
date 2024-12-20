@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  bucketname:
+    Type: String
+    Default: rshetty-serverless-artifacts-dnd
+Resources:
+  samplelambda200:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.samplelambda200
+      Runtime: python3.7
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: df2cce74-eb6a-4890-8fee-cb9402a58ac4
+      FunctionName: samplelambda200
+      Timeout: 20
+  customresource:
+    Type: Custom::customresource
+    Version: '1.0'
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+        - samplelambda200
+        - Arn
+Outputs:
+  finalout:
+    Description: The message from the custom resource.
+    Value:
+      Fn::GetAtt:
+      - customresource
+      - Message

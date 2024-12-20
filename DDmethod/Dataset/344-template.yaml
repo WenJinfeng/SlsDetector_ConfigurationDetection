@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Kinesis Fan Out to DDB and S3
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: Kinesis-Enhanced-Fan-Out-to-DDB-S3-V2
+    Description: "Creates an Amazon Kinesis Data Stream and uses enhanced fan-out with AWS Lambda functions to write to a an Amazon DynamoDB table and Amazon S3 Bucket"
+    Author: Eric Johnson
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels:
+      - Kinesis-Data-Stream
+      - Enhanced-Fan-Out
+      - Lambda
+      - Serverless
+      - Node
+    HomePageUrl: https://github.com/singledigit/kinesis-fan-out-sam
+    SemanticVersion: 0.0.4
+    SourceCodeUrl: https://github.com/singledigit/kinesis-fan-out-sam/releases/tag/v0.0.4
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 512
+    Runtime: nodejs12.x
+    Handler: app.lambdaHandler
+    Tracing: Active
+
+Resources:
+  DDBFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ddb/
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref DDBRecords}
+      Environment:
+        Variables:
+          TABLE: !Ref DDBRecords
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt DDBConsumer.ConsumerARN
+            StartingPosition: LATEST
+            BatchSize: 100
+  
+  S3Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3/
+      Policies:
+        - S3CrudPolicy: {BucketName: !Ref S3Records}
+      Environment:
+        Variables:
+          BUCKET: !Ref S3Records
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt S3Consumer.ConsumerARN
+            StartingPosition: LATEST
+            BatchSize: 100
+
+  KinesisStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties:
+      ShardCount: 4
+  
+  DDBConsumer:
+    Type: "AWS::Kinesis::StreamConsumer"
+    Properties:
+      StreamARN: !GetAtt KinesisStream.Arn
+      ConsumerName: DDBConsumer
+
+  S3Consumer:
+    Type: "AWS::Kinesis::StreamConsumer"
+    Properties:
+      StreamARN: !GetAtt KinesisStream.Arn
+      ConsumerName: S3Consumer
+  
+  DDBRecords:
+    Type: AWS::Serverless::SimpleTable
+
+  S3Records:
+    Type: AWS::S3::Bucket
+
+Outputs:
+  KinesisStream:
+    Description: Kinesis Data Stream name
+    Value: !Ref KinesisStream
+  RecordsTable:
+    Description: Records table
+    Value: !Ref DDBRecords
+  RecordsBucket:
+    Description: Records bucket
+    Value: !Ref S3Records

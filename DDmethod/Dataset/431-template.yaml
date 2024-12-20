@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  ImageBucketName:
+    Type: String
+    Description: Provide a unique bucket name to create a new bucket to hold your
+      source png and converted jpeg images
+
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ImageBucketName
+
+  ImageConversionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.6
+      CodeUri:
+        Bucket: #Bucketname Goes Here#
+        Key: #Lambda deployment package name#
+      Policies:
+      - S3CrudPolicy:
+          BucketName: !Ref ImageBucketName
+
+      Events:
+        PutPNGObjectEvent:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: Bucket
+            Events:
+            - s3:ObjectCreated:Put
+            Filter:
+              S3Key:
+                Rules:
+                - Name: suffix
+                  Value: ".png"
+
+

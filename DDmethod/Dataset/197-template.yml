@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda extension reporting function logs and platform telemetry to Coralogix
+Resources:
+  LambdaLayerX8664Version:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: coralogix-aws-lambda-telemetry-exporter-x86_64
+      Description: Lambda extension reporting function logs and platform telemetry
+        to Coralogix (x86_64)
+      LicenseInfo: Apache-2.0
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: eeb1509c-bbb3-4d4a-a91a-ad69d554f3a3
+      CompatibleRuntimes:
+      - nodejs18.x
+      - nodejs16.x
+      - nodejs14.x
+      - python3.10
+      - python3.9
+      - python3.8
+      - python3.7
+      - java11
+      - java8.al2
+      - java8
+      - dotnetcore3.1
+      - dotnet6
+      - go1.x
+      - provided.al2
+      - provided
+      CompatibleArchitectures:
+      - x86_64
+    Metadata:
+      SamResourceId: LambdaLayerX8664Version
+  LambdaLayerARM64Version:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: coralogix-aws-lambda-telemetry-exporter-arm64
+      Description: Lambda extension reporting function logs and platform telemetry
+        to Coralogix (arm64)
+      LicenseInfo: Apache-2.0
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f4850bd0-f4cc-4db7-997b-ac270e8a2da5
+      CompatibleRuntimes:
+      - nodejs18.x
+      - nodejs16.x
+      - nodejs14.x
+      - python3.10
+      - python3.9
+      - python3.8
+      - java11
+      - java8.al2
+      - dotnetcore3.1
+      - dotnet6
+      - provided.al2
+      - provided
+      CompatibleArchitectures:
+      - arm64
+    Metadata:
+      SamResourceId: LambdaLayerARM64Version
+Outputs:
+  LambdaLayerX8664VersionArn:
+    Description: LambdaLayer
+    Value:
+      Ref: LambdaLayerX8664Version
+    Export:
+      Name: LambdaLayer-X8664
+  LambdaLayerARM64VersionArn:
+    Description: LambdaLayer
+    Value:
+      Ref: LambdaLayerARM64Version
+    Export:
+      Name: LambdaLayer-ARM64

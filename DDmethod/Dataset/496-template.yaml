@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This file contains code that instruments calling APIs and producing Network Connection error using wrong IP Address and wrong port for nodejs12.x
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+Resources:
+  NetworkErrorWrongAddressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: network_error_wrong_address
+      Description: This file contains code that instruments calling APIs and producing Network Connection error using wrong IP Address
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: d755807e-676b-4a11-bf7e-90f2d97d4947
+      Handler: app.handler
+      Runtime: nodejs12.x
+      Events:
+        NetworkErrorWrongAddressFunction:
+          Type: Api
+          Properties:
+            Path: /network_error_wrong_address
+            Method: get
+  NetworkErrorWrongPortFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: network_error_wrong_port
+      Description: This file contains code that instruments calling APIs and producing Network Connection error using wrong port
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 91c4e18c-f7fd-4423-88e6-e61389879662
+      Handler: app.handler
+      Runtime: nodejs12.x
+      Events:
+        NetworkErrorWrongPortFunction:
+          Type: Api
+          Properties:
+            Path: /network_error_wrong_port
+            Method: get
+Outputs:
+  NetworkErrorWrongAddressApi:
+    Description: API Gateway endpoint URL for Prod stage for Network error wrong address function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/network_error_wrong_address/
+  NetworkErrorWrongAddressFunction:
+    Description: Network error wrong address Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - NetworkErrorWrongAddressFunction
+      - Arn
+  NetworkErrorWrongPortApi:
+    Description: API Gateway endpoint URL for Prod stage for Network error wrong port function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/network_error_wrong_port/
+  NetworkErrorWrongPortFunction:
+    Description: Network error wrong port Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - NetworkErrorWrongPortFunction
+      - Arn

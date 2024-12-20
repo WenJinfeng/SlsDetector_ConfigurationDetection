@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless nanoservice using S3, Lambda, and SES
+Parameters:
+  EmailFrom:
+    Type: String
+    Description: Must be a SES verified identity
+  EmailTo:
+    Type: String
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    MemorySize: 128
+    Environment:
+      Variables:
+        EMAIL_FROM:
+          Ref: EmailFrom
+        EMAIL_TO:
+          Ref: EmailTo
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: nanoservice-s3-lambda-ses
+    Description: Serverless nanoservice using S3, Lambda, and SES. The Node.js Lambda service is triggered by S3 object creation and sends emails.
+    Author: Bernd Straehle
+    Labels: ['serverless', 'sam', 's3', 'lambda', 'ses', 'nodejs']
+    SpdxLicenseId: GPL-3.0-or-later
+    LicenseUrl: LICENSE
+    ReadmeUrl: README-SAR.md
+    HomePageUrl: https://github.com/bstraehle
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/bstraehle/aws-s3-lambda-ses
+Resources:
+  myLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri: .
+      Description: Serverless nanoservice using S3, Lambda, and SES
+      Timeout: 10
+      Policies:
+        - SESCrudPolicy:
+            IdentityName: !Ref EmailFrom
+      Events:
+        S3BucketEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref myS3Bucket
+            Events: s3:ObjectCreated:*
+  myS3Bucket:
+    Type: AWS::S3::Bucket

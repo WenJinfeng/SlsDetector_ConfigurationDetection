@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Auto update CloudFront security groups based on SNS message
+Parameters:
+  SecurityGroupRegion:
+    Type: String
+    Description: Region where your security groups are
+Resources:
+  updatesecuritygroups:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: update_security_groups.lambda_handler
+      Runtime: python2.7
+      CodeUri: .
+      Description: Auto update CloudFront security groups based on SNS message.
+      MemorySize: 128
+      Timeout: 5
+      Environment:
+        Variables:
+          SECURITY_GROUP_REGION: !Ref SecurityGroupRegion
+      Events:
+        SNS:
+          Type: SNS
+          Properties:
+            Topic: arn:aws:sns:us-east-1:806199016981:AmazonIpSpaceChanged

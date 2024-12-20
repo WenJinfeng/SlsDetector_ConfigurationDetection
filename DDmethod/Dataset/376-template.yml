@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Lambda Layer for aws-lambda-powertools with python 3.11, 3.10, 3.9,
+  3.8 or 3.7
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: AWS Lambda Layer for aws-lambda-powertools version 2.23.0
+      LayerName: aws-lambda-powertools-python-layer-arm64
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: ac7f457f-8216-47eb-bde5-fb4621b15403
+      CompatibleRuntimes:
+      - python3.11
+      - python3.10
+      - python3.9
+      - python3.8
+      - python3.7
+      LicenseInfo: Available under the Apache-2.0 license.
+      RetentionPolicy: Retain
+    Metadata:
+      SamResourceId: LambdaLayer
+Outputs:
+  LayerVersionArn:
+    Description: ARN for the published Layer version
+    Value:
+      Ref: LambdaLayer
+    Export:
+      Name:
+        Fn::Sub: LayerVersionArn-${AWS::StackName}

@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  thesishelloworld:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs14.x
+      CodeUri: .
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Role: >-
+        arn:aws:iam::644268649546:role/service-role/thesis-hello-world-role-y2mhod2b
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /thesis-hello-world
+            Method: ANY

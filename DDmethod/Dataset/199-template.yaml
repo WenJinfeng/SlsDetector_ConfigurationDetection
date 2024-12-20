@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless REST API for image inference
+Resources:
+  ImageInferenceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Image Inference Lambda
+      MemorySize: 512
+      Handler: com.purplealpha.dl.lambda.InferanceHandler::handleRequest
+      Timeout: 20
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f5c703a9-b768-470a-a74c-c009452233dc
+      Runtime: java8
+      Events:
+        InferenceRequest:
+          Type: Api
+          Properties:
+            Path: /
+            RestApiId:
+              Ref: ImageInferenceApi
+            Method: POST
+  ImageInferenceApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        paths:
+          /:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                type: aws
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ImageInferenceFunction.Arn}/invocations
+                responses:
+                  default:
+                    statusCode: '200'
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              produces:
+              - application/json
+        swagger: '2.0'
+        schemes:
+        - https
+        definitions:
+          Empty:
+            type: object
+            title: Empty Schema
+      StageName: p
+      Name: ImageInferenceAPI
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  medPal:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 92d3ab5d-4302-4253-a040-6ba7adf6bbcb
+      Handler: index.handler
+      Description: Medicine intake manager
+      Runtime: nodejs6.10
+  MedManagerMedicationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      ProvisionedThroughput:
+        WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+      PrimaryKey:
+        Type: String
+        Name: MedicationId

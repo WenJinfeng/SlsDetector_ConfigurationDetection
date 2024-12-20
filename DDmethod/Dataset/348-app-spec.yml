@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: It is test python3-app. It is app to return word.
+
+Parameters:
+  word:
+    Type: String
+    Description: The set word is returned
+
+Resources:
+  ReturnWordApp:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: It is test python3-app. It is app to return word.
+      Handler: lambda_function.handler
+      Runtime: python3.6
+      MemorySize: 128
+      Timeout: 3
+      CodeUri: app.zip
+      Environment:
+        Variables:
+          SET_WORD: !Ref word

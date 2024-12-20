@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Amazon EKS ConfigMap update handler
+Outputs:
+  LambdaFuncArn:
+    Description: Lambda Func ARN
+    Value:
+      Fn::GetAtt:
+      - Func
+      - Arn
+  LambdaFuncName:
+    Description: Lambda Func Name
+    Value:
+      Ref: Func
+  LambdaRoleArn:
+    Description: Lambda Role ARN
+    Value:
+      Ref: LambdaRoleArn
+Parameters:
+  ClusterName:
+    Default: default
+    Type: String
+  FunctionName:
+    Default: defaultFunc
+    Type: String
+  LambdaLayerKubectlArn:
+    Type: String
+  LambdaRoleArn:
+    Type: String
+  NodeInstanceRoleArn:
+    Type: String
+Resources:
+  Func:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 6db361b9-96f6-4d37-b33e-5054cf4b7de7
+      Environment:
+        Variables:
+          aws_account_id:
+            Fn::Sub: ${AWS::AccountId}
+          cluster_name:
+            Ref: ClusterName
+          iam_role_arn:
+            Ref: NodeInstanceRoleArn
+          lambda_role_arn:
+            Ref: LambdaRoleArn
+      FunctionName:
+        Ref: FunctionName
+      Handler: main
+      Layers:
+      - Ref: LambdaLayerKubectlArn
+      MemorySize: 512
+      Role:
+        Ref: LambdaRoleArn
+      Runtime: provided
+      Timeout: 10
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

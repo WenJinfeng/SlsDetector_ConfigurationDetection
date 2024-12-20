@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  DynamoDBTable:
+    Type: String
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  dailyRecycleLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: fdf00353-3ef2-41bf-acdd-b43b9a5d55a6
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: DynamoDBTable
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Policies:
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+            - tableName:
+                Ref: DynamoDBTable
+          Effect: Allow
+  dailyRecycleDynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+      - KeyType: HASH
+        AttributeName: id
+      TableName:
+        Ref: DynamoDBTable
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      ProvisionedThroughput:
+        WriteCapacityUnits: '5'
+        ReadCapacityUnits: '5'
+Description: Daily Recycle helps you track your progress as you work towards your goal of sustainable living.

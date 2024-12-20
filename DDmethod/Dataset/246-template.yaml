@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless nanoservice using SQS, Lambda, and DynamoDB
+Parameters:
+  TableName:
+    Type: String
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    MemorySize: 128
+    Environment:
+      Variables:
+        TABLE_NAME:
+          Ref: TableName
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: nanoservice-sqs-lambda-dynamodb
+    Description: Serverless nanoservice using SQS, Lambda, and DynamoDB. The Node.js Lambda service is triggered by SQS and writes messages to DynamoDB.
+    Author: Bernd Straehle
+    Labels: ['serverless', 'sam', 'sqs', 'lambda', 'dynamodb', 'nodejs']
+    SpdxLicenseId: GPL-3.0-or-later
+    LicenseUrl: LICENSE
+    ReadmeUrl: README-SAR.md
+    HomePageUrl: https://github.com/bstraehle
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/bstraehle/aws-sqs-lambda-dynamodb
+Resources:
+  myLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri: .
+      Description: Serverless nanoservice using SQS, Lambda, and DynamoDB
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              !GetAtt mySQSQueue.Arn
+  mySQSQueue:
+    Type: AWS::SQS::Queue
+  myDynamoDBTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName:
+        Ref: TableName

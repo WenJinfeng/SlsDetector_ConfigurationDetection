@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  RecyclingLocationFinder:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 128
+      Handler: recycle_location_finder.handler
+      Timeout: 100
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 0fdc1934-bc9a-482e-ad77-7747a1dfa861
+      Runtime: python3.6
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill

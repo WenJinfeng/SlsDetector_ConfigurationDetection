@@ -1,0 +1,19 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: Requests
+      Description: v.2.23.0
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: de0f4d5e-c17e-48bf-add9-e5f00edc43ac
+      CompatibleRuntimes:
+      - python2.7
+      - python3.6
+      - python3.7
+      - python3.8
+Outputs:
+  LambdaLayer:
+    Value:
+      Ref: LambdaLayer

@@ -1,0 +1,336 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  eventbridge-integration-solution-zendesk-sentiment-analysis
+  (qs-1qpmal5bp)
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Amazon EventBridge Integration Solution
+      Parameters:
+      - EventSourceName
+    - Label:
+        default: Zendesk Configuration
+      Parameters:
+      - ZendeskSubdomain
+      - ZendeskEmail
+      - ZendeskAPIToken
+      - ZendeskSLANormalWait
+      - ZendeskSLAHighWait
+      - ZendeskSLAUrgentWait
+    ParameterLabels:
+      EventSourceName:
+        default: Event Source Name
+      ZendeskAPIToken:
+        default: API Token
+      ZendeskEmail:
+        default: Email
+      ZendeskSubdomain:
+        default: Subdomain
+      ZendeskSLANormalWait:
+        default: Normal Wait SLA
+      ZendeskSLAHighWait:
+        default: High Wait SLA
+      ZendeskSLAUrgentWait:
+        default: Urgent Wait SLA
+Parameters:
+  EventSourceName:
+    Type: String
+    AllowedPattern: aws\.partner(/[\.\-_A-Za-z0-9]+){2,}
+    MinLength: 1
+    MaxLength: 256
+    Description: Name of the Amazon EventBridge Zendesk Event Source to associate with an Event Bus. For example, aws.partner/zendesk.com/123456/default
+  ZendeskAPIToken:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: The Zendesk API token used to access the Zendesk API
+  ZendeskEmail:
+    Type: String
+    MinLength: 1
+    Description: The Zendesk agent email used for Zendesk API access
+  ZendeskSubdomain:
+    Type: String
+    MinLength: 1
+    Description: The Zendesk subdomain which is a unique identifier of your Zendesk account
+  ZendeskSLANormalWait:
+    Type: Number
+    Description: Normal priority SLA wait time (in seconds)
+    Default: 60
+  ZendeskSLAHighWait:
+    Type: Number
+    Description: High priority SLA wait time (in seconds)
+    Default: 60
+  ZendeskSLAUrgentWait:
+    Type: Number
+    Description: Urgent priority SLA wait time (in seconds)
+    Default: 60
+Globals:
+  Function:
+    Runtime: nodejs12.x
+    Timeout: 30
+Resources:
+  GetTicketInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 3dbda2e1-077c-458e-8c84-73bfefc75389
+      Handler: getTicketInfo.handler
+      Environment:
+        Variables:
+          ZendeskEmail:
+            Ref: ZendeskEmail
+          ZendeskPassword:
+            Ref: ZendeskAPIToken
+          ZendeskSubdomain:
+            Ref: ZendeskSubdomain
+          ZendeskSLANormalWait:
+            Ref: ZendeskSLANormalWait
+          ZendeskSLAHighWait:
+            Ref: ZendeskSLAHighWait
+          ZendeskSLAUrgentWait:
+            Ref: ZendeskSLAUrgentWait
+  GetLanguage:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 6207f13f-c455-4db5-9bb3-033a0f66eaf5
+      Handler: getLanguage.handler
+      Policies:
+      - ComprehendBasicAccessPolicy: {}
+  GetSentiment:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a5f8d391-e563-4cca-95ae-4f5a31cf8670
+      Handler: getSentiment.handler
+      Policies:
+      - ComprehendBasicAccessPolicy: {}
+  SetTags:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 49ca4ee4-df3e-4508-9162-ac9ef3faa341
+      Handler: setTags.handler
+      Environment:
+        Variables:
+          ZendeskEmail:
+            Ref: ZendeskEmail
+          ZendeskPassword:
+            Ref: ZendeskAPIToken
+          ZendeskSubdomain:
+            Ref: ZendeskSubdomain
+  SetPriority:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 7a8438fe-9444-40ad-ac3d-661c9e735f96
+      Handler: setPriority.handler
+      Environment:
+        Variables:
+          ZendeskEmail:
+            Ref: ZendeskEmail
+          ZendeskPassword:
+            Ref: ZendeskAPIToken
+          ZendeskSubdomain:
+            Ref: ZendeskSubdomain
+  EventBridgeEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name:
+        Ref: EventSourceName
+      EventSourceName:
+        Ref: EventSourceName
+  ZendeskSentimentStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition:
+        StartAt: GetTicketInfo
+        States:
+          GetTicketInfo:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - GetTicketInfo
+              - Arn
+            InputPath: $.detail.ticket_event.ticket
+            Next: GetLanguage
+          GetLanguage:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - GetLanguage
+              - Arn
+            Next: GetSentiment
+          GetSentiment:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - GetSentiment
+              - Arn
+            Next: isNegative
+          isNegative:
+            Type: Choice
+            Choices:
+            - Variable: $.sentiment
+              StringEquals: NEGATIVE
+              Next: setTags
+            Default: ClosedOrNotNegative
+          setTags:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - SetTags
+              - Arn
+            Next: isClosed
+          GetZendeskSLAWaitTime:
+            Type: Choice
+            Choices:
+            - Variable: $.priority
+              StringEquals: normal
+              Next: ZendeskSLAHighWait
+            - Variable: $.priority
+              StringEquals: high
+              Next: ZendeskSLAUrgentWait
+            - Variable: $.priority
+              StringEquals: urgent
+              Next: FinalEscalationState
+            Default: ZendeskSLANormalWait
+          FinalEscalationState:
+            Comment: Ticket cannot be escalated further
+            Type: Succeed
+          SetPriority:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - SetPriority
+              - Arn
+            Next: isClosed
+          ZendeskSLANormalWait:
+            Type: Wait
+            SecondsPath: $.ZendeskSLA.NormalWait
+            Next: SetPriority
+          ZendeskSLAHighWait:
+            Type: Wait
+            SecondsPath: $.ZendeskSLA.HighWait
+            Next: SetPriority
+          ZendeskSLAUrgentWait:
+            Type: Wait
+            SecondsPath: $.ZendeskSLA.UrgentWait
+            Next: SetPriority
+          isClosed:
+            Type: Choice
+            Choices:
+            - Variable: $.status
+              StringEquals: open
+              Next: GetZendeskSLAWaitTime
+            Default: ClosedOrNotNegative
+          ClosedOrNotNegative:
+            Type: Pass
+            End: true
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: GetTicketInfo
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: GetLanguage
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: GetSentiment
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: SetPriority
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: SetTags
+      Events:
+        EventBridgeRule:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName:
+              Ref: EventBridgeEventBus
+            Pattern:
+              account:
+              - Ref: AWS::AccountId
+              detail-type:
+              - 'Support Ticket: Comment Created'
+Outputs:
+  EventBridgeEventBus:
+    Description: SaaS Event Bus ARN
+    Value:
+      Fn::GetAtt:
+      - EventBridgeEventBus
+      - Arn
+  EventBridgeRule:
+    Description: EventBridge Rule ARN
+    Value:
+      Fn::GetAtt:
+      - ZendeskSentimentStateMachineEventBridgeRule
+      - Arn
+  GetTicketInfoFunction:
+    Description: GetTicketInfo Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetTicketInfo
+      - Arn
+  GetTicketInfoFunctionIamRole:
+    Description: Implicit IAM Role created for GetTicketInfo function
+    Value:
+      Fn::GetAtt:
+      - GetTicketInfoRole
+      - Arn
+  GetLanguageFunction:
+    Description: GetLanguage Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetLanguage
+      - Arn
+  GetLanguageFunctionIamRole:
+    Description: Implicit IAM Role created for GetLanguageFunction function
+    Value:
+      Fn::GetAtt:
+      - GetLanguageRole
+      - Arn
+  GetSentimentFunction:
+    Description: GetSentiment Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetSentiment
+      - Arn
+  GetSentimentFunctionIamRole:
+    Description: Implicit IAM Role created for GetSentimentFunction function
+    Value:
+      Fn::GetAtt:
+      - GetSentimentRole
+      - Arn
+  SetTagsFunction:
+    Description: SetTags Function ARN
+    Value:
+      Fn::GetAtt:
+      - SetTags
+      - Arn
+  SetTagsFunctionIamRole:
+    Description: Implicit IAM Role created for SetTags function
+    Value:
+      Fn::GetAtt:
+      - SetTagsRole
+      - Arn
+  SetPriorityFunction:
+    Description: SetPriority Function ARN
+    Value:
+      Fn::GetAtt:
+      - SetPriority
+      - Arn
+  SetPriorityFunctionIamRole:
+    Description: Implicit IAM Role created for SetPriority function
+    Value:
+      Fn::GetAtt:
+      - SetPriorityRole
+      - Arn

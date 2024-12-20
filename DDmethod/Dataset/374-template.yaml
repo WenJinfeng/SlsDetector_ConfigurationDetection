@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  GenerateLookMLprodschematablesearch:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: ''
+      Tags:
+        STAGE: prod
+      MemorySize: 1024
+      Environment:
+        Variables:
+          project_config: |-
+            {
+                "<Looker Outbound Webhook Token>": {
+                    "base_url": "https://customer.looker.com",
+                    "github_token": "<Github Personal Token>",
+                    "projects": [
+                        {
+                            "project_id": "<project being updated>",
+                            "repository": "<github path (e.g. organization/repo)>",
+                            "X-Looker-Deploy-Secret": "< (optional) Looker Project Deploy Secret>"
+                        }
+                    ]
+                }
+            }
+      Handler: handler.schema_table_search
+      Timeout: 6
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 7745fc7c-b759-4f3c-b6b5-b47faafd5659
+      Runtime: python3.7
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /schema_table_search
+            RestApiId:
+              Ref: ServerlessRestApi
+            Method: POST
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      __MANAGE_SWAGGER: true
+      DefinitionBody:
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /schema_table_search:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GenerateLookMLprodschematablesearch.Arn}/invocations
+              responses: {}
+        swagger: '2.0'
+      StageName: Prod
+Description: An AWS Serverless Specification template describing your function.

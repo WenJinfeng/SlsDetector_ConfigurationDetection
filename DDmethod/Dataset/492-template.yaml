@@ -1,0 +1,70 @@
+Description: |
+  failed-EMR-info
+  SAM Template for collecting failed EMR info.
+Parameters:
+  DynamoTableName:
+    Default: failed-emr-info
+    Type: String
+    Description: DynamoDB Table name to store EMR info
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  FailedEMRFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 300
+      Environment:
+        Variables:
+          dynamoTableName:
+            Ref: FailedEMRTable
+      Handler: app.lambda_handler
+      Policies:
+      - Statement:
+        - Action:
+          - cloudwatch:PutMetricData
+          Resource: '*'
+          Effect: Allow
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:DeleteItem
+          - dynamodb:PutItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:BatchWriteItem
+          - dynamodb:BatchGetItem
+          - dynamodb:DescribeTable
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+            - tableName:
+                Ref: FailedEMRTable
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 938d1345-56b5-45ea-bf6a-1ddea574f168
+      Runtime: python2.7
+      Events:
+        FailedEMREvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+              - aws.emr
+              detail:
+                state:
+                - TERMINATED_WITH_ERRORS
+              detail-type:
+              - EMR Cluster State Change
+  FailedEMRTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      ProvisionedThroughput:
+        WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+      TableName:
+        Ref: DynamoTableName
+      PrimaryKey:
+        Type: String
+        Name: clusterId

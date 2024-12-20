@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  EncryptedSignalFxAuthToken:
+    Type: String
+  SelectedMetricGroups:
+    Type: String
+  KeyId:
+    Type: String
+  Realm:
+    Type: String
+Resources:
+  SignalFxProcessRDSMetricsEncrypted:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: enhanced_rds.lambda_script.lambda_handler
+      Runtime: python3.8
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: d6a22d14-8cc9-4989-9b34-8b368316fbf6
+      Description: Parses RDS Enhanced Monitoring data from CloudWatch Logs and sends
+        it to SignalFx.
+      Timeout: 15
+      Environment:
+        Variables:
+          encrypted_access_token:
+            Ref: EncryptedSignalFxAuthToken
+          groups:
+            Ref: SelectedMetricGroups
+          realm:
+            Ref: Realm
+      Policies:
+      - KMSDecryptPolicy:
+          KeyId:
+            Ref: KeyId

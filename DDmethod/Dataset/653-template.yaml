@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  HelloWorldPython:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 1d9c4b12-18a7-4a6c-b7fc-b4f8f1e34a3e
+      Runtime: python3.6
+      Handler: hello_world.handler
+      Timeout: 3
+Description: |
+  hello-world
+  Sample SAM Template for Thundra hello-world

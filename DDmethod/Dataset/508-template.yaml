@@ -1,0 +1,16 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: signalfx-lambda-java-wrapper
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 041fd544-6d9a-4cc5-82ce-678b11a8fd76
+      CompatibleRuntimes:
+      - java8
+      - java11
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

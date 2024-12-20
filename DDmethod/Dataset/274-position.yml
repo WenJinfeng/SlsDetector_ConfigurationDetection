@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  HereApiKey:
+    Type: String
+    Description: HERE Location Services API Key (https://developer.here.com/faqs#access-control)
+
+Resources:
+  PositionFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: nodejs12.x
+      Handler: position.positionPOST
+      Description: 'A Lambda function that provides positioning estimates based on global Wi-Fi and cell coverage using HERE Location Services.'
+      Environment:
+        Variables:
+          HERE_API_KEY: !Ref HereApiKey
+      Events:
+        GET:
+          Type: Api
+          Properties:
+            Path: /position/api/{resourcePath+}
+            Method: post
+
+Outputs:
+  HereApiURL:
+    Description: "AWS API Gateway URL for HERE Position API."
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

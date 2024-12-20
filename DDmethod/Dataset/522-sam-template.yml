@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'ApplicationCostMonitoring ACM-DynamoDB-Publisher'
+Resources:
+  SnsSubscriptionDynamoDBPublisher:
+    Type: 'AWS::SNS::Subscription'
+    Properties:
+      TopicArn:
+        'Fn::ImportValue':
+          'Fn::Join':
+            - '-'
+            - - Ref: AwsAdmStackName
+              - BillingRecordsSnsTopicArn
+      Protocol: lambda
+      Endpoint:
+        'Fn::GetAtt':
+          - DynamoDBPublisher
+          - Arn
+  ApplicationCostMonitoringTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: LineItemId
+          AttributeType: S
+        - AttributeName: TimeIntervalStart
+          AttributeType: S
+      KeySchema:
+        - AttributeName: LineItemId
+          KeyType: HASH
+        - AttributeName: TimeIntervalStart
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits:
+          Ref: DynamoDBReadCapacityUnits
+        WriteCapacityUnits:
+          Ref: DynamoDBWriteCapacityUnits
+      StreamSpecification:
+        StreamViewType:
+          Ref: StreamViewType
+  DynamoDBPublisher:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handlers/dynamodb-billing-item-publisher.handler
+      Runtime: python3.6
+      CodeUri: >-
+        s3://%%S3_BUCKET%%/%%S3_DEPLOY_ARTIFACT%%
+      Description: Write billing data to a DynamoDB table
+      MemorySize: 128
+      Timeout: 300
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: ApplicationCostMonitoringTable
+      Environment:
+        Variables:
+          LOG_LEVEL: INFO
+          DYNAMODB_TABLE:
+            Ref: ApplicationCostMonitoringTable
+          DDT_HASH_KEY: LineItemId
+          DDT_RANGE_KEY: TimeIntervalStart
+      Events:
+        ApplicationCostMonitoringMessage:
+          Type: SNS
+          Properties:
+            Topic:
+              Fn::ImportValue:
+                Fn::Sub: ${AwsAdmStackName}-BillingRecordsSnsTopicArn
+Outputs:
+  BillingItemDynamoDBTableName:
+    Description: DynamoDB table name where billing items are written to.
+    Value:
+      Ref: ApplicationCostMonitoringTable
+    Export:
+      Name: ACM-DynamoDB-Publisher-BillingItemDynamoDBTableName
+  BillingItemDynamoDBTableArn:
+    Description: DynamoDB table name where billing items are written to.
+    Value:
+      'Fn::GetAtt':
+        - ApplicationCostMonitoringTable
+        - Arn
+    Export:
+      Name: ACM-DynamoDB-Publisher-BillingItemDynamoDBTableArn
+  BillingItemDynamoDBTableStreamArn:
+    Description: DynamoDB table name where billing items are written to.
+    Value:
+      'Fn::GetAtt':
+        - ApplicationCostMonitoringTable
+        - StreamArn
+    Export:
+      Name: ACM-DynamoDB-Publisher-BillingItemDynamoDBTableStreamArn
+Parameters:
+  AwsAdmStackName:
+    Type: String
+    Description: AWS Application Monitoring CloudFormation stack name
+    Default: aws-serverless-repository-ApplicationCostMonitoring
+  DynamoDBReadCapacityUnits:
+    Type: String
+    Description: DynamoDB Table read capacity units
+    Default: '1'
+  DynamoDBWriteCapacityUnits:
+    Type: String
+    Description: DynamoDB Table write capacity units
+    Default: '5'
+  StreamViewType:
+    Type: String
+    Description: DynamoDB table stream type
+    Default: NEW_AND_OLD_IMAGES

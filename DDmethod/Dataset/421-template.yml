@@ -1,0 +1,15 @@
+Outputs:
+  LayerArn:
+    Value:
+      Ref: S3DeploymentLayer
+Resources:
+  S3DeploymentLayer:
+    Properties:
+      CompatibleRuntimes:
+      - python3.6
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 52586a45-83e1-4985-9e74-2c1e4fb91f76
+      LayerName: S3Deployment
+    Type: AWS::Serverless::LayerVersion
+Transform: AWS::Serverless-2016-10-31

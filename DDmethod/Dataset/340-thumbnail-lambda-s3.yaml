@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+
+Parameters:
+  sourceS3bucket:
+    Description: Source S3 bucket for Thumbnails
+    Type: String
+  targetS3bucket:
+    Description: Target S3 bucket for Thumbnails
+    Type: String
+
+Resources:
+# Lambda Function to Convert Thumbnails of dimensions 200x200 and output format JPG
+  LambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: CreateThumbnail.handler
+      Runtime: python3.7
+      CodeUri: 's3://dbcelm-cfn/zxc-a31b01d6-ec97-4c5e-8eee-6e51794f0350.zip'
+      Description: ''
+      MemorySize: 512
+      Timeout: 15
+      Policies:
+      - S3ReadPolicy:
+          BucketName:
+            Ref: sourceS3bucket
+      - S3CrudPolicy:
+          BucketName:
+            Ref: targetS3bucket
+      Events:
+        BucketEvent1:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: SourceBucket
+            Events:
+              - 's3:ObjectCreated:*'
+      Environment:
+        Variables:
+          source_bucket:
+            Ref: sourceS3bucket
+          destination_bucket:
+            Ref: targetS3bucket
+# Source Bucket
+  SourceBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName:
+        Ref: sourceS3bucket
+# Target Bucket
+  TargetBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName:
+        Ref: targetS3bucket
+# this block maked target bucket public, can be removed if not required               
+      PublicAccessBlockConfiguration:  
+        BlockPublicAcls: False
+        BlockPublicPolicy: False
+        IgnorePublicAcls: False
+        RestrictPublicBuckets: False

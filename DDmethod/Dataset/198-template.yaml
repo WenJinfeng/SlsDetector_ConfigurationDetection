@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    lex-dynamodb
+
+    Example of how a serverless app can handle Lex requests and log intent and/or session data to dynamodb.
+    
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 10
+
+Parameters:
+  TableName:
+    Type: String
+    Default: 'LexLog'
+    Description: (Required) The name of the new DynamoDB table you want to create and save to. Minimum 3 characters
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
+
+Resources:
+  ### Roles
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+      - KeyType: HASH
+        AttributeName: !Sub "${TableName}Id"
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      TableName: !Ref TableName
+      AttributeDefinitions:
+      - AttributeName: !Sub "${TableName}Id"
+        AttributeType: S
+      ProvisionedThroughput:
+        WriteCapacityUnits: 1
+        ReadCapacityUnits: 1
+  LogIntentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: logIntent
+      Description: Log Lex intent to a DynamoDB table
+      CodeUri: s3://mk-sam-packages/log-intent.zip
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Policies:
+      - DynamoDBCrudPolicy:
+        TableName: !Ref DynamoDBTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          PRIMARY_KEY: !Sub ${TableName}Id
+
+# Outputs:
+#     LogIntentFunctionArn:
+#       Description: "Lambda function that takes Lex fulfillment requests and logs them to DynamoDB"
+#       Value: !GetAtt
+#         - LogIntentFunction
+#         - Arn
+
+#     DynamoDBTableArn:
+#       Description: The ARN of your DynamoDB Table
+#       Value: !GetAtt
+#         - DynamoDBTable
+#         - Arn

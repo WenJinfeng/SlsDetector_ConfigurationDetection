@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Zendesk Connector for SendSafely Dropzone
+Resources:
+  SampleZendeskConnector:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Zendesk Connector for SendSafely Dropzone
+      MemorySize: 512
+      Environment:
+        Variables:
+          SENDSAFELY_VERIFICATION_KEY: ''
+          ZENDESK_AUTH_TOKEN: ''
+          ZENDESK_HOST: ''
+      Handler: index.handler
+      Timeout: 10
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 81ecb304-f65f-4b42-9f37-a80afdf7ec57
+      Runtime: nodejs6.10
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /SampleZendeskConnector
+            Method: ANY
+Transform: AWS::Serverless-2016-10-31

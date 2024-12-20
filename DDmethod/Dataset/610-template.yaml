@@ -1,0 +1,171 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Keymaster
+Outputs:
+  DeleteParametersFunctionArn:
+    Description: Keymaster DeleteParametersFunction ARN
+    Value:
+      Fn::GetAtt:
+      - DeleteParametersFunction
+      - Arn
+  GenerateJWTKeysFunctionArn:
+    Description: Keymaster GenerateJWTKeysFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateJWTKeysFunction
+      - Arn
+  GenerateRingKeyFunctionArn:
+    Description: Keymaster GenerateRingKeyFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateRingKeyFunction
+      - Arn
+  GenerateSecretFunctionArn:
+    Description: Keymaster GenerateSecretFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateSecretFunction
+      - Arn
+  GenerateServiceKeyFunctionArn:
+    Description: Keymaster GenerateServiceKeyFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateServiceKeyFunction
+      - Arn
+  GenerateTOTPFunctionArn:
+    Description: Keymaster GenerateTOTPFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateTOTPFunction
+      - Arn
+  GenerateUserKeyFunctionArn:
+    Description: Keymaster GenerateUserKeyFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateUserKeyFunction
+      - Arn
+  GenerateVapidKeysFunctionArn:
+    Description: Keymaster GenerateVapidKeysFunction ARN
+    Value:
+      Fn::GetAtt:
+      - GenerateVapidKeysFunction
+      - Arn
+  ReadSecretFunctionArn:
+    Description: Keymaster ReadSecretFunction ARN
+    Value:
+      Fn::GetAtt:
+      - ReadSecretFunction
+      - Arn
+Parameters:
+  KeymasterRoleArn:
+    Type: String
+Resources:
+  DeleteParametersFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.delete_parameters
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateJWTKeysFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_jwt_keys
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateRingKeyFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_ring_key
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateSecretFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_secret
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateServiceKeyFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_service_key
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateTOTPFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_totp
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateUserKeyFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_user_key
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  GenerateVapidKeysFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.generate_vapid_keys
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  ReadSecretFunction:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 9a85b8b4-a7a5-4185-9e35-4addb65b230a
+      Handler: index.read_secret
+      MemorySize: 512
+      Role:
+        Ref: KeymasterRoleArn
+      Runtime: nodejs10.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

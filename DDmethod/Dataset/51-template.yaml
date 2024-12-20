@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  Name: Alexa-Nodejs-10x-Template
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  code:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Description: Alexa Base Template with ask-sdk-core and Node.js 10.x Support
+      Timeout: 7
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: e6ab05bd-a6f1-4f64-8e28-35a01a6be40c
+      Runtime: nodejs10.x
+      MemorySize: 128
+      Events:
+        AlexaTrigger:
+          Type: AlexaSkill
+Description: Alexa Base Template with ask-sdk-core and Node.js 10.x Support

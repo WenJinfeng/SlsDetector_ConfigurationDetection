@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Amperity supported Lambda logic for handling data out of our webhook destination.
+Resources:
+  AmperityRunnerGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        ApiKeyRequired: true
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          UsagePlanName: AmperityRunnerGatewayAuthorization
+    Metadata:
+      SamResourceId: AmperityRunnerGateway
+  AmperityRunnerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: amperity-lambda-runner
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 4b98d72a-365f-40ed-859c-4e0f9955353d
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Timeout: 900
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: AmperityRunnerGateway
+            Path: /run
+            Method: any
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName: amperity-lambda-runner
+    Metadata:
+      SamResourceId: AmperityRunnerFunction

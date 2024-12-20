@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Timeout: 10
+Resources:
+  fnPyUrlCrawl:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f95f6068-e058-41f2-9c08-039a75bc1178
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.6

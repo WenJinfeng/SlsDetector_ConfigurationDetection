@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This application contains code that instruments unhandled exception for Python3.8
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 128
+Resources:
+  UnhandledFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: unhandled_exception
+      Description: This file contains code that instruments unhandled exception
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 04c75376-f624-4f60-98dc-17d5f9bb927b
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        UnandledFunction:
+          Type: Api
+          Properties:
+            Path: /unhandled_exception
+            Method: get
+Outputs:
+  UnandledApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/unhandled_exception/
+  UnhandledFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - UnhandledFunction
+      - Arn

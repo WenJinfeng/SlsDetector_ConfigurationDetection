@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  text2event:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Timeout: 3
+      Description: A starter AWS Lambda function.
+      Policies:
+      - Statement:
+        - Action:
+          - cloudwatch:PutMetricData
+          Resource: '*'
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: ef677630-40b6-4788-9849-c9432db0b828
+      Runtime: nodejs8.10
+      MemorySize: 128
+Description: A starter AWS Lambda function.

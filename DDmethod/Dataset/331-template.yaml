@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  xray_test
+  Sample SAM Template for xray_test
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      TracingEnabled: true
+  XrayFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 30a798e2-22db-4665-bb9b-a650dfbe2e82
+      Handler: test.my_handler
+      Runtime: python2.7
+      Tracing: Active
+      Policies: null
+      Events:
+        XrayTEst:
+          Type: Api
+          Properties:
+            Path: /ip
+            Method: get
+            RestApiId:
+              Ref: MyApi
+Outputs:
+  TracingApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${MyApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/ip/

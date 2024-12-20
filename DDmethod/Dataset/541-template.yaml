@@ -1,0 +1,754 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Cornell EAS Convenience AWS Glue / Athena Datasets
+Parameters:
+  CornellEasBucket:
+    Type: String
+    Description: The S3 Bucket Containing the Cornell EAS Datasets.
+    Default: cornell-eas
+  Environment:
+    Type: String
+    Description: Only use the master environment for production use.
+    Default: master
+  GlueDatabaseSuffix:
+    Type: String
+    Description: Optional Suffix for Glue Database Names. Leave blank unless you would like to deploy this template multiple times within a single region in your account.
+    Default: ''
+Outputs:
+  CornellEasDatabase:
+    Value:
+      Fn::Sub: ${CornellEasDatabase}
+  NdfdLatestTable:
+    Value:
+      Fn::Sub: ${NdfdLatestTable}
+  NdfdHistoricalTable:
+    Value:
+      Fn::Sub: ${NdfdHistoricalTable}
+  NdfdElementsTable:
+    Value:
+      Fn::Sub: ${NdfdElementsTable}
+  RtmaLatestTable:
+    Value:
+      Fn::Sub: ${RtmaLatestTable}
+  RtmaHistoricalTable:
+    Value:
+      Fn::Sub: ${RtmaHistoricalTable}
+  RtmaElementsTable:
+    Value:
+      Fn::Sub: ${RtmaElementsTable}
+  NdfdNdgdProjectionsTable:
+    Value:
+      Fn::Sub: ${NdfdNdgdProjectionsTable}
+  NdfdNdgdCoordinatesTable:
+    Value:
+      Fn::Sub: ${NdfdNdgdCoordinatesTable}
+Resources:
+  CornellEasDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseInput:
+        Name:
+          Fn::Sub: cornell_eas${GlueDatabaseSuffix}
+        Description: Cornell EAS Convenience Database
+  NdfdLatestTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: ndfd_latest
+        Description: Latest NDFD Forecast via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          EXTERNAL: 'TRUE'
+          classification: orc
+          compressionType: none
+          typeOfData: file
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/latest/orc/
+          InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+          NumberOfBuckets: 100
+          BucketColumns:
+          - status
+          - area
+          - element
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            Parameters:
+              serialization.format: '1'
+          Columns:
+          - Name: status
+            Type: string
+            Comment: Operational Status of NDFD Element (e.g. opnl/expr)
+          - Name: area
+            Type: string
+            Comment: Spatial Area of NDFD Element (e.g. conus, alaska)
+          - Name: element
+            Type: string
+            Comment: Name of NDFD Element (e.g. temp, rhm)
+          - Name: reference_time
+            Type: string
+            Comment: UNIX epoch timestamp of the Reference Time for forecasted values (int stored as string)
+          - Name: projected_hour
+            Type: string
+            Comment: Number of hours ahead of reference_time for a single forecasted value (decimal stored as string)
+          - Name: level
+            Type: string
+            Comment: Level of the atmosphere (e.g. 0-SFC)
+          - Name: x
+            Type: smallint
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: smallint
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: value
+            Type: string
+            Comment: Forecast for the element at a single grid point (stored as string, can be float or string value)
+  NdfdHistoricalTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: ndfd_historical
+        Description: Historical NDFD Forecasts via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          EXTERNAL: 'TRUE'
+          classification: orc
+          compressionType: none
+          typeOfData: file
+        PartitionKeys:
+        - Name: timestamp
+          Type: string
+          Comment: UTC Hour that the forecast was initialized for in the format YYYYMMDDHH
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/historical/
+          InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+          NumberOfBuckets: 100
+          BucketColumns:
+          - status
+          - area
+          - element
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            Parameters:
+              serialization.format: '1'
+          Columns:
+          - Name: status
+            Type: string
+            Comment: Operational Status of NDFD Element (e.g. opnl/expr)
+          - Name: area
+            Type: string
+            Comment: Spatial Area of NDFD Element (e.g. conus, alaska)
+          - Name: element
+            Type: string
+            Comment: Name of NDFD Element (e.g. temp, rhm)
+          - Name: reference_time
+            Type: string
+            Comment: UNIX epoch timestamp of the Reference Time for forecasted values (int stored as string)
+          - Name: projected_hour
+            Type: string
+            Comment: Number of hours ahead of reference_time for a single forecasted value (decimal stored as string)
+          - Name: level
+            Type: string
+            Comment: Level of the atmosphere (e.g. 0-SFC)
+          - Name: x
+            Type: smallint
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: smallint
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: value
+            Type: string
+            Comment: Forecast for the element at a single grid point (stored as string, can be float or string value)
+  NdfdElementsTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: ndfd_elements
+        Description: NDFD Element Metadata Table via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: json
+          compressionType: none
+          typeOfData: file
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/elements/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: element,name,type,unit
+          Columns:
+          - Name: element
+            Type: string
+            Comment: Name of NDFD Element (e.g. temp, rhm)
+          - Name: name
+            Type: string
+            Comment: Friendly Name for NDFD Element (e.g. Temperature, Relative Humidity)
+          - Name: type
+            Type: string
+            Comment: The variable type of "value" for this element (e.g. float, string)
+          - Name: unit
+            Type: string
+            Comment: The unit for this element (e.g. deg F, %, ", etc.)
+  RtmaLatestTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: rtma_latest
+        Description: Latest RTMA Nowcast via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          EXTERNAL: 'TRUE'
+          classification: orc
+          compressionType: none
+          typeOfData: file
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndgd/rtma/latest/orc/
+          InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+          NumberOfBuckets: 10
+          BucketColumns:
+          - area
+          - element
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            Parameters:
+              serialization.format: '1'
+          Columns:
+          - Name: area
+            Type: string
+            Comment: NDFD / NDGD Spatial Area of RTMA Element (e.g. conus, alaska)
+          - Name: element
+            Type: string
+            Comment: Name of RTMA Element (e.g. temp, vis)
+          - Name: reference_time
+            Type: string
+            Comment: UNIX epoch timestamp of the Reference Time for nowcasted values (int stored as string)
+          - Name: projected_hour
+            Type: string
+            Comment: Number of hours ahead of reference_time for a single nowcasted value (decimal stored as string)
+          - Name: level
+            Type: string
+            Comment: Level of the atmosphere (e.g. 0-SFC)
+          - Name: x
+            Type: smallint
+            Comment: Projected X axis coordinate of the NDFD / NDGD grid for the area
+          - Name: y
+            Type: smallint
+            Comment: Projected Y axis coordinate of the NDFD / NDGD grid for the area
+          - Name: value
+            Type: string
+            Comment: Nowcast for the element at a single grid point (stored as string, can be float or string value)
+  RtmaHistoricalTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: rtma_historical
+        Description: Historical RTMA Nowcasts via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          EXTERNAL: 'TRUE'
+          classification: orc
+          compressionType: none
+          typeOfData: file
+        PartitionKeys:
+        - Name: timestamp
+          Type: bigint
+          Comment: UNIX epoch timestamp of the UTC hour the historical nowcast was released
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndgd/rtma/historical/
+          InputFormat: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+          NumberOfBuckets: 10
+          BucketColumns:
+          - area
+          - element
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            Parameters:
+              serialization.format: '1'
+          Columns:
+          - Name: area
+            Type: string
+            Comment: NDFD / NDGD Spatial Area of RTMA Element (e.g. conus, alaska)
+          - Name: element
+            Type: string
+            Comment: Name of RTMA Element (e.g. temp, vis)
+          - Name: reference_time
+            Type: string
+            Comment: UNIX epoch timestamp of the Reference Time for nowcasted values (int stored as string)
+          - Name: projected_hour
+            Type: string
+            Comment: Number of hours ahead of reference_time for a single nowcasted value (decimal stored as string)
+          - Name: level
+            Type: string
+            Comment: Level of the atmosphere (e.g. 0-SFC)
+          - Name: x
+            Type: smallint
+            Comment: Projected X axis coordinate of the NDFD / NDGD grid for the area
+          - Name: y
+            Type: smallint
+            Comment: Projected Y axis coordinate of the NDFD / NDGD grid for the area
+          - Name: value
+            Type: string
+            Comment: Nowcast for the element at a single grid point (stored as string, can be float or string value)
+  RtmaElementsTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: rtma_elements
+        Description: RTMA Element Metadata Table via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: json
+          compressionType: none
+          typeOfData: file
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndgd/rtma/metadata/elements/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: element,name,type,unit
+          Columns:
+          - Name: element
+            Type: string
+            Comment: Name of RTMA Element (e.g. temp, vis, uvis)
+          - Name: name
+            Type: string
+            Comment: Friendly Name for RTMA Element (e.g. Temperature, Visibility, Visibility Error)
+          - Name: type
+            Type: string
+            Comment: The variable type of "value" for this element (e.g. float, string)
+          - Name: unit
+            Type: string
+            Comment: The unit for this element (e.g. deg F, %, ", etc.)
+  NdfdNdgdProjectionsTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: ndfd_ndgd_projections
+        Description: NDFD Area Projection Metadata Table via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: json
+          compressionType: none
+          typeOfData: file
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/projections/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: area,dx,dy,lat1,lon1,projparams,px,py
+          Columns:
+          - Name: area
+            Type: string
+            Comment: Spatial Area of NDFD / NDGD (e.g. conus, alaska)
+          - Name: projparams
+            Type: string
+            Comment: The PROJ.4 Parameter String for this area
+          - Name: dx
+            Type: double
+            Comment: Distance between X grid points in meters
+          - Name: dy
+            Type: double
+            Comment: Distance between Y grid points in meters
+          - Name: px
+            Type: double
+            Comment: Total number of grid points on the X axis
+          - Name: py
+            Type: double
+            Comment: Total number of grid points on the Y axis
+          - Name: lat1
+            Type: double
+            Comment: Latitude of the first grid point
+          - Name: lon1
+            Type: double
+            Comment: Longitude of the first grid point
+  NdfdNdgdCoordinatesTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableInput:
+        Name: ndfd_ndgd_coordinates
+        Description: NDFD Grid Coordinate Lat/Lon Translation Table via Cornell EAS Convenience Database
+        Owner: hadoop
+        Retention: 0
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: json
+          compressionType: bzip2
+          typeOfData: file
+        PartitionKeys:
+        - Name: area
+          Type: string
+          Comment: Spatial Area of NDFD / NDGD (e.g. conus, alaska)
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesAlaskaPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - alaska
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=alaska/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesConusPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - conus
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=conus/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesGuamPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - guam
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=guam/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesHawaiiPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - hawaii
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=hawaii/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesNhemiPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - nhemi
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=nhemi/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesNpacocnPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - npacocn
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=npacocn/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesOceanicPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - oceanic
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=oceanic/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+  NdfdNdgdCoordinatesPuertoriPartition:
+    Type: AWS::Glue::Partition
+    Properties:
+      CatalogId:
+        Fn::Sub: ${AWS::AccountId}
+      DatabaseName:
+        Fn::Sub: ${CornellEasDatabase}
+      TableName:
+        Fn::Sub: ${NdfdNdgdCoordinatesTable}
+      PartitionInput:
+        Values:
+        - puertori
+        StorageDescriptor:
+          Compressed: false
+          Location:
+            Fn::Sub: s3://${CornellEasBucket}/datasets/${Environment}/ndfd/metadata/coordinates/area=puertori/
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              paths: lat,lon,x,y
+          Columns:
+          - Name: x
+            Type: int
+            Comment: Projected X axis coordinate of the NDFD grid for the area
+          - Name: y
+            Type: int
+            Comment: Projected Y axis coordinate of the NDFD grid for the area
+          - Name: lat
+            Type: double
+            Comment: WGS84 Latitude coordinate of the NDFD grid for the area
+          - Name: lon
+            Type: double
+            Comment: WGS84 Longitude coordinate of the NDFD grid for the area
+Transform: AWS::Serverless-2016-10-31

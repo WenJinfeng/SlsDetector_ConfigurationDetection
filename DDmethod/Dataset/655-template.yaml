@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This file contais code that instruments lambda initialization error for nodejs12.x
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+Resources:
+  InitializationErrorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: null
+      Description: This file contais code that instruments lambda initialization error
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 4676c90d-8f95-44df-be54-798f9cba7e93
+      Handler: app.handler
+      Runtime: nodejs12.x
+      Events:
+        InitializationErrorFunction:
+          Type: Api
+          Properties:
+            Path: /initialization_error
+            Method: get
+Outputs:
+  InitializationErrorApi:
+    Description: API Gateway endpoint URL for Prod stage for initialization error function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/initialization_error/
+  InitializationErrorFunction:
+    Description: Initialization Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - InitializationErrorFunction
+      - Arn

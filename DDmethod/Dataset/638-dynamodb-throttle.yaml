@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CloudWatch alarm for Amazon DynamoDB
+
+Parameters:
+  CustomAlarmName:
+    Type: String
+    Default: ''
+    Description: The custom alram name
+  SNSTopicArn:
+    Type: String
+    AllowedPattern: .+
+    Description: The SNS topic ARN [required]
+  TableName:
+    Type: String
+    AllowedPattern: .+
+    Description: The DynamoDB table name [required]
+
+Conditions:
+  CreateCustomAlarmName: !Not [ !Equals [ !Ref CustomAlarmName, '' ] ]
+
+Resources:
+  AlarmDynamoDBWriteThrottleEvents:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref SNSTopicArn
+      AlarmDescription: !Sub '*DynamoDB* (${TableName}) の *書き込み処理でスロットリングが発生* しています。これは、プロビジョニングされたスループット値を超えるリクエストが発生して、書き込み処理が中断されたことを示しています。'
+      AlarmName: !If
+        - CreateCustomAlarmName
+        - !Sub Warning-${CustomAlarmName}-DynamoDB-${TableName}-WriteThrottleEvents
+        - !Sub Warning-DynamoDB-${TableName}-WriteThrottleEvents
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: TableName
+          Value: !Ref TableName
+      EvaluationPeriods: 1
+      MetricName: WriteThrottleEvents
+      Namespace: AWS/DynamoDB
+      OKActions:
+        - !Ref SNSTopicArn
+      # Alert when Sum is 1 count in 60 seconds.
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching
+  AlarmDynamoDBReadThrottleEvents:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref SNSTopicArn
+      AlarmDescription: !Sub '*DynamoDB* (${TableName}) の *読み込み処理でスロットリングが発生* しています。これは、プロビジョニングされたスループット値を超えるリクエストが発生して、読み込み処理が中断されたことを示しています。'
+      AlarmName: !If
+        - CreateCustomAlarmName
+        - !Sub Warning-${CustomAlarmName}-DynamoDB-${TableName}-ReadThrottleEvents
+        - !Sub Warning-DynamoDB-${TableName}-ReadThrottleEvents
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: TableName
+          Value: !Ref TableName
+      EvaluationPeriods: 1
+      MetricName: ReadThrottleEvents
+      Namespace: AWS/DynamoDB
+      OKActions:
+        - !Ref SNSTopicArn
+      # Alert when Sum is 1 count in 60 seconds.
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+      TreatMissingData: notBreaching

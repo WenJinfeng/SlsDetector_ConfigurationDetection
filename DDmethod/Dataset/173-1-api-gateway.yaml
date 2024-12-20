@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: selenium with headless chromium
+Resources:
+  Lambdium:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.postApiGatewayHandler
+      Runtime: nodejs6.10
+      FunctionName: lambdium
+      Description: headless chromium running selenium
+      # This needs to be fairly large: chromium needs a lot of memory
+      MemorySize: 1156
+      Timeout: 20
+      Environment:
+        Variables:
+          CLEAR_TMP: "true"
+      # packaged lambdium archive @ v0.2
+      CodeUri: s3://lambdium-upload-bucket/690dd891bba09e8520a70cf68af7d904
+      Events:
+        RunScript:
+          Properties:
+            Method: POST
+            Path: '/runScript'
+            RestApiId: !Ref Api
+          Type: Api
+  # POST a selenium script file to this endpoint to execute the script:
+  # curl -v -F "script=@examples/visitgoogle.js" <<API Gateway URL>>
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: RunScriptAPI
+      StageName: Prod
+      DefinitionBody:
+        swagger: "2.0"
+        schemes:
+          - "https"
+        paths:
+          '/runScript':
+            post:
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Lambdium.Arn}/invocations
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                type: aws_proxy
+        x-amazon-apigateway-binary-media-types:
+          - "*/*"

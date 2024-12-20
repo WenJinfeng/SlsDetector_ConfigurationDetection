@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Trend-Micro-Smartcheck-and-Threadfix-serverless-connector
+  This serverless application integrates with Trend Micro deep security smart check as web hook and sends scanned data to your Threadfix.
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources: 
+
+  TrendMicroSmartcheckAndThreadfixServerlessConnector:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: s3://dssc-threadfix-notifier-bucket/Trend-Micro-Smartcheck-and-Threadfix-serverless-connector-1.0.0.zip
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.7
+      MemorySize: 512
+      Timeout: 900
+      Environment:
+        Variables:
+          THREADFIX_URL: <add_threadfix_url>
+          THREADFIX_VERSION: <add_version>
+          THREADFIX_API_KEY: <add_api_key>
+          THREADFIX_ID: <add_threadfix_id>
+          DSSC_URL: <add_smartcheck_url>
+          DSSC_SMARTCHECK_USER: <add_smartcheck_user>
+          DSSC_SMARTCHECK_PASSWORD: <add_smartcheck_password>
+          DSSC_MIN_SEVERITY: <min_severity>
+          DSSC_SHOW_FIXED: <add_true_or_false>
+          DSSC_SHOW_OVERRIDDEN: <add_true_or_false>
+          DSSC_INSECURE_SKIP_TLS_VERIFY: <add_true_or_false>
+
+      Events:
+        Api1:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: POST
+
+Outputs:
+
+  TrendMicroSmartcheckAndThreadfixServerlessConnector:
+    Description: "Deep Security Lambda Function ARN for Threadfix"
+    Value: !GetAtt TrendMicroSmartcheckAndThreadfixServerlessConnector.Arn

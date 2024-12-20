@@ -1,0 +1,29 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  CustomResource:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: CustomResource::Lambdajection.Examples.CustomResource.PasswordGenerator::Run
+      Runtime: dotnet6
+      FunctionName: lambdajection-customresource
+      Timeout: 300
+      CodeUri: ../../bin/Examples/CustomResource/Release/net6.0/publish/
+      MemorySize: 512
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          PasswordGen__DefaultLength: "26"
+
+  GeneratedPassword:
+    Type: Custom::Password
+    Properties:
+      ServiceToken: !GetAtt CustomResource.Arn
+      Length: 5
+
+Outputs:
+  InputPayload:
+    Value: "{}"
+
+  ExpectedOutput:
+    Value: !Sub '"${GeneratedPassword.Password}"'

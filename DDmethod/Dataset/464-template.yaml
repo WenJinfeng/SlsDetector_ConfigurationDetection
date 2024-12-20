@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  HTTPApprovalProxy:
+    Type: String
+    Description: The URL of the HTTP Approval Proxy shown on your SSLMate account's API Credentials Page
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  sslmatehttpapproval:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          SSLMATE_HTTP_APPROVAL_PROXY:
+            Ref: HTTPApprovalProxy
+      Handler: lambda_function.lambda_handler
+      Description: Automatically approve SSLMate certificates for domains that are pointed at your Application Load Balancer
+      Timeout: 8
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: b18a7fe0-0624-4945-85c5-ec301b137a71
+      Runtime: python3.7
+      MemorySize: 128
+Description: Automatically approve SSLMate certificates for domains that are pointed at your Application Load Balancer

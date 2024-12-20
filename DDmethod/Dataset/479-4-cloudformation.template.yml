@@ -1,0 +1,35 @@
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  DotnetVersion:
+    Type: String
+    Description: Version of .NET to use.
+
+Resources:
+  LambdajectionLayer:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      # Requires that dotnet build be run with UPLOAD_LAYER_TEMPLATE=true and OutputLayerTemplateFilePath=./Layer.template.yml
+      TemplateURL: ../../Layer.template.yml
+
+  CustomRuntime:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: CustomRuntime::Lambdajection.Examples.CustomRuntime.Handler::Run
+      Runtime: provided.al2
+      FunctionName: lambdajection-customruntime
+      Timeout: 300
+      CodeUri: ../../bin/Examples/CustomRuntime/Release/net7.0/linux-x64/publish/
+      MemorySize: 512
+      Layers:
+        # https://github.com/cythral/dotnet-lambda-layer
+        - !Sub "{{resolve:ssm:/dotnet/${DotnetVersion}/layer-arn}}"
+        - !GetAtt LambdajectionLayer.Outputs.LayerArn
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+Outputs:
+  InputPayload:
+    Value: "{}"
+
+  ExpectedOutput:
+    Value: '"Hello World!"'

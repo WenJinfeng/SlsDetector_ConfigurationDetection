@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: eMAM lambda transcoder
+Parameters:
+  LambdaRole:
+    Type: String
+    Description: emam-role ARN
+  UID:
+    Type: String
+    Description: Unique ID
+Resources:
+  LambdaTranscoder:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName:
+        Fn::Sub: emam-lambda-${UID}
+      Code:
+        S3Bucket: <%REPO_BUCKET%>
+        S3Key: 6b8988a4-288c-494b-bb09-046c72614667
+      Handler: transcoder.lambda_handler
+      Runtime: python3.7
+      Timeout: 300
+      MemorySize: 2048
+      Role:
+        Ref: LambdaRole
+Outputs:
+  LambdaTranscoderArn:
+    Description: lambda_transcoder ARN
+    Value:
+      Fn::GetAtt:
+      - LambdaTranscoder
+      - Arn
+    Export:
+      Name:
+        Fn::Sub: ${UID}-LambdaArn

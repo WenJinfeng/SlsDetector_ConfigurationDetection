@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Clean resources created by EC2 instances in ASG
+Parameters:
+  KeepLogGroups:
+    Type: String
+    Default: true
+    AllowedValues: [true, false]
+    Description: Whether to keep or delete log groups after SAM is deleted
+  RCU:
+    Type: Number
+    Default: 5
+    Description: Read capacity units for DynamoDB table
+  WCU:
+    Type: Number
+    Default: 5
+    Description: Write capacity units for DynamoDB table
+Conditions:
+  ManageLogGroupsCondition: !Equals [!Ref KeepLogGroups, false]
+Resources:
+  # The cleaner function. By itself there's no trigger. Instead, let user stacks
+  # connect this lambda to an SNS topic.
+  CleanerFun:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: cleaner.lambda_handler
+      Runtime: python3.6
+      CodeUri: .
+      Description: A cleaner function that reacts to an SNS topic
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref InstanceResourcesTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref InstanceResourcesTable
+      MemorySize: 128
+      Timeout: 10
+
+  # Optional: clean-up logs on sam deletion
+  CleanerFunLogGroups:
+    Type: AWS::Logs::LogGroup
+    Condition: ManageLogGroupsCondition
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CleanerFun}
+
+  # Map instances to their resources
+  InstanceResourcesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: instance
+          AttributeType: S
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: instance
+          KeyType: HASH
+        - AttributeName: name
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: !Ref RCU
+        WriteCapacityUnits: !Ref WCU
+
+Outputs:
+  CleanerFunARN:
+    Value: !GetAtt CleanerFun.Arn
+    Description: ARN of CleanerFun
+
+  # OPTIONAL: SAR does not allow this template to declare CleanerFunRole,
+  # because for each lambda function XXX, SAM implicitly creates XXXRole (which
+  # in this case is CleanerFunRole). However, it turns out that we can still
+  # refer to this 'hidden' name, hence we export it as an output.
+  #
+  # NOTE: it is possible not to export CleanerFunRole. In this case, before
+  # starting a user-stack to use this SAM, one must check the resource section
+  # of this SAM stack (visible from web-console or fetchable with AWS CLI).
+  CleanerFunRoleName:
+    Value: !Ref CleanerFunRole

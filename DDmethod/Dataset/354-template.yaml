@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Creates LogicMonitor OpsNotes for CloudWatch Events, thereby enabling correlation between events and performance data.
+Resources:
+  logicmonitorsendcloudwatchevents:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Creates LogicMonitor OpsNotes for CloudWatch Events, thereby enabling correlation between events and performance data.
+      Policies:
+      - Statement:
+        - Action: kms:Decrypt
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/${keyId}
+            - keyId: <enter key id>
+          Effect: Allow
+      MemorySize: 128
+      Environment:
+        Variables:
+          ACCOUNT_NAME: <enter logicmonitor account name here>
+          API_ACCESS_ID: <enter api access id here>
+          API_ACCESS_KEY: <enter api key here>
+      Handler: main.lambda_handler
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: c533f714-29f8-43cd-886e-4fa4c85e7cad
+      Runtime: python2.7
+Metadata:
+  Name: logicmonitor-send-cloudwatch-events

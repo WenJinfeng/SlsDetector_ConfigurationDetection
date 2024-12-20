@@ -1,0 +1,61 @@
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  TelegramApiToken:
+    Type: String
+  Keyword:
+    Type: String
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: Telegram-Bot-Rekognition
+    Author: Salvatore Cozzubo
+    ReadmeUrl: README.md
+    LicenseUrl: LICENSE
+    Labels:
+      - telegram
+      - rekognition
+      - nodejs
+    SourceCodeUrl: https://github.com/SalvoCozzubo/telegram-bot-rekognition
+    HomePageUrl: https://www.salvatorecozzubo.com
+    Description: Deploy a webhook for Telegram Bot that uses AWS Rekognition to get labels from user's picture message
+    SemanticVersion: 1.0.1
+
+Resources:
+  WebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/webhook
+      Runtime: nodejs14.x
+      Handler: index.handler
+      Architectures:
+        - arm64
+      Timeout: 10
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /webhook
+            Method: POST
+      Environment:
+        Variables:
+          TELEGRAM_API_TOKEN: !Ref TelegramApiToken
+          KEYWORD: !Ref Keyword
+      Layers:
+        - !Ref Dependencies
+      Policies:
+        - RekognitionDetectOnlyPolicy: {}
+
+  Dependencies:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - nodejs14.x
+      ContentUri: src/layer-deps
+    Metadata:
+      BuildMethod: nodejs14.x
+
+Outputs:
+  WebEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/webhook"

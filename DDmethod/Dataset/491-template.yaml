@@ -1,0 +1,56 @@
+Parameters:
+  ExampleParameter:
+    Type: String
+    Default: Hello World
+    Description: An example parameter.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: sam-app
+Transform:
+- AWS::Serverless-2016-10-31
+Resources:
+  getAllItemsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/handler
+      Runtime: go1.x
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all items from
+        a DynamoDB table.
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: SampleTable
+      Environment:
+        Variables:
+          SAMPLE_TABLE:
+            Ref: SampleTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 48f3ef69-64bf-4519-9abe-cee0e634127b
+    Metadata:
+      SamResourceId: getAllItemsFunction
+  SampleTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+    Metadata:
+      SamResourceId: SampleTable
+Outputs:
+  WebEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/

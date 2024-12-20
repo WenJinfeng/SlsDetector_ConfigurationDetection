@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: TweetEventSource
+    Description: "A serverless app that periodically polls the public Twitter API with a predefined search query and invokes a given lambda function to process new tweets."
+    Author: William Weiss
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['lambda','events','polling','source','twitter','tweet','api','search']
+    HomePageUrl: https://github.com/wweiss/aws-serverless-tweet-event-source
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/wweiss/aws-serverless-tweet-event-source
+
+Parameters:
+  EncryptedConsumerApiKey:
+    Type: String
+    Default: ''
+    Description: Encrypted Twitter Consumer API Key encrypted ciphertext blob as a base64-encoded string.
+  EncryptedConsumerApiSecretKey:
+    Type: String
+    Default: ''
+    Description: Encrypted Twitter Consumer API Secret Key encrypted ciphertext blob as a base64-encoded string.
+  DecryptionKeyName:
+    Type: String
+    Default: invalid
+    Description:
+      KMS key name of the key used to encrypt the Twitter Consumer API Keys. Note, this must be just the key name (UUID), not the full key ARN. It's assumed the key is owned by the same account, in the same region as the app.
+  ConsumerApiKey:
+    Type: String
+    Default: ''
+    Description: Consumer API Key in plain text.
+  ConsumerApiSecretKey:
+    Type: String
+    Default: ''
+    Description: Consumer API Secret Key in plain text.
+  ProcessorFunctionName:
+    Type: String
+    Description:
+      Name of lambda function that should be invoked to process tweets. Note, this must be a function name and not a function ARN.
+  SearchQuery:
+    Type: String
+    Description: Search query to be passed to Twitter to select tweets to use for the event source.
+  AdditionalParameters:
+    Type: String
+    Default: ''
+    Description: Additional parameters to be added to the API call. This should be in query string format.
+  PollingFrequencyInMinutes:
+    Type: Number
+    MinValue: 1
+    Default: 5
+    Description: Frequency in minutes to poll for new tweets.
+  PollTimeout:
+    Type: Number
+    MinValue: 1
+    Default: 30
+    Description: Maximum time in seconds to spend on a single polling session.
+  PerRequestTimeout:
+    Type: Number
+    MinValue: 1
+    Default: 1500
+    Description: Milliseconds before any given request to the Twitter API will timeout and give up.
+  LoggingLevel:
+    Type: String
+    Default: error
+    AllowedValues:
+      - error
+      - warn
+      - info
+      - debug
+      - trace
+    Description: (Optional) The level of logging desired (error, warn, info, debug or trace).
+
+Conditions:
+  IsPollingFrequencyInMinutesSingular: !Equals [!Ref PollingFrequencyInMinutes, 1]
+
+Resources:
+  TwitterTweetPoller:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs10.x
+      CodeUri: ./dist/tweetPoller.js
+      Handler: tweetPoller.handler
+      Tracing: Active
+      MemorySize: 512
+      Timeout: !Ref PollTimeout
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ProcessorFunctionName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PollingCheckpoint
+        - KMSDecryptPolicy:
+            KeyId: !Ref DecryptionKeyName
+      Environment:
+        Variables:
+          LOGGING_LEVEL: !Ref LoggingLevel
+          ENCRYPTED_CONSUMER_API_KEY: !Ref EncryptedConsumerApiKey
+          ENCRYPTED_CONSUMER_API_SECRET_KEY: !Ref EncryptedConsumerApiSecretKey
+          CONSUMER_API_KEY: !Ref ConsumerApiKey
+          CONSUMER_API_SECRET_KEY: !Ref ConsumerApiSecretKey
+          SEARCH_QUERY: !Ref SearchQuery
+          ADDITIONAL_PARAMETERS: !Ref AdditionalParameters
+          PER_REQUEST_TIMEOUT: !Ref PerRequestTimeout
+          POLLING_CHECKPOINT_TABLE_NAME: !Ref PollingCheckpoint
+          PROCESSOR_FUNCTION_NAME: !Ref ProcessorFunctionName
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule:
+              !If [
+                IsPollingFrequencyInMinutesSingular,
+                !Sub 'rate(${PollingFrequencyInMinutes} minute)',
+                !Sub 'rate(${PollingFrequencyInMinutes} minutes)',
+              ]
+
+  PollingCheckpoint:
+    Type: AWS::Serverless::SimpleTable
+
+Outputs:
+  TwitterTweetPollerFunctionName:
+    Value: !Ref TwitterTweetPoller
+    Export:
+      Name: !Sub ${AWS::StackName}-TwitterTweetPollerFunctionName
+  TwitterTweetPollerFunctionArn:
+    Value: !GetAtt TwitterTweetPoller.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-TwitterTweetPollerFunctionArn
+  PollingCheckpointTableName:
+    Value: !Ref PollingCheckpoint
+    Export:
+      Name: !Sub ${AWS::StackName}-PollingCheckpointTableName
+  PollingCheckpointTableArn:
+    Value: !GetAtt PollingCheckpoint.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-PollingCheckpointTableArn

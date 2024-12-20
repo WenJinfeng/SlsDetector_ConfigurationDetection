@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SpheroAlexa:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: ''
+      MemorySize: 128
+      Environment:
+        Variables:
+          ngrokURL: 6294233b.ngrok.io
+      Handler: index.handler
+      Timeout: 3
+      Policies:
+      - Statement:
+        - Action:
+          - lambda:InvokeFunction
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}*
+            - functionName: name
+          Effect: Allow
+      - Statement:
+        - Action:
+          - cloudwatch:PutMetricData
+          Resource: '*'
+          Effect: Allow
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          - dynamodb:Scan
+          - dynamodb:Query
+          - dynamodb:BatchGetItem
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+            - tableName: name
+          Effect: Allow
+      - Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:GetBucketLocation
+          - s3:GetObjectVersion
+          - s3:GetLifecycleConfiguration
+          Resource:
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}
+            - bucketName: name
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}/*
+            - bucketName: name
+          Effect: Allow
+      - Statement:
+        - Action:
+          - ec2:DescribeRegions
+          - ec2:DescribeInstances
+          Resource: '*'
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 8c4dc1a5-88a6-473a-984d-021c578d26b2
+      Runtime: nodejs6.10
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+Description: An AWS Serverless Specification template describing your function.

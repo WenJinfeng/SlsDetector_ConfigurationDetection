@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless App for sending push notifications to Huawei devices (HMS)
+
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: sns-push-hms
+    Description: An AWS Serverless App for sending push notifications to Huawei devices (HMS)
+    Author: Taha HICHRI
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['SNS', 'Huawei', "HMS"]
+    HomePageUrl: https://github.com/tahaHichri/serverless-sns-push-pushkit
+    SemanticVersion: 0.0.2
+    SourceCodeUrl: https://github.com/tahaHichri/serverless-sns-push-pushkit
+
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  snspushhms:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Description: 'An AWS Serverless App for sending push notifications to Huawei devices (HMS)'
+      MemorySize: 128
+      Timeout: 3
+      Events:
+        SNS1:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: SNSTopic1
+  SNSTopic1:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      DisplayName: 'Push to HMS devices'
+      TopicName: 'mobile_push_hms'
+      FifoTopic: False

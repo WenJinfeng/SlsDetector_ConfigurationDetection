@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  WriteEvent:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Write autoscaling events to Datadog
+      MemorySize: 128
+      Environment:
+        Variables:
+          DATADOG_API_KEY:
+            Ref: DatadogApiKey
+          LOG_LEVEL: INFO
+          DATADOG_APP_KEY:
+            Ref: DatadogAppKey
+      Handler: handlers/write-event-to-datadog.handler
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 2137fc5b-038d-409e-ba88-461399f95f4e
+      Runtime: python3.6
+      Events:
+        Event1:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              event:
+                source:
+                - aws.dynamodb
+                detail:
+                  userAgent:
+                  - dynamodb.application-autoscaling.amazonaws.com
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  DatadogApiKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog API key
+  DatadogAppKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog App key
+Description: 'SAM template for Serverless framework service: '

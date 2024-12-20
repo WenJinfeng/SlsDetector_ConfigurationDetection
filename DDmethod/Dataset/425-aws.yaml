@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Demonstrate a basic fact skill built with the ASK NodeJS SDK
+Resources:
+  awsserverlessrepositoryalexaskillskitnodejsfactL3Q0NKRTG09E:
+    Properties:
+      CodeUri: s3://huskill/fb122fc8dbeb5d403b0e1470962bb537
+      Description: Demonstrate a basic fact skill built with the ASK NodeJS SDK
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: nodejs8.10
+      Timeout: 7
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless nanoservice using SNS, Lambda, and DynamoDB
+Parameters:
+  TableName:
+    Type: String
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    MemorySize: 128
+    Environment:
+      Variables:
+        TABLE_NAME:
+          Ref: TableName
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: nanoservice-sns-lambda-dynamodb
+    Description: Serverless nanoservice using SNS, Lambda, and DynamoDB. The Node.js Lambda service is triggered by SNS and writes messages to DynamoDB.
+    Author: Bernd Straehle
+    Labels: ['serverless', 'sam', 'sns', 'lambda', 'dynamodb', 'nodejs']
+    SpdxLicenseId: GPL-3.0-or-later
+    LicenseUrl: LICENSE
+    ReadmeUrl: README-SAR.md
+    HomePageUrl: https://github.com/bstraehle
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/bstraehle/aws-sns-lambda-dynamodb
+Resources:
+  myLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri: .
+      Description: Serverless nanoservice using SNS, Lambda, and DynamoDB
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: mySNSTopic
+  mySNSTopic:
+    Type: AWS::SNS::Topic
+  myDynamoDBTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName:
+        Ref: TableName

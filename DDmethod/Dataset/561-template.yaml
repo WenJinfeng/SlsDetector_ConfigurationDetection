@@ -1,0 +1,319 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  eventbridge-integration-solution-zendesk-attachment-processing
+  (qs-1qpmal5co)
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Amazon EventBridge Integration Solution
+      Parameters:
+      - EventSourceName
+    - Label:
+        default: Amazon S3 Bucket for Attachment Files
+      Parameters:
+      - BucketName
+    - Label:
+        default: Zendesk Configuration
+      Parameters:
+      - ZendeskAPIToken
+      - ZendeskEmail
+      - ZendeskSubdomain
+    ParameterLabels:
+      EventSourceName:
+        default: Event Source Name
+      BucketName:
+        default: Bucket Name
+      ZendeskAPIToken:
+        default: API Token
+      ZendeskEmail:
+        default: Email
+      ZendeskSubdomain:
+        default: Subdomain
+Parameters:
+  EventSourceName:
+    Type: String
+    AllowedPattern: aws\.partner(/[\.\-_A-Za-z0-9]+){2,}
+    MinLength: 1
+    MaxLength: 256
+    Description: Name of the Zendesk Partner Event Source to associate with an Event Bus. For example, aws.partner/zendesk.com/1234/default
+  ZendeskAPIToken:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: The Zendesk API token used to access the Zendesk API
+  ZendeskEmail:
+    Type: String
+    MinLength: 1
+    Description: The Zendesk agent email used for Zendesk API access
+  ZendeskSubdomain:
+    Type: String
+    MinLength: 1
+    Description: The Zendesk subdomain which is a unique identifier of your Zendesk account
+  BucketName:
+    Type: String
+    Default: ''
+    AllowedPattern: '[a-zA-Z0-9.-]*'
+    MaxLength: 63
+    Description: Name of the Amazon S3 Bucket to create to store Zendesk attachment files for processing. Leave blank for an automatically generated name.
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.8
+Conditions:
+  AutoGenerateBucketName:
+    Fn::Equals:
+    - Ref: BucketName
+    - ''
+Resources:
+  ZendeskEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      EventSourceName:
+        Ref: EventSourceName
+      Name:
+        Ref: EventSourceName
+  AttachmentFileBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      BucketName:
+        Fn::If:
+        - AutoGenerateBucketName
+        - Ref: AWS::NoValue
+        - Ref: BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  GetAttachment:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: eb8671c4-65a1-4b63-bf44-dcf34f6fa048
+      Description: A function that retrieves a file attached to a Zendesk comment.
+      Policies:
+      - S3WritePolicy:
+          BucketName:
+            Ref: AttachmentFileBucket
+      Environment:
+        Variables:
+          S3_BUCKET:
+            Ref: AttachmentFileBucket
+  GetText:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: aa4f8df3-2c84-482e-8e18-b509557ab489
+      Description: A function that extracts text from a given file using Textract.
+      Policies:
+      - TextractPolicy: {}
+      - S3ReadPolicy:
+          BucketName:
+            Ref: AttachmentFileBucket
+      Environment:
+        Variables:
+          S3_BUCKET:
+            Ref: AttachmentFileBucket
+  DetectImages:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: dcb4769c-df4e-4887-9c18-fb523a670b71
+      Description: A function that analyizes images from a given file using Textract.
+      Policies:
+      - RekognitionDetectOnlyPolicy: {}
+      - S3ReadPolicy:
+          BucketName:
+            Ref: AttachmentFileBucket
+      Environment:
+        Variables:
+          S3_BUCKET:
+            Ref: AttachmentFileBucket
+  PostComment:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 1cca154d-458b-4a94-8b25-15c395745990
+      Description: A function that posts the extracted text and objects detected in a comment on the Zendesk ticket.
+      Environment:
+        Variables:
+          ZENDESK_EMAIL:
+            Ref: ZendeskEmail
+          ZENDESK_SUBDOMAIN:
+            Ref: ZendeskSubdomain
+          ZENDESK_TOKEN:
+            Ref: ZendeskAPIToken
+  AttachmentProcessor:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Definition:
+        StartAt: GetAttachment
+        States:
+          GetAttachment:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - GetAttachment
+              - Arn
+            Next: isSupportedFileType
+          isSupportedFileType:
+            Type: Choice
+            Choices:
+            - Variable: $.accepted_file_type
+              BooleanEquals: true
+              Next: GetTextAndImages
+            - Variable: $.accepted_file_type
+              BooleanEquals: false
+              Next: UnsupportedFileTypeSucceed
+            Default: FileTypeCheckFail
+          UnsupportedFileTypeSucceed:
+            Type: Succeed
+          FileTypeCheckFail:
+            Type: Fail
+            Cause: Could not determine if supported or unsupported file type.
+          GetTextAndImages:
+            Type: Parallel
+            Next: PostComment
+            Branches:
+            - StartAt: GetText
+              States:
+                GetText:
+                  Type: Task
+                  Resource:
+                    Fn::GetAtt:
+                    - GetText
+                    - Arn
+                  End: true
+            - StartAt: DetectImages
+              States:
+                DetectImages:
+                  Type: Task
+                  Resource:
+                    Fn::GetAtt:
+                    - DetectImages
+                    - Arn
+                  End: true
+          PostComment:
+            Type: Task
+            Resource:
+              Fn::GetAtt:
+              - PostComment
+              - Arn
+            End: true
+      Events:
+        EventBridgeRule:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName:
+              Ref: ZendeskEventBus
+            Pattern:
+              account:
+              - Ref: AWS::AccountId
+              detail-type:
+              - 'Support Ticket: Attachment Linked to Comment'
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: GetAttachment
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: GetText
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: DetectImages
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: PostComment
+      Type: STANDARD
+Outputs:
+  EventBridgeEventBus:
+    Description: SaaS Event Bus ARN
+    Value:
+      Fn::GetAtt:
+      - ZendeskEventBus
+      - Arn
+  EventBridgeRule:
+    Description: Implicit EventBridge Rule ARN
+    Value:
+      Fn::GetAtt:
+      - AttachmentProcessorEventBridgeRule
+      - Arn
+  AttachmentProcessor:
+    Description: AttachmentProcessor state machine ARN
+    Value:
+      Ref: AttachmentProcessor
+  AttachmentProcessorIamRole:
+    Description: Implicit IAM Role created for AttachmentProcessor state machine
+    Value:
+      Fn::GetAtt:
+      - AttachmentProcessorRole
+      - Arn
+  GetAttachmentFunction:
+    Description: GetAttachment Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetAttachment
+      - Arn
+  GetAttachmentFunctionIamRole:
+    Description: Implicit IAM Role created for GetAttachment Function
+    Value:
+      Fn::GetAtt:
+      - GetAttachmentRole
+      - Arn
+  GetTextFunction:
+    Description: GetText Function ARN
+    Value:
+      Fn::GetAtt:
+      - GetText
+      - Arn
+  GetTextFunctionIamRole:
+    Description: Implicit IAM Role created for GetText Function
+    Value:
+      Fn::GetAtt:
+      - GetTextRole
+      - Arn
+  DetectImagesFunction:
+    Description: DetectImages Function ARN
+    Value:
+      Fn::GetAtt:
+      - DetectImages
+      - Arn
+  DetectImagesFunctionIamRole:
+    Description: Implicit IAM Role created for DetectImages Function
+    Value:
+      Fn::GetAtt:
+      - DetectImagesRole
+      - Arn
+  PostCommentFunction:
+    Description: PostComment Function ARN
+    Value:
+      Fn::GetAtt:
+      - PostComment
+      - Arn
+  PostCommentFunctionIamRole:
+    Description: Implicit IAM Role created for PostComment Function
+    Value:
+      Fn::GetAtt:
+      - PostCommentRole
+      - Arn
+  S3Bucket:
+    Description: S3 Bucket to save attachments for processing
+    Value:
+      Fn::GetAtt:
+      - AttachmentFileBucket
+      - Arn

@@ -1,0 +1,175 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Generate report from Coralogix Elasticsearch API and send it by email.
+Parameters:
+  CoralogixRegion:
+    Type: String
+    Description: The Coralogix location region, possible options are [Europe, Europe2,
+      India, Singapore, US, US2]
+    AllowedValues:
+    - Europe
+    - Europe2
+    - India
+    - Singapore
+    - US
+    - US2
+    Default: Europe
+  PrivateKey:
+    Type: String
+    Description: The Coralogix private key which is used to validate your authenticity
+    NoEcho: true
+  FunctionArchitecture:
+    Type: String
+    Description: Lambda function architecture, possible options are [x86_64, arm64]
+    AllowedValues:
+    - x86_64
+    - arm64
+    Default: x86_64
+  FunctionMemorySize:
+    Type: Number
+    Description: Lambda function memory limit
+    MinValue: 128
+    MaxValue: 3008
+    Default: 2048
+  FunctionTimeout:
+    Type: Number
+    Description: Lambda function timeout limit
+    MinValue: 30
+    MaxValue: 900
+    Default: 600
+  Schedule:
+    Type: String
+    Description: Report sending schedule
+    MinLength: 3
+    MaxLength: 320
+    Default: cron(0 0 * * ? *)
+  Enabled:
+    Type: String
+    Description: Report sending state
+    AllowedValues:
+    - true
+    - false
+    Default: true
+  Sender:
+    Type: String
+    Description: Report sender email
+    AllowedPattern: ^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$
+    ConstraintDescription: The Sender should be valid email string
+    MinLength: 3
+    MaxLength: 320
+  Recipient:
+    Type: String
+    Description: Report recipient email
+    MinLength: 3
+    Default: success@simulator.amazonses.com
+  Subject:
+    Type: String
+    Description: Report email subject
+    MinLength: 1
+    MaxLength: 78
+    Default: Coralogix Elasticsearch Report
+  Query:
+    Type: String
+    Description: Elasticsearch query
+    MinLength: 1
+  Template:
+    Type: String
+    Description: Report template in JMESPath format
+    MinLength: 1
+  RequestTimeout:
+    Type: Number
+    Description: Elasticsearch request timeout
+    MinValue: 10000
+    Default: 30000
+  NotificationEmail:
+    Type: String
+    Description: Failure notification email address
+    MaxLength: 320
+    Default: ''
+Mappings:
+  CoralogixRegionMap:
+    Europe:
+      LogUrl: https://coralogix-esapi.coralogix.com:9443
+    Europe2:
+      LogUrl: https://es-api.eu2.coralogix.com:9443
+    India:
+      LogUrl: https://es-api.app.coralogix.in:9443
+    Singapore:
+      LogUrl: https://es-api.coralogixsg.com:9443
+    US:
+      LogUrl: https://esapi.coralogix.us:9443
+    US2:
+      LogUrl: https://esapi.cx498.coralogix.com:9443
+Conditions:
+  IsNotificationEnabled:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: NotificationEmail
+      - ''
+Resources:
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Generate report from Coralogix Elasticsearch API and send it by
+        email.
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a05c619c-766b-496e-8b7d-0a632282b663
+      Handler: index.handler
+      Runtime: nodejs16.x
+      Architectures:
+      - Ref: FunctionArchitecture
+      MemorySize:
+        Ref: FunctionMemorySize
+      Timeout:
+        Ref: FunctionTimeout
+      Environment:
+        Variables:
+          CORALOGIX_URL:
+            Fn::FindInMap:
+            - CoralogixRegionMap
+            - Ref: CoralogixRegion
+            - LogUrl
+          private_key:
+            Ref: PrivateKey
+          query:
+            Ref: Query
+          template:
+            Ref: Template
+          sender:
+            Ref: Sender
+          recipient:
+            Ref: Recipient
+          subject:
+            Ref: Subject
+          requestTimeout:
+            Ref: RequestTimeout
+      Policies:
+      - SESCrudPolicy:
+          IdentityName:
+            Ref: Sender
+      EventInvokeConfig:
+        DestinationConfig:
+          OnFailure:
+            Type: SNS
+      Events:
+        CloudWatchSchedule:
+          Type: Schedule
+          Properties:
+            Schedule:
+              Ref: Schedule
+            Enabled:
+              Ref: Enabled
+    Metadata:
+      SamResourceId: LambdaFunction
+  LambdaFunctionNotificationSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: IsNotificationEnabled
+    Properties:
+      Protocol: email
+      Endpoint:
+        Ref: NotificationEmail
+      TopicArn:
+        Ref: LambdaFunction.DestinationTopic
+    Metadata:
+      SamResourceId: LambdaFunctionNotificationSubscription

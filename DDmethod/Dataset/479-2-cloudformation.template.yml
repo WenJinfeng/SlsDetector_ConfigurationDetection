@@ -1,0 +1,20 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  CustomConfiguration:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: CustomConfiguration::Lambdajection.Examples.CustomConfiguration.Handler::Run
+      Runtime: dotnet6
+      FunctionName: lambdajection-customconfiguration
+      Timeout: 300
+      CodeUri: ../../bin/Examples/CustomConfiguration/Release/net6.0/publish/
+      MemorySize: 512
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+Outputs:
+  InputPayload:
+    Value: "{}"
+
+  ExpectedOutput:
+    Value: '"Bar"'

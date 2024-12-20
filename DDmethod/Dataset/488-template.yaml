@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: sam_nephridium
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 3
+
+
+Resources:
+
+    ReportFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: nephridium
+            Handler: app.lambdaHandler
+            Runtime: nodejs14.x
+            # Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+            #     Variables:
+            #         PARAM1: VALUE
+            Events:
+                Report:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /
+                        Method: get
+
+Outputs:
+
+    ReportApi:
+      Description: "API Gateway endpoint URL for Prod stage for Report function"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+
+    ReportFunction:
+      Description: "Report Lambda Function ARN"
+      Value: !GetAtt ReportFunction.Arn
+
+    ReportFunctionIamRole:
+      Description: "Implicit IAM Role created for Report function"
+      Value: !GetAtt ReportFunctionRole.Arn

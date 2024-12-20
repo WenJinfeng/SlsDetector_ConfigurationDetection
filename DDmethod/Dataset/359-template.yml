@@ -1,0 +1,203 @@
+Parameters:
+  BucketEncryption:
+    Default: AES256
+    Type: String
+    Description: Server-side encryption algorithm for your event S3 storage. Select AES256 for S3 managed keys, or AWS:KMS for KMS managed keys
+    AllowedValues:
+    - None
+    - AES256
+    - aws:kms
+  CloudWatchNameSpace:
+    AllowedPattern: ^[0-9A-Za-z\._/-]+$
+    ConstraintDescription: 'Up to 250 characters. Possible characters are: alphanumeric
+      characters (0-9A-Za-z), period (.), hyphen (-), underscore (_), forward slash
+      (/), hash (#), and colon (:)'
+    Description: CloudWatch Metrics Namespace
+    MaxLength: 250
+    Default: Desole
+    MinLength: 1
+    Type: String
+  CorsOrigin:
+    Default: '*'
+    MinLength: 1
+    Type: String
+    Description: Cross-origin resource sharing (CORS) restriction for the event submission Web Api. Restrict to a single web site domain to only allow submissions from that site, or leave as * for open submission.
+    MaxLength: 250
+  BucketEncryptionKMSKey:
+    AllowedPattern: ^$|^arn:aws:kms:.+:.+:.+
+    Default: ''
+    Type: String
+    Description: The AWS:KMS Master key for S3 server-side encryption. Leave blank if not using AWS:KMS bucket encryption.
+    ConstraintDescription: Must be an AWS KMS Key ARN (eg arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012)
+  BucketPrefix:
+    Default: archive
+    MinLength: 1
+    Type: String
+    Description: Storage prefix for S3 event storage
+    MaxLength: 250
+  BucketExpiryDays:
+    AllowedPattern: ^[0-9]*$
+    Default: ''
+    Type: String
+    Description: Expiry time (in days) for events on S3 storage. The event details will be automatically removed from S3 after expiry. Leave empty for no expiration.
+    ConstraintDescription: Must be a number
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  S3Bucket:
+    Description: S3 bucket where the events will be archived
+    Value:
+      Ref: CollectedEventsStorage
+  ApiUrl:
+    Description: The URL of your API endpoint -- use this to configure the Desole client
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${ServerlessRestApiProdStage}/desole
+  CollectorSNSTopic:
+    Description: SNS Collector Topic for custom integrations
+    Value:
+      Ref: CollectorTopic
+Conditions:
+  IsBucketEncryptionKMS:
+    Fn::Equals:
+    - aws:kms
+    - Ref: BucketEncryption
+  IsBucketExpiryDefined:
+    Fn::Not:
+    - Fn::Equals:
+      - ''
+      - Ref: BucketExpiryDays
+  IsBucketEncryptionDefined:
+    Fn::Not:
+    - Fn::Equals:
+      - None
+      - Ref: BucketEncryption
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  CollectorTopic:
+    Type: AWS::SNS::Topic
+  S3Publisher:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          BUCKET_PREFIX:
+            Ref: BucketPrefix
+          BUCKET_NAME:
+            Ref: CollectedEventsStorage
+      Handler: s3-publisher.handler
+      Policies:
+      - Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:GetBucketLocation
+          - s3:GetObjectVersion
+          - s3:PutObject
+          - s3:GetLifecycleConfiguration
+          - s3:PutLifecycleConfiguration
+          Resource:
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}
+            - bucketName:
+                Ref: CollectedEventsStorage
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}/*
+            - bucketName:
+                Ref: CollectedEventsStorage
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f5c71187-b2d1-45fd-8517-9e01e26ecf5c
+      Runtime: nodejs8.10
+      Events:
+        CollectorSubscribedTopic:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: CollectorTopic
+  CloudwatchPublisher:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          CLOUDWATCH_NAMESPACE:
+            Ref: CloudWatchNameSpace
+      Handler: cloudwatch-publisher.handler
+      Policies:
+      - Statement:
+        - Action:
+          - cloudwatch:PutMetricData
+          Resource: '*'
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f5c71187-b2d1-45fd-8517-9e01e26ecf5c
+      Runtime: nodejs8.10
+      Events:
+        CollectorSubscribedTopic:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: CollectorTopic
+  CollectorApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          TOPIC_ARN:
+            Ref: CollectorTopic
+          CORS_ORIGIN:
+            Ref: CorsOrigin
+      Handler: collector-api.handler
+      Policies:
+      - Statement:
+        - Action:
+          - sns:Publish
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:${topicName}
+            - topicName:
+                Fn::GetAtt:
+                - CollectorTopic
+                - TopicName
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: f5c71187-b2d1-45fd-8517-9e01e26ecf5c
+      Runtime: nodejs8.10
+      Events:
+        PostResource:
+          Type: Api
+          Properties:
+            Path: /desole
+            Method: POST
+        OptionsResource:
+          Type: Api
+          Properties:
+            Path: /desole
+            Method: OPTIONS
+  CollectedEventsStorage:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        Fn::If:
+        - IsBucketEncryptionDefined
+        - ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID:
+                Fn::If:
+                - IsBucketEncryptionKMS
+                - Ref: BucketEncryptionKMSKey
+                - Ref: AWS::NoValue
+              SSEAlgorithm:
+                Ref: BucketEncryption
+        - Ref: AWS::NoValue
+      LifecycleConfiguration:
+        Fn::If:
+        - IsBucketExpiryDefined
+        - Rules:
+          - Status: Enabled
+            Prefix:
+              Ref: BucketPrefix
+            ExpirationInDays:
+              Ref: BucketExpiryDays
+        - Ref: AWS::NoValue

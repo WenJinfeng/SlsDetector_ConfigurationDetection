@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  WriteEvent:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Write ASG autoscaling events to Datadog
+      MemorySize: 128
+      Environment:
+        Variables:
+          DATADOG_API_KEY:
+            Ref: DatadogApiKey
+          LOG_LEVEL: INFO
+          DATADOG_APP_KEY:
+            Ref: DatadogAppKey
+      Handler: handlers/write-event-to-datadog.handler
+      Timeout: 30
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 8e7f6e8c-a3ef-4f99-8d61-a5084971d3a4
+      Runtime: python3.6
+      Events:
+        Event1:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              event:
+                source:
+                - aws.autoscaling
+                detail-type:
+                - EC2 Instance-launch Lifecycle Action
+                - EC2 Instance Launch Successful
+                - EC2 Instance Launch Unuccessful
+                - EC2 Instance-terminate Lifecycle Action
+                - EC2 Instance Terminate Successful
+                - EC2 Instance Terminate Unsuccessful
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  DatadogApiKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog API key
+  DatadogAppKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog App key
+Description: 'SAM template for Serverless framework service: '

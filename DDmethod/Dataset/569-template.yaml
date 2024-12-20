@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda Layer for Deploy Function
+Resources:
+  ServerlessFunction:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: cfn-aws-lambda-deploy-layer
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 0dec7200-3cdc-47a3-8a2f-8a0c41c8a065
+      CompatibleRuntimes:
+      - python3.7
+      - python3.8
+      Description: This layer represents kubectl, helm, helm-diff, helmfile and jq binaries
+Outputs:
+  LayerArn:
+    Value:
+      Ref: ServerlessFunction

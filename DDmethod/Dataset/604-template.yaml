@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  dynamodb_event_reader
+  Sample SAM Template for dynamodb_event_reader to interact with DynamoDB Events.
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  ReadDynamoDBEvent:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: d2f95aa0-56ee-408d-a3e8-98b5e483e12a
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Events:
+        DynamoDBEvent:
+          Type: DynamoDB
+          Properties:
+            Stream:
+              Fn::GetAtt:
+              - DynamoDBTable
+              - StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 10
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      ProvisionedThroughput:
+        WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - KeyType: HASH
+        AttributeName: id

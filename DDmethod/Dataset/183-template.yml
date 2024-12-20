@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SQSQueue1:
+    Type: AWS::SQS::Queue
+    Properties: {}
+  sqstodynamodb:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Description: ''
+      Timeout: 3
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 50817c3a-b1ab-493a-8f9d-128d1f10bca3
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Events:
+        SQS1:
+          Type: SQS
+          Properties:
+            Queue:
+              Fn::GetAtt:
+              - SQSQueue1
+              - Arn
+Description: Lambda to store message from AWS SQS into a Dynamo Db Table. The table has to be created previously.

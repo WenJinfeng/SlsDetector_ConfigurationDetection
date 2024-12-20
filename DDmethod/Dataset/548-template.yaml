@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SSN-Validator
+
+  Example SSN Validation Function using Python
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: SSN-Validator
+    Description: Example SSN Validation Function using Python
+    Author: Arun Thangavel
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['Python', 'SSN']
+    SemanticVersion: 0.0.1
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 300
+
+Resources:
+  SSNValidator:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 128
+      Handler: SSN_Validator.lambda_handler
+      CodeUri: SSN_Validator
+      Runtime: python3.9
+      Architectures:
+      - x86_64
+
+Outputs:
+  SSNValidator:
+      Description: "SSN_Validator Lambda Function ARN"
+      Value: !GetAtt SSNValidator.Arn

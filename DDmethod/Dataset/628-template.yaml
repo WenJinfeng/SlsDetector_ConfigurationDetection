@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  AWS SDK for pandas Lambda Layer (Python 3.10 | Arm64)
+Parameters:
+  LayerName:
+    Description: Name of the Layer
+    Type: String
+    Default: AWSSDKPandas-Python310-Arm64
+  ExportName:
+    Description: Name of the export
+    Type: String
+    Default: aws-sdk-pandas-py3-10-arm64
+Resources:
+  WranglerLayer310:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 16371d11-b99e-4d75-bc2d-5c794e204556
+      Description: AWS SDK for pandas Lambda Layer - 3.3.0 (Python 3.10 | Arm64)
+      LicenseInfo: Apache 2.0
+      CompatibleRuntimes:
+      - python3.10
+    Metadata:
+      SamResourceId: WranglerLayer310
+Outputs:
+  WranglerLayer310Arn:
+    Value:
+      Ref: WranglerLayer310
+    Export:
+      Name:
+        Ref: ExportName

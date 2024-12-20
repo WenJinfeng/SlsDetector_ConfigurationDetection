@@ -1,0 +1,66 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  AwsClientFactories:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: AwsClientFactories::Lambdajection.Examples.AwsClientFactories.Handler::Run
+      FunctionName: lambdajection-awsclientfactories
+      Runtime: dotnet6
+      Timeout: 300
+      CodeUri: ../../bin/Examples/AwsClientFactories/Release/net6.0/publish/
+      MemorySize: 512
+      Policies:
+        - AWSLambdaBasicExecutionRole
+
+  Bucket:
+    Type: AWS::S3::Bucket
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: s3:PutObject
+            Resource: !Sub arn:aws:s3:::${Bucket}/*
+            Principal:
+              AWS: !GetAtt PutBucketRole.Arn
+          - Effect: Allow
+            Action:
+              - s3:DeleteBucket
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !Sub arn:aws:s3:::${Bucket}
+              - !Sub arn:aws:s3:::${Bucket}/*
+            Principal:
+              AWS: !ImportValue lambdajection-infrastructure:GithubUserArn
+
+  PutBucketRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS: !GetAtt AwsClientFactoriesRole.Arn
+
+Outputs:
+  BucketName:
+    Value: !Ref Bucket
+
+  InputPayload:
+    Value: !Sub |
+      {
+        "RoleArn": "${PutBucketRole.Arn}",
+        "BucketName": "${Bucket}",
+        "FileName": "test-file",
+        "Contents": "test"
+      }
+
+  ExpectedOutput:
+    Value: !Sub '"Successfully written to file test-file in bucket ${Bucket}"'

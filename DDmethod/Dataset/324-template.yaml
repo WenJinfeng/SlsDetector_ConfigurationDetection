@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: An AWS Serverless Specification template describing your function.
+Resources:
+  lexffmpegConv:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ffmpeg/lambda_function.lambda_handler
+      Description: ''
+      Timeout: 10
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 54eeb816-5adf-4fce-88e7-00fec28eb2b8
+      Runtime: python3.6
+      MemorySize: 256
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,268 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Coralgoix WebDAV SAM app to send logs from Salesforce Commerce Cloud to Coraloigx
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Coralogix Configuration
+      Parameters:
+      - CoralogixRegion
+      - PrivateKey
+      - ApplicationName
+      - SubsystemName
+    - Label:
+        default: SFCC Configuration
+      Parameters:
+      - SfccEndpoints
+      - SfccUsername
+      - SfccPassword
+    - Label:
+        default: Lambda Configuration
+      Parameters:
+      - FunctionArchitecture
+      - FunctionMemorySize
+      - FunctionTimeout
+      - FunctionSchedule
+      - NotificationEmail
+    - Label:
+        default: Script Configuration
+      Parameters:
+      - LogsToStdout
+      - LogsPattern
+      - SendTruncatedLogs
+      - LogsMaxSize
+    ParameterLabels:
+      CoralogixRegion:
+        default: Region
+      PrivateKey:
+        default: Private Key
+      ApplicationName:
+        default: Application Name
+      SubsystemName:
+        default: Subsystem Name
+      SfccEndpoints:
+        default: Full Endpoints
+      SfccUsername:
+        default: Username
+      SfccPassword:
+        default: Password
+      FunctionArchitecture:
+        default: Architecture
+      FunctionMemorySize:
+        default: Memory
+      FunctionTimeout:
+        default: Timeout
+      FunctionSchedule:
+        default: Scheduler
+      NotificationEmail:
+        default: Notification Email
+      LogsToStdout:
+        default: Logs to stdout
+      LogsPattern:
+        default: Logs pattern
+      SendTruncatedLogs:
+        default: Send truncated logs
+      LogsMaxSize:
+        default: Logs max size
+Parameters:
+  CoralogixRegion:
+    Type: String
+    Description: The Coralogix location region [Europe, Europe2, India, Singapore,
+      US]
+    AllowedValues:
+    - Europe
+    - Europe2
+    - India
+    - Singapore
+    - US
+    Default: Europe
+  PrivateKey:
+    Type: String
+    Description: The Coralogix private key which is used to validate your authenticity
+    AllowedPattern: '[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}'
+    ConstraintDescription: The PrivateKey should be valid UUID string
+    MinLength: 36
+    MaxLength: 36
+    NoEcho: true
+  ApplicationName:
+    Type: String
+    Description: The name of your application
+    MinLength: 1
+    MaxLength: 64
+  SubsystemName:
+    Type: String
+    Description: The subsystem name of your application
+    MinLength: 1
+    MaxLength: 64
+  SfccEndpoints:
+    Type: String
+    Description: The endpoints in HOST/PATH format delimited by comma ',' without
+      protocol.(i.e. "prod.example1.net/on/demandware.servlet/webdav/Sites/securitylogs,staging.example2.com/on/logs/security2")
+  SfccUsername:
+    Type: String
+    Description: The SFCC Username for authentication
+  SfccPassword:
+    Type: String
+    Description: The SFCC Password for authentication
+    NoEcho: true
+  FunctionArchitecture:
+    Type: String
+    Description: Lambda function architecture [x86_64, arm64]
+    AllowedValues:
+    - x86_64
+    - arm64
+    Default: x86_64
+  FunctionMemorySize:
+    Type: Number
+    Description: Lambda function memory limit
+    MinValue: 128
+    MaxValue: 10240
+    Default: 1024
+  FunctionTimeout:
+    Type: Number
+    Description: Lambda function timeout limit
+    MinValue: 30
+    MaxValue: 900
+    Default: 300
+  FunctionSchedule:
+    Type: Number
+    Description: Lambda function schedule in minutes
+    MinValue: 2
+    MaxValue: 1440
+    Default: 10
+  NotificationEmail:
+    Type: String
+    Description: Failure notification email address
+    MaxLength: 320
+    Default: ''
+  LogsToStdout:
+    Type: String
+    Description: Send logs to stdout/cloudwatch [True,False]
+    AllowedValues:
+    - 'True'
+    - 'False'
+    Default: 'True'
+  LogsPattern:
+    Type: String
+    Description: The regex pattern that fetched logs will satisfy. default is "\.log$"
+      (all logs)
+    Default: \.log$
+  SendTruncatedLogs:
+    Type: String
+    Description: Send big logs to coralogix even after being truncated. [True,False]
+    AllowedValues:
+    - 'True'
+    - 'False'
+    Default: 'True'
+  LogsMaxSize:
+    Type: String
+    Description: the max size of logs your coralogix account can receive. default
+      is 32000(bytes)
+    Default: '32000'
+Mappings:
+  CoralogixRegionMap:
+    Europe:
+      LogUrl: https://api.coralogix.com/api/v1/logs
+    Europe2:
+      LogUrl: https://api.eu2.coralogix.com/api/v1/logs
+    India:
+      LogUrl: https://api.app.coralogix.in/api/v1/logs
+    Singapore:
+      LogUrl: https://api.coralogixsg.com/api/v1/logs
+    US:
+      LogUrl: https://api.coralogix.us/api/v1/logs
+Conditions:
+  ShouldCreateResource:
+    Fn::Equals:
+    - ''
+    - Ref: NotificationEmail
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+    Metadata:
+      SamResourceId: S3Bucket
+  LambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Send logs from SFCC to Coralogix.
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 044aa41f-62d9-4753-9401-15e691ff67c2
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      Architectures:
+      - Ref: FunctionArchitecture
+      MemorySize:
+        Ref: FunctionMemorySize
+      Timeout:
+        Ref: FunctionTimeout
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          CORALOGIX_LOG_URL:
+            Fn::FindInMap:
+            - CoralogixRegionMap
+            - Ref: CoralogixRegion
+            - LogUrl
+          CORALOGIX_PRIVATE_KEY:
+            Ref: PrivateKey
+          CORALOGIX_APPLICATION_NAME:
+            Ref: ApplicationName
+          CORALOGIX_SUBSYSTEM_NAME:
+            Ref: SubsystemName
+          S3BUCKET:
+            Ref: S3Bucket
+          SFCC_ENDPOINTS:
+            Ref: SfccEndpoints
+          SFCC_USERNAME:
+            Ref: SfccUsername
+          SFCC_PASSWORD:
+            Ref: SfccPassword
+          LOGS_TO_STDOUT:
+            Ref: LogsToStdout
+          LOGS_PATTERN:
+            Ref: LogsPattern
+          SEND_TRUNCATED_LOGS:
+            Ref: SendTruncatedLogs
+          LOGS_MAX_SIZE:
+            Ref: LogsMaxSize
+      EventInvokeConfig:
+        DestinationConfig:
+          OnFailure:
+            Type: SNS
+      Policies:
+      - S3CrudPolicy:
+          BucketName:
+            Ref: S3Bucket
+      Events:
+        CWSchedule:
+          Type: Schedule
+          Properties:
+            Schedule:
+              Fn::Sub:
+              - rate(${FunctionSchedule} minutes)
+              - FunctionSchedule:
+                  Ref: FunctionSchedule
+            Description: The Lambda schedule in minutes.
+            Enabled: true
+    Metadata:
+      SamResourceId: LambdaFunction
+  LambdaFunctionNotificationSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: ShouldCreateResource
+    Properties:
+      Protocol: email
+      Endpoint:
+        Ref: NotificationEmail
+      TopicArn:
+        Ref: LambdaFunction.DestinationTopic
+    Metadata:
+      SamResourceId: LambdaFunctionNotificationSubscription

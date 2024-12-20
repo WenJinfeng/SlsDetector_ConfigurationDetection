@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+    Serverless application to respond to events from IoT and send to Splunk HTTP Event Collector (HEC).
+
+    This SAM template creates the Lambda function with its IAM execution role, and IoT topic rule,
+    along with a Lambda permission to grant AWS IoT permission to invoke this function.
+
+    Last Modified: 29 Nov, 2017
+    Authors: Roy Arsan <roy@splunk.com>, Tarik Makota <tmak@amazon.com>
+
+Parameters:
+    IoTTopicFilter:
+      Type: "String"
+      Description: "IoT topic filter. To learn more about topics and topic filters, see http://docs.aws.amazon.com/iot/latest/developerguide/topics.html"
+
+    IoTSqlVersion:
+      Type: "String"
+      Description: "Version of the SQL rule engine. Allowed values are '2016-03-23' or '2015-10-08'"
+      Default: "2016-03-23"
+
+    SplunkHttpEventCollectorURL:
+      Type: "String"
+      Description: "URL address of your Splunk HTTP event collector endpoint"
+
+    SplunkHttpEventCollectorToken:
+      Type: "String"
+      Description: "Token of your Splunk HTTP event collector endpoint"
+
+Outputs:
+    SplunkIoTProcessorFunction:
+      Description: "Splunk IoT Serverless Function"
+      Value: !GetAtt IoTFunction.Arn
+
+Resources:
+  IoTFunction: 
+    Type: AWS::Serverless::Function
+    Properties: 
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: ./splunk-iot-processor.zip
+      Description: Capture events from IOT topic and send to Splunk HTTP event collector
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+          Variables:
+            SPLUNK_HEC_URL: !Ref SplunkHttpEventCollectorURL
+            SPLUNK_HEC_TOKEN: !Ref SplunkHttpEventCollectorToken
+      Events: 
+        IoT: 
+          Type: IoTRule
+          Properties: 
+            AwsIotSqlVersion: !Ref IoTSqlVersion
+            Sql: !Join [ "", [ "SELECT * FROM '", !Ref IoTTopicFilter, "'"] ]

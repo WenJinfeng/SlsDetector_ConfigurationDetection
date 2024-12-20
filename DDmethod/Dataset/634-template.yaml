@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  sam-with-layers
+  Sample SAM Template for sam-with-layers
+Parameters:
+  CopyScriptRoleArn:
+    Type: String
+Resources:
+  CopyUserScriptToS3Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      InlineCode: "import cfnresponse, boto3\nimport logging\nimport urllib.request\n\
+        logger = logging.getLogger(__name__)\ndef checkS3(bucket_name):\n    s3 =\
+        \ boto3.resource('s3')\n    object = s3.Object(bucket_name, 'additional-userscripts/userscript.sh')\n\
+        \    try:\n        object.get()\n        return True\n    except s3.meta.client.exceptions.NoSuchKey\
+        \ as e:\n        return False\n        \ndef download_upload(url_input,bucket_name):\n\
+        \    try:\n        urllib.request.urlretrieve(url_input, '/tmp/userscript.sh')\n\
+        \        s3 = boto3.client('s3')\n        s3.upload_file('/tmp/userscript.sh',bucket_name,'additional-userscripts/userscript.sh')\n\
+        \        return True\n    except Exception as e:\n        logging.error('Unhandled\
+        \ exception'+str(e), exc_info=True)\n        return False\n\ndef handler(event,\
+        \ context):\n    url_input=event['ResourceProperties']['additionalUserScript']\n\
+        \    bucket_name=event['ResourceProperties']['S3BucketName']\n    \n    logger.debug(event)\n\
+        \    status = cfnresponse.SUCCESS\n    if checkS3(bucket_name):\n        print(\"\
+        File already present in S3\")\n        status = cfnresponse.SUCCESS\n    else:\n\
+        \        logging.debug(\"Download Starting...\")\n        if download_upload(url_input,bucket_name):\n\
+        \            status = cfnresponse.SUCCESS\n            print(\"Download and\
+        \ Upload Completed...\")\n        else:\n            status = cfnresponse.FAILED\n\
+        \            print(\"Download and Upload Failed...\")\n    cfnresponse.send(event,\
+        \ context, status, {}, None)\n"
+      Handler: index.handler
+      Runtime: python3.7
+      Timeout: 30
+      Role:
+        Ref: CopyScriptRoleArn
+Outputs:
+  CopyUserScriptToS3FunctionArn:
+    Description: GetCaller Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - CopyUserScriptToS3Function
+      - Arn

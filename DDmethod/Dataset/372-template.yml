@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Holy-lambda micro framework babashka compatible runtime/backend layer
+Resources:
+  BabashkaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: holy-lambda-babashka-runtime
+      Description: holy-lambda micro framework babashka compatible runtime layer
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 2ddd6f38-ce4a-4183-b731-ef9804d497f6
+      CompatibleRuntimes:
+      - provided
+      LicenseInfo: https://github.com/FieryCod/holy-lambda/tree/master/modules/holy-lambda-babashka-layer/LICENSE
+      RetentionPolicy: Retain
+Outputs:
+  LayerVersion:
+    Description: Layer ARN Reference
+    Value:
+      Ref: BabashkaLayer

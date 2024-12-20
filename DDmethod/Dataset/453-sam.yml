@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Publish SNS Topic, and notificate Slack
+
+Parameters:
+  DefaultSlackIncommingWebhookUrl:
+    Description: デフォルトで使用するSlackのIncommingWebhookのURL
+    Type: String
+  SlackNotifierTopicArnParameterName:
+    Description: |
+      Slack通知に使用するSNS TopicのArnを格納するSSM Parameter。
+      この値を変更していない場合は、Layerから使用する際にSNS TopicのArnを指定する必要がない
+    Type: String
+    Default: "/sns-to-slack/SnsTopicArn"
+
+Resources:
+  SlackNotifierTopic:
+    Type: AWS::SNS::Topic
+
+  RequestsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: src/layers/requests
+      CompatibleRuntimes:
+        - python3.6
+      RetentionPolicy: Delete
+
+  SlackNotifierFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Post to Slack incomming webhook url
+      Runtime: python3.7
+      Timeout: 300
+      MemorySize: 256
+      CodeUri: src/handlers/slack_notifier
+      Handler: slack_notify.lambda_handler
+      AutoPublishAlias: production
+      Layers:
+        - !Ref RequestsLayer
+      Environment:
+        Variables:
+          DEFAULT_INCOMMING_WEBHOOK_URL: !Ref DefaultSlackIncommingWebhookUrl
+      Events:
+        SNSTopic:
+          Type: SNS
+          Properties:
+            Topic: !Ref SlackNotifierTopic
+
+  SlackNotifierTopicArnParameter:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Description: Slack通知用のSNS TopicのArnを格納するSSM Parameter
+      Name: !Ref SlackNotifierTopicArnParameterName
+      Type: String
+      Value: !Ref SlackNotifierTopic
+
+  SlackNotifierLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: src/layers/slack_notifier
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+        - python2.7
+      LicenseInfo: MIT License
+      RetentionPolicy: Delete
+
+Outputs:
+  SlackNotifierTopicArn:
+    Value: !Ref SlackNotifierTopic
+    Export:
+      Name: !Sub ${AWS::StackName}-SlackNotifierTopicArn
+  SlackNotifierTopicArnParameterName:
+    Value: !Ref SlackNotifierTopicArnParameter
+    Export:
+      Name: !Sub ${AWS::StackName}-SlackNotifierTopicArnParameterName
+  SlackNotifierLayerArn:
+    Value: !Ref SlackNotifierLayer
+    Export:
+      Name: !Sub ${AWS::StackName}-SlackNotifierLayerArn

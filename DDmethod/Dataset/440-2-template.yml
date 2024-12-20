@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Parameters:
+  FunctionName:
+    Type: String
+    Description: Lambda function name.
+    Default: CodePipelineS3Deploy
+  ArtifactStore:
+    Type: String
+    Description: The S3 bucket name that CodePipeline uses to store artifacts.
+  TargetBucket:
+    Type: String
+    Description: The target S3 bucket to deploy to.
+Resources:
+  CodePipelineS3DeployFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Ref FunctionName
+      Description: "Deploy AWS CodePipeline artifacts to S3"
+      Runtime: nodejs8.10
+      Handler: index.handler
+      MemorySize: 512
+      Timeout: 60
+      AutoPublishAlias: prod
+      Environment:
+        Variables:
+          TARGET_BUCKET: !Ref TargetBucket
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: 'Allow'
+              Action:
+                - codepipeline:PutJobSuccessResult
+                - codepipeline:PutJobFailureResult
+              Resource: '*'
+            - Effect: 'Allow'
+              Action: 
+                - cloudfront:CreateInvalidation
+              Resource: "*"
+            - Effect: 'Allow'
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+                - s3:GetBucketLocation
+                - s3:GetObjectVersion
+                - s3:PutObject
+                - s3:GetLifecycleConfiguration
+                - s3:PutLifecycleConfiguration
+              Resource: '*'

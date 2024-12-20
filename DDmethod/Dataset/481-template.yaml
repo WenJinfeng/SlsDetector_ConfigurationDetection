@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  AWS SDK for pandas Lambda Layer (Python 3.11)
+Parameters:
+  LayerName:
+    Description: Name of the Layer
+    Type: String
+    Default: AWSSDKPandas-Python311
+  ExportName:
+    Description: Name of the export
+    Type: String
+    Default: aws-sdk-pandas-py3-11
+Resources:
+  WranglerLayer311:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 7dd7e39c-da89-49e4-a189-4f3956351b69
+      Description: AWS SDK for pandas Lambda Layer - 3.3.0 (Python 3.11)
+      LicenseInfo: Apache 2.0
+      CompatibleRuntimes:
+      - python3.11
+    Metadata:
+      SamResourceId: WranglerLayer311
+Outputs:
+  WranglerLayer311Arn:
+    Value:
+      Ref: WranglerLayer311
+    Export:
+      Name:
+        Ref: ExportName

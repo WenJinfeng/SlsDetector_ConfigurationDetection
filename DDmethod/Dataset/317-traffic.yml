@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  HereApiKey:
+    Type: String
+    Description: HERE Location Services API Key (https://developer.here.com/faqs#access-control)
+
+Resources:
+  TrafficFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: nodejs12.x
+      Handler: traffic.trafficGET
+      Description:  'A lambda function to display map tiles with real-time traffic flow information overlays reflected as colored lines drawn on affected streets and roads and get access to real-time traffic flow and incident data in XML and JSON.'
+      Environment:
+        Variables:
+          HERE_API_KEY: !Ref HereApiKey
+      Events:
+        GET:
+          Type: Api
+          Properties:
+            Path: /traffic/api/{type}/{resourcePath+}
+            Method: get
+Outputs:
+  HereApiURL:
+    Description: "AWS API Gateway URL for HERE Traffic API."
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

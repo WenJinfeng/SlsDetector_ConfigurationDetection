@@ -1,0 +1,16 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: aws-cli-v1
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 10fc9288-af37-47f9-95b2-35b39bd0977e
+      CompatibleRuntimes:
+      - python3.7
+      - python2.7
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

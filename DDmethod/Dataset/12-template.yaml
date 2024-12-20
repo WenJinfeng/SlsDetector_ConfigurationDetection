@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Pushes RDS Enhanced metrics to Datadog.
+Parameters:
+  KMSKeyId:
+    Type: String
+    Description: The id (final part of the key's ARN) of a KMS key used to encrypt
+      and decrypt your Datadog API and App keys.
+Resources:
+  rdslambdaddfunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Pushes RDS Enhanced metrics to Datadog.
+      Environment:
+        Variables:
+          kmsEncryptedKeys: YOUR_KEY
+      Handler: lambda_function.lambda_handler
+      MemorySize: 128
+      Policies:
+        KMSDecryptPolicy:
+          KeyId:
+            Ref: KMSKeyId
+      Runtime: python3.7
+      Timeout: 10
+      KmsKeyArn:
+        Fn::Sub:
+        - arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:key/${keyId}
+        - keyId:
+            Ref: KMSKeyId
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a2204e1c-82db-456b-9884-096affa039bc

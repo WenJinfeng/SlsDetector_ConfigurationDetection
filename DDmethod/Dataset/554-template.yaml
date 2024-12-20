@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'SAM template for an Epsagon wrapped Python Labmda'
+Parameters:
+  EpsagonToken:
+    Type: String
+  EpsagonAppName:
+    Type: String
+Resources:
+  EpsagonHelloWorld:
+    Properties:
+      CodeUri: .
+      Environment:
+        Variables:
+          EPSAGON_TOKEN:
+            Ref: EpsagonToken
+          EPSAGON_APP_NAME:
+            Ref: EpsagonAppName
+      Handler: handler.handler
+      MemorySize: 128
+      Runtime: python3.6
+      Timeout: 60
+    Type: AWS::Serverless::Function

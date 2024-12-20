@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+- AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    AutoPublishAlias: live
+    Timeout: 15
+    MemorySize: 256
+Resources:
+  ReCaptchaVerify:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: d4eba70a-b990-468b-a57d-8a9c4a5bdaa6
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Description: Verifies Google reCAPTCHA tokens
+      Environment:
+        Variables:
+          SECRET_KEY: PUT_SECRET_KEY_HERE
+      Events:
+        GetEvent:
+          Type: Api
+          Properties:
+            Path: /verify
+            Method: get

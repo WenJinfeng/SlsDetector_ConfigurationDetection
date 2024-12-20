@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: ServerlessEventTestTarget
+    Description: "A serverless app that simply receives and logs events."
+    Author: William Weiss
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ["test", "lambda", "events", "serverless"]
+    HomePageUrl: https://github.com/wweiss/aws-serverless-event-test-target
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/wweiss/aws-serverless-event-test-target
+
+Parameters:
+  LoggingLevel:
+    Type: String
+    Default: INFO
+    Description: Setting to WARN or below will disable.
+
+Resources:
+  EventTestTarget:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs14.x
+      CodeUri: ./dist/index.js
+      Handler: index.handler
+      Tracing: Active
+      MemorySize: 512
+      Timeout: 60
+      Environment:
+        Variables:
+          LOGGING_LEVEL: !Ref LoggingLevel
+
+Outputs:
+  EventTestTargetFunctionName:
+    Value: !Ref EventTestTarget
+    Export:
+      Name: !Sub ${AWS::StackName}-EventTestTargetFunctionName
+  EventTestTargetFunctionArn:
+    Value: !GetAtt EventTestTarget.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-EventTestTargetFunctionArn

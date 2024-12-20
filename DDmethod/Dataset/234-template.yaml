@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  DaznLambdaPowertools:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: dazn-lambda-powertools
+      Description: DAZN lambda powertools
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 5cfa897c-51c1-4d54-837b-60642b9f278c
+      CompatibleRuntimes:
+      - nodejs8.10
+      - nodejs10.x
+      LicenseInfo: https://raw.githubusercontent.com/getndazn/dazn-lambda-powertools/master/LICENSE
+      RetentionPolicy: Retain
+Outputs:
+  LayerVersion:
+    Description: Layer ARN Reference
+    Value:
+      Ref: DaznLambdaPowertools

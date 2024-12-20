@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  graphics magick layer
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: graphicsmagick-layer
+    Description: >
+      AWS Lambda Layer for GraphicsMagick with nodejs12.x. 
+      GraphicsMagick is a robust and efficient collection of tools and 
+      libraries which support reading, writing, and manipulating 
+      an image in over 89 major formats.
+    Author: Mesfin Moges
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['layer', 'lambda', 'image', 'graphicsmagick', 'gm']
+    HomePageUrl: https://github.com/MesfinMo/sa-layers
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/MesfinMo/sa-layers
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  GraphicsmagickLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: graphicsmagick-layer
+      Description: Dependencies for the imager resizer app.
+      ContentUri: layer/
+      CompatibleRuntimes:
+        - nodejs12.x
+      RetentionPolicy: Retain  
+Outputs:
+  LayerArn:
+    Value: !Ref GraphicsmagickLayer

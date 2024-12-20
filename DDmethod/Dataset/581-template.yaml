@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  URL-meta Endpoint
+Parameters:
+  Name:
+    Type: String
+    MinLength: '3'
+Globals:
+  Function:
+    Timeout: 10
+    Tracing: Active
+Resources:
+  URLTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${Name}-table
+      AttributeDefinitions:
+      - AttributeName: _pk
+        AttributeType: S
+      KeySchema:
+      - AttributeName: _pk
+        KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+      TimeToLiveSpecification:
+        AttributeName: _ttl
+        Enabled: true
+    Metadata:
+      SamResourceId: URLTable
+  FetchRetryStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name:
+        Fn::Sub: ${Name}-retry-fetch
+      DefinitionUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 26941b02-275c-4251-8507-63cea20e6721
+      DefinitionSubstitutions:
+        FetchFunctionArn:
+          Fn::GetAtt:
+          - FetchFunction
+          - Arn
+      Policies:
+      - LambdaInvokePolicy:
+          FunctionName:
+            Ref: FetchFunction
+    Metadata:
+      SamResourceId: FetchRetryStateMachine
+  FetchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 15
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 0e998523-ac0e-4208-b1c1-0e0bc1143a9e
+      Handler: fetch
+      Runtime: go1.x
+      ReservedConcurrentExecutions: 30
+      Environment:
+        Variables:
+          DYNAMODB_TABLE:
+            Ref: URLTable
+    Connectors:
+      URLTableConn:
+        Properties:
+          Destination:
+            Id: URLTable
+          Permissions:
+          - Write
+          - Read
+    Metadata:
+      SamResourceId: FetchFunction
+  PreviewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 10
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 88c5454b-6168-4e0a-9965-0020f2747370
+      Handler: preview
+      Runtime: go1.x
+      AutoPublishAlias: live
+      ReservedConcurrentExecutions: 30
+      FunctionUrlConfig:
+        AuthType: NONE
+      Environment:
+        Variables:
+          STATE_MACHINE:
+            Ref: FetchRetryStateMachine
+          DYNAMODB_TABLE:
+            Ref: URLTable
+    Connectors:
+      URLTableConn:
+        Properties:
+          Destination:
+            Id: URLTable
+          Permissions:
+          - Write
+          - Read
+      FetchRetryStateMachineConn:
+        Properties:
+          Destination:
+            Id: FetchRetryStateMachine
+          Permissions:
+          - Write
+    Metadata:
+      SamResourceId: PreviewFunction
+Outputs:
+  PreviewFunctionUrlEndpoint:
+    Description: Preview Function URL Endpoint
+    Value:
+      Fn::GetAtt: PreviewFunctionUrl.FunctionUrl
+  PreviewFunctionUrlDomainName:
+    Description: Preview Function URL Endpoint
+    Value:
+      Fn::Select:
+      - 2
+      - Fn::Split:
+        - /
+        - Fn::GetAtt:
+          - PreviewFunctionUrl
+          - FunctionUrl

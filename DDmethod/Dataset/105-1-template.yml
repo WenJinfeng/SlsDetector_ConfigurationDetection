@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'Create pipeline-dashboard application.'
+Parameters:
+  PipelinePattern:
+    Description: 'The pattern of pipeline names to allow access to describe.  Recommended value: *'
+    Type: String
+  BucketName:
+      Description: 'S3 BucketName for Node functions. For example: pipeline-dashboard'
+      Type: String
+      Default: "pipeline-dashboard-node-0811"
+  CodeKey:
+      Description: 'S3 Key for Node functions. For example: pipeline-dashboard.zip'
+      Type: String
+      Default: "pipeline-dashboard.zip"
+Resources:
+  PipelineDashboardEventHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Create CloudWatch metrics from CodePipeline events
+      Handler: index.handlePipelineEvent
+      Runtime: nodejs12.x
+      CodeUri:
+        Bucket: !Ref BucketName
+        Key: !Ref CodeKey
+      Events:
+        PipelineEventRule:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - "aws.codepipeline"
+              detail-type:
+                - "CodePipeline Pipeline Execution State Change"
+                - "CodePipeline Stage Execution State Change"
+                - "CodePipeline Action Execution State Change"
+      Policies:
+      - CloudWatchPutMetricPolicy: {}
+      - CodePipelineReadOnlyPolicy: 
+          PipelineName: !Ref PipelinePattern
+  PipelineDashboardGenerator:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Build CloudWatch dashboard from CloudWatch metrics
+      Handler: index.generateDashboard
+      Runtime: nodejs12.x
+      CodeUri:
+        Bucket: !Ref BucketName
+        Key: !Ref CodeKey
+      Timeout: 60
+      Events:
+        DashboardEventRule:
+          Type: Schedule
+          Properties:
+            Schedule: "cron(*/5 * * * ? *)"
+      Policies:
+      - CloudWatchDashboardPolicy: {}

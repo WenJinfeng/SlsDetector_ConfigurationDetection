@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: severless lending management Application
+Outputs:
+  DynamoDBTableArn:
+    Description: The ARN of your DynamoDB Table
+    Value:
+      Fn::GetAtt:
+      - DynamoDBTable
+      - Arn
+  StaticURL:
+    Value:
+      Fn::Join:
+      - ''
+      - - https://s3.amazonaws.com/
+        - Ref: StaticDomain
+Parameters:
+  AdminEmail:
+    Default: test@test.com
+    Description: AdminEmail for notifications
+    Type: String
+  CcEmail:
+    Default: test@test.com
+    Description: CcEmail for notifications
+    Type: String
+  Message1:
+    Default: "\u3010serverless application message1\u3011"
+    Description: message1 for notifications
+    Type: String
+  Message2:
+    Default: "\u3010serverless application message2\u3011"
+    Description: message2 for notifications
+    Type: String
+  Message3:
+    Default: "\u3010serverless application message3\u3011"
+    Description: message3 for notifications
+    Type: String
+  NotifiedNDaysAgo:
+    Default: 1
+    Description: notified n days ago for notifications
+    Type: String
+  Schedule:
+    Default: cron(0 1 ? * MON-FRI *)
+    Description: schedule for notifications
+    Type: String
+  StaticDomain:
+    Default: test.bucket.com
+    Description: domain for static website hosting
+    Type: String
+  Subject:
+    Default: "\u3010serverless application title\u3011"
+    Description: subject for notifications
+    Type: String
+  TableName:
+    AllowedPattern: ^[A-Za-z]+$
+    ConstraintDescription: Required parameter. Must be characters only. No numbers
+      allowed.
+    Default: defaultTableName
+    Description: (Required) The name of the new DynamoDB table you want to create
+      and save to. Minimum 3 characters
+    MaxLength: 50
+    MinLength: 3
+    Type: String
+Resources:
+  DeleteFunction:
+    Properties:
+      CodeUri: s3://lambda-package-btc/f527a9ad8bec543d3b1f03b75c7d53f4
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: DynamoDBTable
+      Events:
+        DeleteResource:
+          Properties:
+            Method: delete
+            Path: /resource/{resourceId}
+          Type: Api
+      Handler: indexdelete.delete
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  DynamoDBTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      TableName:
+        Ref: TableName
+    Type: AWS::DynamoDB::Table
+  GetAllDataAndSESRelationFunction:
+    Properties:
+      CodeUri: s3://lambda-package-btc/548deecd1a3923e4fd8402a7b53c5793
+      Environment:
+        Variables:
+          EMAIL_ADMIN:
+            Ref: AdminEmail
+          EMAIL_CC_ADDRESS:
+            Ref: CcEmail
+          MESSAGE1:
+            Ref: Message1
+          MESSAGE2:
+            Ref: Message2
+          MESSAGE3:
+            Ref: Message3
+          NOTIFIED_N_DAYS_AGO:
+            Ref: NotifiedNDaysAgo
+          SUBJECT:
+            Ref: Subject
+          TABLE_NAME:
+            Ref: DynamoDBTable
+      Events:
+        Timer:
+          Properties:
+            Schedule:
+              Ref: Schedule
+          Type: Schedule
+      Handler: indexbatch.check
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      - SESCrudPolicy:
+          IdentityName:
+            Ref: AdminEmail
+      Runtime: nodejs6.10
+      Timeout: 15
+    Type: AWS::Serverless::Function
+  GetFunction:
+    Properties:
+      CodeUri: s3://lambda-package-btc/c9d1fabc7f5afd49f90b7a9fb0b50e3d
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: DynamoDBTable
+      Events:
+        GetResource:
+          Properties:
+            Method: get
+            Path: /resource/{resourceId}
+          Type: Api
+      Handler: indexget.get
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  PutFunction:
+    Properties:
+      CodeUri: s3://lambda-package-btc/cf7874fc003cf370f82f0a90e19d11d5
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: DynamoDBTable
+      Events:
+        PutResource:
+          Properties:
+            Method: put
+            Path: /resource/{resourceId}
+          Type: Api
+      Handler: indexput.put
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TableName
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  StaticBucket:
+    Properties:
+      BucketName:
+        Ref: StaticDomain
+      WebsiteConfiguration:
+        ErrorDocument: error.html
+        IndexDocument: index.html
+    Type: AWS::S3::Bucket
+Transform: AWS::Serverless-2016-10-31

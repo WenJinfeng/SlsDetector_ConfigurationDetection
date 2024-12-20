@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+    Serverless application to stream access logs of Classic ELB from S3 to Splunk HTTP Event Collector (HEC).
+
+    This SAM template creates the Lambda function & associated policy + IAM role, and new S3 bucket
+    with enabled Events notification to this Lambda function. Direct your load balancers access logs to this newly created S3 Bucket.
+    To enable access logs on classic load balancers, refer to AWS docs:
+    http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html
+
+    Last Modified: 29 Nov, 2017
+    Authors: Roy Arsan <roy@splunk.com>, Tarik Makota <tmak@amazon.com>
+
+Parameters:
+  S3CLBLogsBucketName:
+    Type: "String"
+    Description: "Name of S3 bucket that will store access logs. This bucket will be created for you. Name must be unique across all existing bucket names in Amazon S3."
+  
+  S3Prefix:
+    Type: "String"
+    Description: "Optional prefix to limit the notifications to objects with keys that start with matching characters. e.g. uploadedImages/"
+
+  S3Suffix:
+    Type: "String"
+    Description: "Optional suffix to limit the notifications to objects with keys that end with matching characters.. e.g. .jpg"
+
+  SplunkHttpEventCollectorURL:
+    Type: "String"
+    Description: "URL address of your Splunk HTTP event collector endpoint"
+
+  SplunkHttpEventCollectorToken:
+    Type: "String"
+    Description: "Token of your Splunk HTTP event collector endpoint"
+    
+Outputs:
+    SplunkCLBLogsProcessor:
+      Description: "Splunk S3 Bucket Stream Lambda Function ARN"
+      Value: !Ref SplunkCLBProcessorFunction
+
+Resources:
+  SplunkCLBProcessorFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Stream CLB events from S3 to Splunk HTTP event collector
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: ./splunk-elb-classic-access-logs-processor.zip
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref S3CLBLogsBucketName
+      MemorySize: 512
+      Timeout: 10
+      Environment:
+        Variables:
+          SPLUNK_HEC_URL: !Ref SplunkHttpEventCollectorURL
+          SPLUNK_HEC_TOKEN: !Ref SplunkHttpEventCollectorToken
+      Events:
+        LogUpload:
+          Type: S3
+          Properties:
+            Bucket: !Ref Bucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  -
+                    Name: prefix
+                    Value: !Sub "${S3Prefix}"
+                  -
+                    Name: suffix
+                    Value: !Sub "${S3Suffix}"
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3CLBLogsBucketName
+      

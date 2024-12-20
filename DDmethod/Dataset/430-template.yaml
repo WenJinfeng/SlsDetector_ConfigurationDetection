@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Lambda Slack Handler
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: lambda-slack-handler
+    Description: Filters CloudWatch logs and publishes them to Slack
+    Author: First and Third
+    SpdxLicenseId: MIT
+    # paths are relative to .aws-sam/build directory
+    LicenseUrl: ./LICENSE
+    ReadmeUrl: ./README.md
+    Labels: [serverless,slack,CloudWatch,logs]
+    HomePageUrl: https://github.com/firstandthird/lambda-slack-handler
+    # Update the semantic version and run sam publish to publish a new version of your app
+    SemanticVersion: 1.1.0
+    # best practice is to use git tags for each release and link to the version tag as your source code URL
+    SourceCodeUrl: https://github.com/firstandthird/lambda-slack-handler/tree/1.0.0
+
+Parameters:
+  SlackUrl:
+    Description: Webhook URL for integration with Slack
+    Type: String
+  SlackChannel:
+    Description: Channel to send message to
+    Type: String
+  SlackUsername:
+    Description: Name to post as
+    Type: String
+
+Resources:
+  LambdaSlackHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: index.handler
+      Runtime: nodejs10.x
+      Environment:
+        Variables:
+          SLACK_HOOK: !Ref SlackUrl
+          SLACK_CHANNEL: !Ref SlackChannel
+          SLACK_USERNAME: !Ref SlackUsername
+
+
+Outputs:
+  LambdaToSlackArn:
+    Description: "Lambda Slack Function Name ARN"
+    Value: !GetAtt LambdaSlackHandler.Arn

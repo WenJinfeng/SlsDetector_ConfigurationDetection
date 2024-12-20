@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Description: 'SignalFx Cloudwatch Event Forwarder App - Encrypted token'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  EncryptedSignalFxAccessToken:
+    Type: String
+    Description: 'Encrypted SignalFx Access Token. The token to encrypt can be found in SignalFx (top right corner) --> Organization Settings --> Access Tokens.'
+  SignalFxIngestEndpoint:
+    Type: String
+    Default: 'https://ingest.<REALM>.signalfx.com'
+    Description: 'SignalFx Ingest Endpoint. Can be found in SignalFx (top right corner) --> My Profile --> Endpoints --> Real-time Data Ingest.'
+  # SignalFxSendTimeout:
+  #   Type: String
+  #   Default: 1000
+  #   Description: 'Send timeout in milliseconds.'
+  EventSources:
+    Type: CommaDelimitedList
+    Default: 'aws.ec2'
+    Description: 'Event sources to forward to SignalFx. Use "*" if you want all CloudWatch Events (except for aws.kms). Use comma delimited list to specify multiple sources, for example: "aws.ec2,aws.s3".'
+  KeyId:
+    Type: String
+    Description: 'Key Id of the key used to encrypt the SignalFx token. Key Id is the last part of the Key ARN.'
+
+Conditions:
+  AllCWEvents: !Equals [!Select [ 0, !Ref EventSources ], '*']
+
+
+Resources:
+  SignalFxLambdaWrapperApp:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-2:254067382080:applications/wrapper-node-sfx-app
+        SemanticVersion: 0.4.2
+    Outputs:
+      LayerArn:
+        Value:
+          Fn:GetAtt:
+            - SignalFxLambdaWrapperApp
+            - Arn
+  SignalFxCloudwatchEventsForwarder:
+    Type: AWS::Serverless::Function
+    Properties:
+      Layers:
+        - !GetAtt SignalFxLambdaWrapperApp.Outputs.LayerArn
+      Handler: cloudwatch-event-forwarder.handler
+      Runtime: nodejs12.x
+      CodeUri: cloudwatch-event-forwarder.js
+      Timeout: 60
+      Environment:
+        Variables:
+          ENCRYPTED_SIGNALFX_AUTH_TOKEN:
+            Ref: EncryptedSignalFxAccessToken
+          SIGNALFX_INGEST_ENDPOINT:
+            Ref: SignalFxIngestEndpoint
+          SIGNALFX_SEND_TIMEOUT:
+            Ref: SignalFxSendTimeout
+      Events:
+        CWEvent:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+               source: !If [AllCWEvents, [anything-but: "aws.kms"], !Ref EventSources]
+      Policies:
+        - KMSDecryptPolicy:
+            KeyId:
+              Ref: KeyId

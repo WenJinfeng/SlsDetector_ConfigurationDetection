@@ -1,0 +1,148 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  resolution-service
+
+  SAM Template for resolution-service
+
+Globals:
+  Function:
+    Timeout: 30
+
+###################################################################################################
+##   Template Parameters                                                                         ##
+###################################################################################################
+
+Parameters:
+    TargetTableName:
+      Type: String
+    Image404:
+      Type: String
+    Region:
+      Type: String
+
+###################################################################################################
+##   Template Resources                                                                          ##
+###################################################################################################
+
+Resources:
+  ##   Lambda Function
+  NameResolutionFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: apps/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Description: An AWS Lambda function with API Gateway that receives a short URL, finds a record in the DynamoDB table, redirects user to the long URL.
+      MemorySize: 128
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TargetTableName
+      Environment:
+        Variables:
+          DEBUG: 1
+          TargetTable: !Ref TargetTableName
+          Region: !Ref Region
+          Image404: !Ref Image404
+      Events:
+        ResolutionServiceApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResolutionServiceApiGateway
+            Path: /{arklabel}/53696/{shortid}
+            Method: GET
+
+  ##   API Gateway
+  ResolutionServiceApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Join [ "-", [ "Resolution Service API", !Ref TargetTableName] ]
+      StageName: Prod
+      EndpointConfiguration: Edge
+      TracingEnabled: true
+      DefinitionBody:
+        openapi: "3.0.1"
+        info:
+          title: "Resolution Service API"
+          version: "1.0.3"
+
+        x-amazon-apigateway-request-validators:
+          all:
+            validateRequestBody: true
+            validateRequestParameters: true
+          params:
+            validateRequestBody: false
+            validateRequestParameters: true
+          body:
+            validateRequestBody: true
+            validateRequestParameters: false
+
+        paths:
+          /{arklabel}/53696/{shortid}:
+            ## URL redirector
+            get:
+              summary: Get a url by ID and redirect
+              responses:
+                "301":
+                  description: "301 redirect"
+                  headers:
+                    Location:
+                      type: "string"
+              ## API Gateway Integration
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NameResolutionFunction.Arn}/invocations' #NameResolutionFunction.Arn
+                httpMethod: "POST"
+                requestTemplates:
+                  application/json: "{\"arklabel\": \"ark:\", \"short_id\": \"$input.params('shortid')\"}"
+                passthroughBehavior: "when_no_templates"
+                responses:
+                  "":
+                    statusCode: "301"
+                    responseParameters:
+                      method.response.header.Location: "integration.response.body.location"
+                type: aws
+
+
+  ##   CloudFront distribution
+  CloudFrontDistro:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: Name Resolution CDN
+        DefaultCacheBehavior:
+          AllowedMethods: ["GET", "HEAD"]
+          CachedMethods: ["GET", "HEAD"]
+          Compress: true
+          DefaultTTL: 0
+          ForwardedValues:
+            Headers:
+            - Origin
+            QueryString: false
+          TargetOriginId: "ResolutionServiceAPIGW"
+          ViewerProtocolPolicy: redirect-to-https
+        Enabled: true
+        Origins:
+          - CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+            DomainName: !Sub ${ResolutionServiceApiGateway}.execute-api.${AWS::Region}.amazonaws.com
+            Id: "ResolutionServiceAPIGW"
+            OriginPath: /Prod
+
+Outputs:
+  NameResolutionFunction:
+    Description: "Name Resolution Lambda Function ARN"
+    Value: !GetAtt NameResolutionFunction.Arn
+  NameResolutionFunctionIamRole:
+    Description: "Implicit IAM Role created for Name Resolution function"
+    Value: !GetAtt NameResolutionFunctionRole.Arn
+  ResolutionServiceApiGateway:
+    Description: 'API Gateway endpoint URL for Prod stage for Name Resolution function'
+    Value: !Sub 'https://${ResolutionServiceApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/{arklabel}/53696/{shortid}'
+  ResolutionServiceApiGatewayRestApiId:
+    Description: 'API Gateway Rest API Id for Name Resolution API Gateway'
+    Value: !Ref ResolutionServiceApiGateway
+  ResolutionServiceApiGatewayRootResourceId:
+    Description: 'API Gateway Root Resource Id for Name Resolution API Gateway'
+    Value: !GetAtt ResolutionServiceApiGateway.RootResourceId
+

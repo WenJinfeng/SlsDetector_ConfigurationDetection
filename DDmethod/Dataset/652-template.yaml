@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-logs-comptroller
+
+  Sample SAM Template for sam-logs-comptroller
+Parameters:
+  EnableScheduler:
+    Type: String
+    Default: "False"
+  RetentionInDays:
+    Type: Number
+    Default: "7"
+  Schedule:
+    Type: String
+    Default: "rate(7 days)"
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: sam-logs-comptroller
+    Description: Pure ASL State Machine to set log retention and prune unused LogGroups at any scale!
+    Author: Matt Morgan
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: 
+      - cloudwatch
+      - intrinsic
+      - logs
+      - loggroups
+      - retention
+      - sam
+      - serverless
+      - stepfunctions
+    HomePageUrl: https://github.com/elthrasher/sam-logs-comptroller
+    SemanticVersion: 0.1.0
+    SourceCodeUrl: https://github.com/elthrasher/sam-logs-comptroller
+
+Resources:
+  IteratorStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/iterator.asl.json
+      DefinitionSubstitutions:
+        RunnerStateMachineArn: !GetAtt RunnerStateMachine.Arn
+      Events:
+        LogsComptrollerSchedule:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run sam-logs-controller
+            Enabled: !Ref EnableScheduler
+            Schedule: !Ref Schedule
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt RunnerStateMachine.Name
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - xray:GetSamplingRules
+                - xray:GetSamplingTargets
+                - xray:PutTelemetryRecords
+                - xray:PutTraceSegments
+              Resource: '*'
+        
+  RunnerStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/runner.asl.json
+      DefinitionSubstitutions:
+        RetentionInDays: !Ref RetentionInDays
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - lambda:GetFunction
+                - logs:DeleteLogGroup
+                - logs:PutRetentionPolicy
+                - states:SendTaskSuccess
+                - xray:GetSamplingRules
+                - xray:GetSamplingTargets
+                - xray:PutTelemetryRecords
+                - xray:PutTraceSegments
+              Resource: '*'
+
+Outputs:
+  IteratorStateMachine:
+    Description: "Iterator state machine ARN"
+    Value: !Ref IteratorStateMachine

@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  LayerName:
+    Type: String
+Transform: AWS::Serverless-2016-10-31
+Description: Create a Layer
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: cd167738-f4a5-4374-95db-56bf8a5b8609
+      CompatibleRuntimes:
+      - provided
+      LicenseInfo: Available under the MIT-0 license.
+      RetentionPolicy: Retain
+Outputs:
+  LayerVersionArn:
+    Description: ARN for the published Layer version
+    Value:
+      Ref: LambdaLayer
+    Export:
+      Name:
+        Fn::Sub: LayerVersionArn-${AWS::StackName}

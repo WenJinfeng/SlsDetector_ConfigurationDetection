@@ -1,0 +1,34 @@
+---
+  AWSTemplateFormatVersion: 2010-09-09
+  Transform: AWS::Serverless-2016-10-31
+  Description: This serverless application provides a phone home endpoint for recording contacts from another deployed application.
+  Resources:
+    siteFunction:
+      Type: AWS::Serverless::Function
+      Properties:
+        Description: Phone Home endpoint (proxy all paths to this function)
+        Handler: src/index.handler
+        Runtime: nodejs12.x
+        CodeUri: build/phone-home.zip
+        Policies:
+          - DynamoDBCrudPolicy:
+              TableName:
+                Ref: eventTable
+        Timeout: 10
+        Events:
+          get:
+            Type: Api
+            Properties:
+              Path: /
+              Method: get
+          post:
+            Type: Api
+            Properties:
+              Path: /
+              Method: post
+        Environment:
+          Variables:
+            EVENT_TABLE:
+              Ref: eventTable
+    eventTable:
+      Type: AWS::Serverless::SimpleTable

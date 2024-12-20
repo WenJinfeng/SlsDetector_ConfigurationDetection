@@ -1,0 +1,66 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless Carrier Info
+
+Metadata: 
+  AWS::CloudFormation::Interface: 
+    ParameterGroups: 
+      - 
+        Label: 
+          default: "Required"
+        Parameters: 
+          - TwilioAccountSid
+          - TwilioAuthToken
+      - 
+        Label: 
+          default: "Optional"
+        Parameters: 
+          - IOPipeToken
+
+Parameters:
+  TwilioAccountSid:
+    Type: String
+    Description: Twilio Account SID
+  TwilioAuthToken:
+    Type: String
+    Description: Twilio Auth Token
+  IOPipeToken:
+    Type: String
+    Description: 'Serverless DevOps?'
+    Default: ''
+
+Resources:
+
+  #
+  # Our Lambda Api function.  
+  #
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Timeout: 5
+      CodeUri: ./
+      Runtime: nodejs8.10
+      Events:
+        PostEvent:
+          Type: Api
+          Properties:
+            Path: /
+            Method: post
+      Environment:
+        Variables:
+          TwilioAccountSid: !Ref TwilioAccountSid
+          TwilioAuthToken: !Ref TwilioAuthToken
+          IOPipeToken: !Ref IOPipeToken
+
+Outputs:
+  ApiUrl:
+    Description: URL of your API endpoint
+    Value: !Join
+      - ''
+      - - https://
+        - !Ref ServerlessRestApi
+        - '.execute-api.'
+        - !Ref 'AWS::Region'
+        - '.amazonaws.com/Prod'

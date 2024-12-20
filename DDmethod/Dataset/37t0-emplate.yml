@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description:  Perform healthchecks on private IP or private FQDN (Private Route53). Healthchecks status are pushed to Cloudwatch custom metrics.
+
+Parameters:
+  Protocol:
+    Type: String
+    AllowedValues: 
+      - http
+      - https
+    Default: http
+    Description: 'Protocol of the URL to test (http or https). Default: http'
+  Hostname:
+    Type: String
+    Description: 'Hostname or IP of the URL to test. Default: localhost'
+  Port:
+    Type: Number
+    Default: 80
+    Description: 'Port of URL to test. Default: 80 for http, 443 for https'
+  UrlPath:
+    Type: String
+    Description: 'Path of the URL to test. Default: no path'
+  StringMatching:
+    Type: String
+    Description: '(Optional) String to search in the response body. If found the healcheck will succeed.'
+  InvertHealtcheckStatus:
+    Type: String
+    Default: false
+    Description: '(Optional) Set to true if you want to invert the healthcheck result'
+  MetricName:
+    Type: String
+    Default: MyService
+    Description: 'Name of the Cloudwatch metrics. Default: MyService'
+  MetricNamespace:
+    Type: String
+    Default: HealthCheck
+    Description: 'Namespace of the Cloudwatch Metric. Default: HealthCheck'
+  Cron: 
+    Type: String
+    Default: 0/5 * * * ? *
+    Description: 'Cron expression (example : "0/5 * * * ? *" : run healthchecks every 5 minutes )'
+  SecurityGroupIds:
+    Type: List<String>
+  SubnetIds:
+    Type: List<String>
+  Timeout:
+    Type: Number
+    Default: 10
+    Description: 'Timeout in Seconds'
+
+Resources:
+  AwsInternalHealthcheck:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Description: >-
+        Perform healthchecks on private IP or private FQDN (Private Route53). 
+        Healthchecks status are pushed to Cloudwatch custom metrics.
+      Timeout: 30
+      Policies:
+        - CloudWatchPutMetricPolicy: {}
+        - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIds
+      Environment:
+        Variables:
+          PROTOCOL: 
+            Ref: Protocol
+          HOSTNAME: 
+            Ref: Hostname
+          PORT: 
+            Ref: Port
+          URL_PATH: 
+            Ref: UrlPath
+          STRING_MATCHING: 
+            Ref: StringMatching
+          INVERT_HEALTHCHECK_STATUS: 
+            Ref: InvertHealtcheckStatus
+          METRIC_NAME: 
+            Ref: MetricName
+          METRIC_NAMESPACE: 
+            Ref: MetricNamespace
+          TIMEOUT:
+            Ref: Timeout
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule:
+              'Fn::Join':
+                - ''
+                - - 'cron('
+                  - !Ref Cron
+                  - ')'

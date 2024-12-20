@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Generic Webhook to SNS
+
+Globals:
+  Function:
+    Timeout: 29
+    Runtime: nodejs12.x
+    Tracing: Active
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: generic-webhook-to-sns
+    Description: "A serverless application that receives a webhook event via POST or GET HTTP method, sends the raw event data to the SNS topic, and replies with the 200 OK response to the webhook sender"
+    Author: Slobodan
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['webhook','sns']
+    HomePageUrl: https://github.com/vacationtracker/generic-webhook-to-sns
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/vacationtracker/generic-webhook-to-sns
+
+Resources:
+  WebhookTopic:
+    Type: AWS::SNS::Topic
+
+  WebhookApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+
+  WebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: build/webhook
+      Handler: lambda.handler
+      Environment:
+        Variables:
+          WEBHOOK_TOPIC: !Ref WebhookTopic
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt WebhookTopic.TopicName
+      Events:
+        WebhookPost:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: POST
+            ApiId: !Ref WebhookApi
+        WebhookGet:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: GET
+            ApiId: !Ref WebhookApi
+
+Outputs:
+  WebhookApiUrl:
+    Description: "A webhook URL"
+    Value: !Sub "https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  WebhookApiId:
+    Description: "An ID of the API Gateway HTTP API"
+    Value: !Ref WebhookApi
+
+  WebhookTopicArn:
+    Description: "A webhook event SNS topic Arn"
+    Value: !Ref WebhookTopic
+
+  WebhookTopicName:
+    Description: "A name of the webhook SNS topic"
+    Value: !GetAtt WebhookTopic.TopicName

@@ -1,0 +1,68 @@
+Description: Serverless REST API for object detection using coco_v2
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  ApiURL:
+    Description: API endpoint URL for Prod environment
+    Value:
+      Fn::Sub: https://${FunctionApi}.execute-api.${AWS::Region}.amazonaws.com/p/
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Image Inference Lambda
+      MemorySize: 1024
+      Environment:
+        Variables:
+          REMOTE_MODEL_ZIP: https://github.com/kbhuyan/ai/raw/master/models/inception_v2_coco.zip
+      Handler: od_handler
+      Timeout: 60
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a5707322-327c-46a7-9173-acebed016526
+      Runtime: go1.x
+      Events:
+        InferenceRequest:
+          Type: Api
+          Properties:
+            Path: /
+            RestApiId:
+              Ref: FunctionApi
+            Method: POST
+  FunctionApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      MethodSettings:
+      - HttpMethod: '*'
+        ResourcePath: /*
+        ThrottlingBurstLimit: 1
+        ThrottlingRateLimit: 1
+      DefinitionBody:
+        paths:
+          /:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                passthroughBehavior: when_no_match
+                type: aws
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApiFunction.Arn}/invocations
+                responses:
+                  default:
+                    statusCode: '200'
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: '#/definitions/Empty'
+              produces:
+              - application/json
+        swagger: '2.0'
+        schemes:
+        - https
+        definitions:
+          Empty:
+            type: object
+            title: Empty Schema
+      StageName: p
+      Name: FunctionApi

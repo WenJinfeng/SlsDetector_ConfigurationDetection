@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  AWS SDK for pandas Lambda Layer (Python 3.8)
+Parameters:
+  LayerName:
+    Description: Name of the Layer
+    Type: String
+    Default: AWSSDKPandas-Python38
+  ExportName:
+    Description: Name of the export
+    Type: String
+    Default: aws-sdk-pandas-py3-8
+Resources:
+  WranglerLayer38:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 3e5f7eba-7140-4029-99b9-4af1d9f8c908
+      Description: AWS SDK for pandas Lambda Layer - 3.3.0 (Python 3.8)
+      LicenseInfo: Apache 2.0
+      CompatibleRuntimes:
+      - python3.8
+    Metadata:
+      SamResourceId: WranglerLayer38
+Outputs:
+  WranglerLayer38Arn:
+    Value:
+      Ref: WranglerLayer38
+    Export:
+      Name:
+        Ref: ExportName

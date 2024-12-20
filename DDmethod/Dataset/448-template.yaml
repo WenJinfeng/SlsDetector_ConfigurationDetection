@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  NetsurionAWSIntegrator:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: EventTrackerSIEM::EventTrackerSIEM.Bootstrap::ExecuteFunction
+      Runtime: dotnet6
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: e1d97e0d-be1a-4101-961a-317e96ec3906
+      Timeout: 30
+      Environment:
+        Variables:
+          NetsurionXDRManager:
+            Ref: NetsurionXDRManager
+          OrganizationName:
+            Ref: OrganizationName
+          Port:
+            Ref: SyslogPort
+          TLSEnabled:
+            Ref: SyslogOverTLS
+Parameters:
+  NetsurionXDRManager:
+    Type: String
+    Description: Netsurion Open XDR Manager FQDN/IP (e.g. receiver.contoso.net)
+  OrganizationName:
+    Type: String
+    Description: Organization Name (e.g. Contoso)
+  SyslogPort:
+    Type: String
+    Description: Netsurion Open XDR Syslog VCP Port (e.g. 4514)
+  SyslogOverTLS:
+    Type: String
+    Default: true
+    AllowedValues:
+    - true
+    - false
+    Description: Enable Syslog Over TLS (e.g. true or false)

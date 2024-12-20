@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 79c73b75-e48d-4c1f-b7f4-79d0691a31b0
+      Runtime: python2.7
+      Handler: index.handler
+      MemorySize: 1024
+      Timeout: 30

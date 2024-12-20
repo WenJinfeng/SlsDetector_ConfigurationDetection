@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Sends notifications about new Amazon Macie alerts to Slack channel.
+
+Parameters:
+  SlackWebhookUrl:
+    Type: String
+    Description: Webhook URL where notification will be sent to
+  SlackChannelName:
+    Type: String
+    Description: Name of the channel to send notification to (leave empty for channel name configured in the webhook)
+    Default: ""
+  SlackUserName:
+    Type: String
+    Description: Name of the user that will send notification (leave empty for user name configured in the webhook)
+    Default: ""
+  LambdaFunctionMemorySize:
+    Type: Number
+    Description: Amount of memory dedicated for Lambda function
+    Default: 128
+  LambdaFunctionTimeout:
+    Type: Number
+    Description: Maximum time for how long Lambda can be runing
+    Default: 60
+
+Resources:
+  MacieSlackNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Sends notifications about new Amazon Macie alerts to Slack channel.
+      Handler: macie_notification.lambda_handler.main
+      Runtime: python3.6
+      CodeUri: ./macie-slack-package.zip
+      Timeout: !Ref LambdaFunctionTimeout
+      MemorySize: !Ref LambdaFunctionMemorySize
+      Events:
+        newAlert:
+          Type: CloudWatchEvent
+          Properties:
+            Pattern:
+              source:
+                - aws.macie
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
+          SLACK_CHANNEL_NAME: !Ref SlackChannelName
+          SLACK_USER_NAME: !Ref SlackUserName
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn:
+          Fn::GetAtt: [MacieSlackNotificationFunctionDLQ, Arn]
+
+  MacieSlackNotificationFunctionDLQ:
+    Type: AWS::SQS::Queue

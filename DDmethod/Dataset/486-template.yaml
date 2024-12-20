@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This file contains code that instruments handled exception for nodejs12.x
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+Resources:
+  HandledExceptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: handled_exception
+      Description: This file contains code that instruments handled exception.
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: c7e229f2-0ab9-427d-96fc-073e7955607c
+      Handler: app.handler
+      Runtime: nodejs12.x
+      Events:
+        HandledExceptionFunction:
+          Type: Api
+          Properties:
+            Path: /handled_exception
+            Method: get
+Outputs:
+  HandledExceptionApi:
+    Description: API Gateway endpoint URL for Prod stage for handled exception function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/handled_exception/
+  HandledExceptionFunction:
+    Description: Handled Exception Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HandledExceptionFunction
+      - Arn

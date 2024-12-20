@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Lambda Layer with Hugo
+
+Resources:
+  HugoLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: dist/layer-hugo-0.76.3.zip
+Outputs:
+  LayerArn:
+    Value: !Ref HugoLayer

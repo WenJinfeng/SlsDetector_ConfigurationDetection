@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  CloudWatchNameSpace:
+    Type: String
+    Default: yourCloudWatchNameSpace
+    Description: CloudWatch Metrics Namespace
+    AllowedPattern: ^[0-9A-Za-z\._/-]+$
+    MaxLength: 250
+    MinLength: 1
+    ConstraintDescription: 'Up to 250 characters. Possible characters are: alphanumeric characters (0-9A-Za-z), period (.), hyphen (-), underscore (_), forward slash (/), hash (#), and colon (:)'
+Resources:
+  SNSTopic:
+    Type: AWS::SNS::Topic
+  LambdaPutToCloudWatch:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          CLOUDWATCH_NAMESPACE: !Ref CloudWatchNameSpace
+      Policies:
+        - CloudWatchPutMetricPolicy: {}
+      Events:
+        SubscribedTopic:
+          Type: SNS
+          Properties:
+            Topic: !Ref SNSTopic
+Outputs:
+  SNSTopic:
+    Value: !Ref SNSTopic
+    Description: The SNS topic your Lambda is listening to
+  CloudWatchNamespace:
+    Value: !Ref CloudWatchNameSpace
+    Description: The CloudWatch NameSpace where you put your SNS events

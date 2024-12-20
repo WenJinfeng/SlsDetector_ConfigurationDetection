@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    Timeout: 10
+    Tracing: Active
+
+Parameters:
+  CorsOrigin:
+    Type: String
+    Default: "'*'"
+    Description: (Optional) Cross-origin resource sharing (CORS) Origin. You can specify a single origin, all "*" or leave empty and no CORS will be applied.
+    MaxLength: 250
+  SSMParameterPath:
+    Type: String
+    Default: 'lambda-stripe-charge/stripe-secret-key'
+    Description: >
+      This component assumes the Stripe Secret key needed to use the Stripe Charge API is stored as SecureStrings in SSM Parameter Store under the path defined by
+      this parameter. See the component README for details.
+    AllowedPattern: ^[0-9a-zA-Z-][0-9a-zA-Z-\/]+
+    ConstraintDescription: 'Must start with a slash and alphanumeric characters (exclude the starting slash)'
+  EnableInstantCapture:
+    Type: String
+    AllowedValues: [true, false]
+    Default: true
+    Description: To immediatelly capture a payment upon charge, if true it means on charge you collect the amount, if false, you need to do a capture.
+Conditions:
+  ShouldEnableCapture: !Equals [true, !Ref EnableInstantCapture]
+Resources:
+  ChargeStripeApiWebhook:
+    Type: AWS::Serverless::Api
+    Properties:
+      Cors:
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: !Ref CorsOrigin
+        MaxAge: "'3600'"
+        AllowMethods: "'OPTIONS,POST'"
+      EndpointConfiguration: REGIONAL
+      StageName: prod
+      TracingEnabled: true
+  CreateStripeCharge:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: charge.handler
+      Policies:
+        - SNSCrudPolicy:
+            TopicName: !GetAtt SNSTopic.TopicName
+        - SSMParameterReadPolicy:
+            ParameterName: !Ref SSMParameterPath
+      Environment:
+        Variables:
+          IS_CORS: IsCorsDefined
+          CORS_ORIGIN: !Ref CorsOrigin
+          SSM_PARAMETER_PATH: !Ref SSMParameterPath
+          TOPIC_ARN: !Ref SNSTopic
+          IS_CAPTURE: !Ref EnableInstantCapture
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /charge
+            Method: POST
+            RestApiId: !Ref ChargeStripeApiWebhook
+  CaptureStripeCharge:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: capture.handler
+      Policies:
+        - SNSCrudPolicy:
+            TopicName: !GetAtt SNSTopic.TopicName
+        - SSMParameterReadPolicy:
+            ParameterName: !Ref SSMParameterPath
+      Environment:
+        Variables:
+          IS_CORS: IsCorsDefined
+          CORS_ORIGIN: !Ref CorsOrigin
+          SSM_PARAMETER_PATH: !Ref SSMParameterPath
+          TOPIC_ARN: !Ref SNSTopic
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /capture
+            Method: POST
+            RestApiId: !Ref ChargeStripeApiWebhook
+  CreateRefund:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: refund.handler
+      Policies:
+        - SNSCrudPolicy:
+            TopicName: !GetAtt SNSTopic.TopicName
+        - SSMParameterReadPolicy:
+            ParameterName: !Ref SSMParameterPath
+      Environment:
+        Variables:
+          IS_CORS: IsCorsDefined
+          CORS_ORIGIN: !Ref CorsOrigin
+          SSM_PARAMETER_PATH: !Ref SSMParameterPath
+          TOPIC_ARN: !Ref SNSTopic
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /refund
+            Method: POST
+            RestApiId: !Ref ChargeStripeApiWebhook
+  SNSTopic:
+    Type: AWS::SNS::Topic
+Outputs:
+  ChargeApiUrl:
+    Value: !Sub https://${ChargeStripeApiWebhook}.execute-api.${AWS::Region}.amazonaws.com/prod/charge
+    Description: The URL of the API Gateway you provide to Stripe as a webhook it invokes to CREATE a charge based on its token.
+  CaptureApiUrl:
+    Value: !Sub https://${ChargeStripeApiWebhook}.execute-api.${AWS::Region}.amazonaws.com/prod/capture
+    Description: The URL of the API Gateway you provide to Stripe as a webhook it invokes to CAPTURE a charge based on its token.
+  RefundApiUrl:
+    Value: !Sub https://${ChargeStripeApiWebhook}.execute-api.${AWS::Region}.amazonaws.com/prod/refund
+    Description: The URL of the API Gateway you provide to Stripe as a webhook it invokes to CAPTURE a charge based on its token.
+  SNSTopic:
+    Value: !Ref SNSTopic
+    Description: The SNS topic your Stripe Lambda is notifying to

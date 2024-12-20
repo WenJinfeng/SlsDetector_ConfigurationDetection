@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  amazon-chime-pstn-audio-workshop
+  Sample SAM Template for amazon-chime-pstn-audio-workshop
+Globals:
+  Function:
+    Timeout: 15
+Resources:
+  PSTNAudioWorkshopHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 3b6a4bcc-d8f7-499b-9b8d-9906017075f4
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Environment:
+        Variables:
+          WAVFILE_BUCKET: ''
+          WAVFILE_KEY: ''
+      Architectures:
+      - arm64
+Outputs:
+  PSTNAudioWorkshopHandler:
+    Description: PSTNAudioWorkshopHandler Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - PSTNAudioWorkshopHandler
+      - Arn
+  PSTNAudioWorkshopHandlerIamRole:
+    Description: Implicit IAM Role created for PSTNAudioWorkshopHandler function
+    Value:
+      Fn::GetAtt:
+      - PSTNAudioWorkshopHandler
+      - Arn

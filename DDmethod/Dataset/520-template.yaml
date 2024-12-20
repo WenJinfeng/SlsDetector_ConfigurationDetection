@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  Table1:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+      - KeyType: HASH
+        AttributeName: Sensor_NAME
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+      AttributeDefinitions:
+      - AttributeName: Sensor_NAME
+        AttributeType: S
+      ProvisionedThroughput:
+        WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+  ImaguNaturalDisasterMonitor:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: An Amazon DynamoDB trigger that logs the updates made to a table.
+      Tags:
+        lambda-console:blueprint: dynamodb-process-stream-python3
+      MemorySize: 128
+      Environment:
+        Variables:
+          ATTOM_API_URL: https://search.onboard-apis.com/communityapi/v2.0.0/area/full
+          ATTOM_API_KEY: d235fdcf8d972ef306eace248d0374cc
+          SNS_TOPIC: arn:aws:sns:us-east-1:666494974328:DisasterReport
+      Handler: lambda_function.lambda_handler
+      Timeout: 3
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 7c6f8074-e8b4-4e18-8c5e-1f953f4320f7
+      Runtime: python3.6
+      Events:
+        DynamoDB1:
+          Type: DynamoDB
+          Properties:
+            BatchSize: 100
+            StartingPosition: TRIM_HORIZON
+            Stream:
+              Fn::GetAtt:
+              - Table1
+              - StreamArn
+Description: An application which uses Amazon DynamoDB trigger to call for webservices queries and generate notifications via SNS.

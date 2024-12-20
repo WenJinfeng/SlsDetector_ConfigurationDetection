@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  sam-app
+  Sample SAM Template for sam-app
+Outputs:
+  HelloWorldApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  HelloWorldFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunction
+      - Arn
+  HelloWorldFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - HelloWorldFunctionRole
+      - Arn
+Resources:
+  HelloWorldFunction:
+    Properties:
+      Timeout: 3
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: e6a86acd-6477-483f-bbad-dc2f31306339
+      Environment:
+        Variables:
+          PARAM1: VALUE
+      Events:
+        HelloWorld:
+          Properties:
+            Method: get
+            Path: /hello
+            RestApiId:
+              Ref: ServerlessRestApi
+          Type: Api
+      Handler: app.lambda_handler
+      Runtime: python3.6
+    Type: AWS::Serverless::Function
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      __MANAGE_SWAGGER: true
+      DefinitionBody:
+        info:
+          version: '1.0'
+          title:
+            Ref: AWS::StackName
+        paths:
+          /hello:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloWorldFunction.Arn}/invocations
+              responses: {}
+        swagger: '2.0'
+      StageName: Prod
+Transform: AWS::Serverless-2016-10-31

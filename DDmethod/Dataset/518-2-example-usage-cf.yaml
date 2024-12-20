@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  Example using the Custom::SES_Domain CloudFormation custom resource type to provision
+  an Amazon SES domain identity and maintain necessary DNS records in Route53
+
+Parameters:
+  Domain:
+    Type: String
+    Description: >
+      The domain name you want to provision for Amazon SES (e.g., "corp.example.com").
+    Default: ""
+  EmailAddress:
+    Type: String
+    Description: >
+      The email address you want to verify with Amazon SES (e.g., "sender@example.com").
+    Default: ""
+  CfnSESResourcesTemplateURL:
+    Type: String
+    Description: >
+      The S3 url where you have uploaded your copy of aws-cfn-ses-domain.cf.yaml.
+    Default: https://s3.amazonaws.com/YOUR_BUCKET_NAME/aws-cfn-ses-domain-VERSION.cf.yaml
+
+Conditions:
+  DeployDomainExample: !Not [!Equals [!Ref Domain, ""]]
+  DeployEmailExample: !Not [!Equals [!Ref EmailAddress, ""]]
+
+Resources:
+  # Use a nested stack to create the AWS Lambda Functions for the custom SES resources.
+  # This stack's outputs include what you'll need for each custom resource's ServiceToken.
+  CfnSESResources:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref CfnSESResourcesTemplateURL
+
+  # Use Custom::SES_Domain to provision a domain identity in SES
+  MySESDomain:
+    Type: Custom::SES_Domain
+    Condition: DeployDomainExample
+    Properties:
+      ServiceToken: !GetAtt CfnSESResources.Outputs.CustomDomainIdentityArn
+      # Domain is required; all others are optional
+      Domain: !Ref Domain
+      EnableReceive: true
+      EnableSend: true
+      MailFromSubdomain: "mail"
+      TTL: "1800"
+      CustomDMARC: '"v=DMARC1; p=none; pct=100; sp=none; aspf=r;"'
+      Region: !Ref AWS::Region
+
+  # Add the necessary Route 53 DNS records for the SES domain identity.
+  # (This assumes you already have a Route 53 hosted zone for Domain;
+  # if not, add a Type: AWS::Route53::HostedZone resource to create it.)
+  MyRoute53Records:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: DeployDomainExample
+    Properties:
+      HostedZoneName: !Sub "${Domain}."
+      RecordSets: !GetAtt MySESDomain.Route53RecordSets
+
+  # Use Custom::SES_EmailIdentity to verify an email in SES
+  MySESEmail:
+    Type: Custom::SES_EmailIdentity
+    Condition: DeployEmailExample
+    Properties:
+      ServiceToken: !GetAtt CfnSESResources.Outputs.CustomEmailIdentityArn
+      # EmailAddress is required; all others are optional
+      EmailAddress: !Ref EmailAddress
+      Region: !Ref AWS::Region

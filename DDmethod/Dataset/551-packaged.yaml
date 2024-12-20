@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless Places API
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Configuration
+      Parameters:
+      - HereAppId
+      - HereAppCode
+      - HereBaseURL
+Outputs:
+  ApiUrl:
+    Description: URL of your API endpoint
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: RestApi
+        - .execute-api.
+        - Ref: AWS::Region
+        - .amazonaws.com/Prod
+Parameters:
+  HereAppCode:
+    Description: App code for Here API
+    Type: String
+  HereAppId:
+    Description: App id for Here API
+    Type: String
+  HereBaseURL:
+    Description: 'Here API url up to the version number (Ex: https://places.demo.api.here.com/places/v1)'
+    Type: String
+Resources:
+  PlacesFunction:
+    Properties:
+      CodeUri: s3://3lmedia/27490d820a3d19e2a7d90495f3f96b9d
+      Environment:
+        Variables:
+          HereAppCode:
+            Ref: HereAppCode
+          HereAppId:
+            Ref: HereAppId
+          HereBaseURL:
+            Ref: HereBaseURL
+      Events:
+        GetEvent:
+          Properties:
+            Method: get
+            Path: /places
+            RequestParameters:
+            - method.request.querystring.latlong:
+                Caching: false
+                Required: true
+            RestApiId:
+              Ref: RestApi
+          Type: Api
+      Handler: places.handler
+      Runtime: nodejs8.10
+      Timeout: 5
+    Type: AWS::Serverless::Function
+  RequestValidator:
+    Properties:
+      Name: validator1
+      RestApiId:
+        Ref: RestApi
+      ValidateRequestBody: true
+      ValidateRequestParameters: true
+    Type: AWS::ApiGateway::RequestValidator
+  RestApi:
+    Properties:
+      Name: api1
+      StageName: Prod
+    Type: AWS::Serverless::Api
+Transform: AWS::Serverless-2016-10-31

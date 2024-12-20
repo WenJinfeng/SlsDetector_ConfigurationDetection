@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  serverless-dice-roller
+  A simple serverless dice rolling API
+  usage: {url}/roll?diceRoll=1d10
+  code: https://github.com/madcap/serverless-dice-roller
+
+Globals:
+  Function:
+    Timeout: 3
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: dice-roller
+    Description: A simple serverless dice rolling API
+    Author: madcap
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: []
+    HomePageUrl: https://github.com/madcap/serverless-dice-roller
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/madcap/serverless-dice-roller
+
+Resources:
+  DiceRollerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dice_roller_lambda/
+      Handler: dice_roller.lambda_handler
+      Runtime: python3.6
+      Events:
+        DiceRoller:
+          Type: Api
+          Properties:
+            Path: /roll
+            Method: get
+
+Outputs:
+  DiceRollerApi:
+    Description: "API Gateway endpoint URL for Prod stage for Dice Roller function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/roll/"
+  DiceRollerFunction:
+    Description: "Dice Roller Lambda Function ARN"
+    Value: !GetAtt DiceRollerFunction.Arn
+  DiceRollerFunctionIamRole:
+    Description: "Implicit IAM Role created for Dice Roller function"
+    Value: !GetAtt DiceRollerFunctionRole.Arn

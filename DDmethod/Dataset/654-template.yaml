@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This application contains code that instruments handled exception for Python3.8
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+Resources:
+  HandledFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: handled_exception
+      Description: This file contains code that instruments handled exception
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: b1cb3231-f5b8-438d-b0ec-090761fe203c
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        HandledFunction:
+          Type: Api
+          Properties:
+            Path: /handled_exception
+            Method: get
+Outputs:
+  HandledApi:
+    Description: API Gateway endpoint URL for Prod stage for Hello World function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/handled_exception/
+  HandledFunction:
+    Description: Hello World Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - HandledFunction
+      - Arn

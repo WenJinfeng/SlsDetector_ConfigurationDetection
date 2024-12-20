@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A simple webhook troubleshooting endpoint that stores data in S3
+
+# first, the configuration parameters:
+Parameters:
+  bucketName:
+    Description: S3 bucket to store webhook data
+    Type: String
+  bucketPrefix:
+    Description: S3 bucket prefix
+    Type: String
+    Default: guarana
+  lambdaTimeOut:
+    Description: Lambda function timeout
+    Type: Number
+    Default: 60
+  lambdaMemoryLimit:
+    Description: Lambda function memory limit in MB
+    Type: Number
+    Default: 256
+
+# second, the resources:
+Resources:
+  Guarana:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/guarana.jar
+      FunctionName: uvasoftware-guarana-handler
+      Handler: com.uvasoftware.guarana.Handler
+      Runtime: java11
+      MemorySize: !Sub ${lambdaMemoryLimit}
+      Timeout: !Sub ${lambdaTimeOut}
+      Description: Captures HTTP requests and saves them kindly to S3.
+      AutoPublishAlias: live # enables automatic version tracking
+
+      Environment:
+        Variables:
+          DESTINATION_BUCKET: !Sub ${bucketName}
+          # default prefix for all objects stored in the above bucket:
+          DESTINATION_BUCKET_PREFIX: !Sub ${bucketPrefix}
+
+      Policies:
+      - S3CrudPolicy:
+          BucketName:
+            Ref: bucketName
+
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+
+Outputs:
+  ApiURL:
+    Description: "API endpoint URL for Prod environment"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+
+
+

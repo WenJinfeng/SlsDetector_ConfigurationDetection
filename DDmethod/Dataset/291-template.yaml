@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: api-access-tracker-backend
+    Description: A simple AWS serverless backend, for tracking and logging API request details to a webservice.
+    Author: Actigence Solutions
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['lambda', 'dynamodb', 'sqs']
+    HomePageUrl: https://github.com/Actigence/api-access-tracker-backend
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/Actigence/api-access-tracker-backend
+
+Description: >
+  A simple AWS serverless backend, for tracking and logging API request details to a webservice.
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  # Lambda function mapping for consuming items in inbound request queue from SQS and writing them to DynamoDB
+  InboundRequestConsumerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: server/
+      Handler: app.inboundRequestQueueConsumer
+      Runtime: nodejs12.x
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt InboundRequestLoggingQueue.QueueName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref InboundAPIAccessLogs
+      Events:
+        ShortCodeGenerationSQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt InboundRequestLoggingQueue.Arn
+            BatchSize: 1
+      Environment:
+        Variables:
+          INBOUND_TABLE_NAME: !Ref InboundAPIAccessLogs
+
+  # Lambda function mapping for consuming items in Outtbound request queue from SQS and writing them to DynamoDB
+  OutboundRequestConsumerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: server/
+      Handler: app.outboundRequestQueueConsumer
+      Runtime: nodejs12.x
+      Policies:
+        - SQSPollerPolicy:
+            QueueName: !GetAtt OutboundRequestLoggingQueue.QueueName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OutboundAPIAccessLogs
+      Events:
+        ShortCodeGenerationSQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt OutboundRequestLoggingQueue.Arn
+            BatchSize: 1
+      Environment:
+        Variables:
+          OUTBOUND_TABLE_NAME: !Ref OutboundAPIAccessLogs
+
+  #DynamoDB Tables to store API invocation events
+  InboundAPIAccessLogs:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      TableName: aal_inbound_api_access_logs
+
+  #DynamoDB Tables to store API invocation events
+  OutboundAPIAccessLogs:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      TableName: aal_outbound_api_access_logs
+
+  #SQS Definitions
+  InboundRequestLoggingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: aal_inbound_request_logging_queue
+
+  #SQS Definitions
+  OutboundRequestLoggingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: aal_outbound_request_logging_queue

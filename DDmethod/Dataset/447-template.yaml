@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ''
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  ChimeSDKIvr:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 45346e7c-f9f3-4559-91ea-00da429eca66
+      Handler: app.lambdaHandler
+      Runtime: nodejs16.x
+      Timeout: 1
+      Architectures:
+      - arm64
+      Environment:
+        Variables:
+          BRIDGE_NUMBER: ''
+          MAIN_MENU: ''
+          WELCOME_MESSAGE: ''
+          ADDRESS: ''
+          HOURS_OF_OPERATION: ''
+          WAV_BUCKET: ''
+          TONE_KEY: ''
+    Metadata:
+      SamResourceId: ChimeSDKIvr
+Outputs:
+  ChimeSDKIvr:
+    Description: Chime SDK IVR Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ChimeSDKIvr
+      - Arn
+  ChimeSDKIvrIamRole:
+    Description: Chime SDK IVR Role created for ChimeSDKIvr function
+    Value:
+      Fn::GetAtt:
+      - ChimeSDKIvr
+      - Arn

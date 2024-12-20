@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: cw-logs-to-slack-multi
+    Description: Filters CloudWatch logs and publishes them to Slack
+    Author: Chander Ganesan
+    SpdxLicenseId: MIT
+    # paths are relative to .aws-sam/build directory
+    LicenseUrl: ./LICENSE
+    ReadmeUrl: ./README.md
+    Labels: [serverless,slack,CloudWatch,logs]
+    HomePageUrl: https://github.com/chander/cw-logs-to-slack-multi
+    # Update the semantic version and run sam publish to publish a new version of your app
+    SemanticVersion: 1.0.1
+    # best practice is to use git tags for each release and link to the version tag as your source code URL
+    SourceCodeUrl: https://github.com/chander/cw-logs-to-slack-multi/tree/1.0.1
+
+Parameters:
+  LogLevel:
+    Type: String
+    Description: Log level for Lambda function logging, e.g., ERROR, INFO, DEBUG, etc
+    Default: INFO
+  SlackUrl:
+    Description: Webhook URL for integration with Slack
+    Type: String
+  LogGroupName:
+    Description: Log group to listen to (has to be in same account and region)
+    Type: String
+  FilterPattern:
+    Description: Pattern for filtering log events
+    Type: String
+    Default: ERROR
+  OnlySendLogMessage:
+    Type: String
+    Default: 'False'
+    Description: By default, this applicaiton will send the log message, id, and timestamp, unless this is set to True
+    AllowedValues: ['True','False']
+  SlackUrl01:
+    Default: ''
+    Description: Webhook URL for integration with Slack (using ContainsString01)
+    Type: String
+  ContainsString01:
+    Default: ''
+    Type: String
+    Description: A String that must appear in the message in order for SlackUrl01 to be used.
+  SlackUrl02:
+    Default: ''
+    Description: Webhook URL for integration with Slack (using ContainsString02)
+    Type: String
+  ContainsString02:
+    Default: ''
+    Type: String
+    Description: A String that must appear in the message in order for SlackUrl02 to be used.
+  SlackUrl03:
+    Default: ''
+    Description: Webhook URL for integration with Slack (using ContainsString03)
+    Type: String
+  ContainsString03:
+    Default: ''
+    Type: String
+    Description: A String that must appear in the message in order for SlackUrl03 to be used.
+  SlackUrl04:
+    Default: ''
+    Description: Webhook URL for integration with Slack (using ContainsString04)
+    Type: String
+  ContainsString04:
+    Default: ''
+    Type: String
+    Description: A String that must appear in the message in order for SlackUrl04 to be used.
+  SlackUrl05:
+    Default: ''
+    Description: Webhook URL for integration with Slack (using ContainsString05)
+    Type: String
+  ContainsString05:
+    Default: ''
+    Type: String
+    Description: A String that must appear in the message in order for SlackUrl05 to be used.
+
+Resources:
+  cwlogstolambda:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:289559741701:applications/cw-logs-to-lambda
+        SemanticVersion: 0.0.1
+      Parameters: 
+        # Name of the function to which this application will send log messages
+        DestinationFunctionName: !GetAtt lambdatoslack.Outputs.LambdaToSlackName
+        # Pattern for filtering log events
+        FilterPattern: !Ref FilterPattern
+        # Log group to listen to (has to be in same account and region)
+        LogGroupName: !Ref LogGroupName
+        # Log level for Lambda function logging, e.g., ERROR, INFO, DEBUG, etc
+        LogLevel: !Ref LogLevel
+        # By default, this function will send the log message, id, and timestamp, unless this is set to True
+        OnlySendLogMessage: !Ref OnlySendLogMessage
+
+  lambdatoslack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-west-2:444108974876:applications/lambda-to-slack-multi
+        SemanticVersion: 0.0.5
+      Parameters: 
+        # Log level for Lambda function logging, e.g., ERROR, INFO, DEBUG, etc
+        LogLevel: !Ref LogLevel
+        # Webhook URL for integration with Slack
+        SlackUrl: !Ref SlackUrl
+        SlackUrl01: !Ref SlackUrl01
+        ContainsString01: !Ref ContainsString01
+        SlackUrl02: !Ref SlackUrl02
+        ContainsString02: !Ref ContainsString02
+        SlackUrl03: !Ref SlackUrl03
+        ContainsString03: !Ref ContainsString03
+        SlackUrl04: !Ref SlackUrl04
+        ContainsString04: !Ref ContainsString04
+        SlackUrl05: !Ref SlackUrl05
+        ContainsString05: !Ref ContainsString05
+
+
+Outputs:
+  LogsToLambdaName:
+    Description: "Log Lambda Function Name"
+    Value: !GetAtt cwlogstolambda.Outputs.LogsToLambdaName
+  LogsToLambdaArn:
+    Description: "Log Lambda Function ARN"
+    Value: !GetAtt cwlogstolambda.Outputs.LogsToLambdaArn
+  LambdaToSlackName:
+    Description: "Slack Lambda Function Name"
+    Value: !GetAtt lambdatoslack.Outputs.LambdaToSlackName
+  LambdaToSlackArn:
+    Description: "Slack Lambda Function ARN"
+    Value: !GetAtt lambdatoslack.Outputs.LambdaToSlackArn

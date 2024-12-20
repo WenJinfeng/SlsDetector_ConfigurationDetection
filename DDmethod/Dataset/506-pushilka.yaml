@@ -1,0 +1,14 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Adds required headers for proper functioning of pushilka with CloudFront
+Resources:
+  pushilka:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: s3://pushilka/pushilka-e2a13888-1b82-493c-8078-da929ff23a6d.zip
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Policies:

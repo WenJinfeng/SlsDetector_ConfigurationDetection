@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: json-logs-to-kinesis-firehose
+    Description: This serverless application forwards JSON-formatted log events for a given CloudWatch Log Group to a Kinesis Data Firehose Delivery Stream
+    Author: James Hood
+    SpdxLicenseId: MIT
+    # paths are relative to .aws-sam/build directory
+    LicenseUrl: ../../LICENSE
+    ReadmeUrl: ../../README.md
+    Labels: [logs, json, kinesis-firehose]
+    HomePageUrl: https://github.com/jlhood/json-lambda-logs-to-kinesis-firehose
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/jlhood/json-lambda-logs-to-kinesis-firehose/tree/1.0.0
+
+Parameters:
+  LogGroupName:
+    Type: String
+    Description: Name (not ARN) of the log group whose JSON-formatted logs should be sent to the given Kinesis Data Firehose Delivery Stream.
+  KinesisFirehoseDeliveryStream:
+    Type: String
+    Description: Name (not ARN) of the Kinesis Data Firehose Delivery Stream that JSON-formatted log events should be written to.
+  LogLevel:
+    Type: String
+    Description: Log level for Lambda function logging, e.g., ERROR, INFO, DEBUG, etc
+    Default: INFO
+
+Resources:
+  ForwardJsonLogs:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: forwardjsonlogs.handler
+      Runtime: python3.7
+      Tracing: Active
+      Timeout: 5
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+          DELIVERY_STREAM_NAME: !Ref KinesisFirehoseDeliveryStream
+      Policies:
+        - FirehoseWritePolicy:
+            DeliveryStreamName: !Ref KinesisFirehoseDeliveryStream
+      Events:
+        Logs:
+          Type: CloudWatchLogs
+          Properties:
+            LogGroupName: !GetAtt EnsureLogGroupExists.LogGroupName
+            FilterPattern: ''
+
+  EnsureLogGroupExistsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: ensureloggroup.handler
+      Runtime: python3.7
+      Tracing: Active
+      Timeout: 5
+      Environment:
+        Variables:
+          LOG_LEVEL: !Ref LogLevel
+
+  EnsureLogGroupExists:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt EnsureLogGroupExistsFunction.Arn
+      LogGroupName: !Ref LogGroupName
+
+Outputs:
+  ForwardJsonLogsFunctionName:
+    Description: "Log forwarding Lambda function name"
+    Value: !Ref ForwardJsonLogs
+  ForwardJsonLogsFunctionArn:
+    Description: "Log forwarding Lambda function ARN"
+    Value: !GetAtt ForwardJsonLogs.Arn

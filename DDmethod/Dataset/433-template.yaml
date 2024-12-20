@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SQS to Slack AWS Application
+
+Globals:
+  Function:
+    Timeout: 5
+
+Parameters:
+  QueueARN:
+    Type: String
+    Description: ARN of the queue to read messages
+  SlackWebhook:
+    Type: String
+    Description: Slack webhook to send the queue messages
+
+Resources:
+  SQSToSlackFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: sqs-to-slack/
+      Handler: handler
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue:
+              Ref: QueueARN
+      Environment:
+        Variables:
+          SLACK_WEBHOOK:
+            Ref: SlackWebhook
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: sqs-to-slack
+    Description: SQS to Slack AWS Application
+    Author: Felipe Murillo
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['sqs', 'slack']
+    HomePageUrl: https://github.com/phillip2025/sqs-to-slack
+    SemanticVersion: 0.0.2
+    SourceCodeUrl: https://github.com/phillip2025/sqs-to-slack

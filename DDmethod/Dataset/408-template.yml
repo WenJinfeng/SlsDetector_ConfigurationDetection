@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Trend Micro Logs CloudWatch Connector This serverless application integrates with different services of Trend Micro which sends an event notification to AWS CloudWatch using AWS SNS, API Gateway, and Lambda function.
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  trendmicrologscloudwatchconnector:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.7
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 2163a995-4b7f-4bff-b4ad-dcdbb8e96daa
+      MemorySize: 512
+      Timeout: 900
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /
+            Method: POST
+        SNS1:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: SNSTopic1
+      Environment:
+        Variables:
+          DSSC_INSECURE_SKIP_TLS_VERIFY: <add_true_or_false>
+          DSSC_MIN_SEVERITY: <add_min_severity>
+          DSSC_SHOW_FIXED: <add_true_or_false>
+          DSSC_SHOW_OVERRIDDEN: <add_true_or_false>
+          DSSC_SMARTCHECK_PASSWORD: <add_smartcheck_password>
+          DSSC_SMARTCHECK_USER: <add_smartcheck_user>
+          DSSC_URL: <add_smartcheck_url>
+  SNSTopic1:
+    Type: AWS::SNS::Topic

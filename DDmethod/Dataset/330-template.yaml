@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Alexa Skill Template with clean code, multi-language and Alexa Presentation Language (APL) support
+Resources:
+  AlexaSkillFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: cd3d58d2-4e79-48c6-a62c-277c09378c4f
+      Handler: index.handler
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 8
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill

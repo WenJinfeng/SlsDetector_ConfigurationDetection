@@ -1,0 +1,198 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Outputs:
+  NamesApiEndpoint:
+    Description: Names API URL for application
+    Value:
+      Fn::Sub: https://${NamesApi}.execute-api.${AWS::Region}.amazonaws.com/prod/resources/names
+  GreetingApiEndpoint:
+    Description: Greeting API URL for application
+    Value:
+      Fn::Sub: https://${GreetingApi}.execute-api.${AWS::Region}.amazonaws.com/prod/resources/greeting
+  WebappApiEndpoint:
+    Description: WebApp URL for application
+    Value:
+      Fn::Sub: https://${WebAppApi}.execute-api.${AWS::Region}.amazonaws.com/prod/
+Description: Amazon API Gateway.
+Resources:
+  GreetingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Amazon API Gateway.
+      Tracing: Active
+      MemorySize: 1024
+      Handler: org.aws.samples.compute.greeting.GreetingHandler::handleRequest
+      Timeout: 20
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 64ca048d-974b-42e1-94e8-cc46aa6df677
+      Runtime: java8
+      Events:
+        greet:
+          Type: Api
+          Properties:
+            Path: /resources/greeting
+            RestApiId:
+              Ref: GreetingApi
+            Method: GET
+  NamesApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        definitions:
+          Name:
+            type: object
+            properties:
+              id:
+                type: number
+              name:
+                type: string
+        swagger: '2.0'
+        paths:
+          /resources/names/{id}:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NamesFunction.Arn}/invocations
+              responses:
+                '200':
+                  content:
+                    text/plain:
+                      scheme:
+                        type: string
+              parameters:
+              - required: true
+                type: number
+                name: id
+                in: path
+              produces:
+              - text/plain
+              - application/json
+              - application/xml
+          /resources/names:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                responses: {}
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NamesFunction.Arn}/invocations
+              produces:
+              - application/json
+              - application/xml
+      StageName: prod
+  WebAppApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        info:
+          title: Webapp API
+        paths:
+          /{id}:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebAppFunction.Arn}/invocations
+              responses: {}
+              parameters:
+              - required: false
+                type: number
+                name: id
+                in: path
+              produces:
+              - text/plain
+        swagger: '2.0'
+      StageName: prod
+  GreetingApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        paths:
+          /resources/greeting:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GreetingFunction.Arn}/invocations
+              responses:
+                '200':
+                  content:
+                    text/plain:
+                      scheme:
+                        type: string
+        swagger: '2.0'
+      StageName: prod
+  NamesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Amazon API Gateway.
+      Tracing: Active
+      MemorySize: 1024
+      Handler: org.aws.samples.compute.name.NameHandler::handleRequest
+      Timeout: 20
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 3972d1a9-1692-4446-b745-b12b31608ebd
+      Runtime: java8
+      Events:
+        findname:
+          Type: Api
+          Properties:
+            Path: /resources/names/{id}
+            RestApiId:
+              Ref: NamesApi
+            Method: GET
+        names:
+          Type: Api
+          Properties:
+            Path: /resources/names
+            RestApiId:
+              Ref: NamesApi
+            Method: GET
+  WebAppFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Amazon API Gateway.
+      Tracing: Active
+      MemorySize: 1024
+      Environment:
+        Variables:
+          GREETING_SERVICE_PORT: '443'
+          NAME_SERVICE_PORT: '443'
+          NAME_SERVICE_PATH: /prod/resources/names
+          GREETING_SERVICE_SCHEME: https
+          NAME_SERVICE_HOST:
+            Fn::Sub: ${NamesApi}.execute-api.${AWS::Region}.amazonaws.com
+          GREETING_SERVICE_PATH: /prod/resources/greeting
+          NAME_SERVICE_SCHEME: https
+          GREETING_SERVICE_HOST:
+            Fn::Sub: ${GreetingApi}.execute-api.${AWS::Region}.amazonaws.com
+      Handler: org.aws.samples.compute.webapp.WebappHandler::handleRequest
+      Timeout: 20
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 90a6c640-a715-4342-ae22-1f461b288f66
+      Runtime: java8
+      Events:
+        WebAppName:
+          Type: Api
+          Properties:
+            Path: /{id}
+            RestApiId:
+              Ref: WebAppApi
+            Method: GET
+        WebAppRoot:
+          Type: Api
+          Properties:
+            Path: /
+            RestApiId:
+              Ref: WebAppApi
+            Method: GET
+    DependsOn:
+    - NamesApi
+    - GreetingApi
+Transform: AWS::Serverless-2016-10-31

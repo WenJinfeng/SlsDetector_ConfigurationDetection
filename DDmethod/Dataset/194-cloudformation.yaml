@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Send a daily fortune via SMS.
+
+Parameters: 
+  PhoneNumber: 
+    Type: String
+    Description: The phone number recipient of the fortune, in E.164 (e.g. +15555550100) format.
+  UTCHour: 
+    Type: String
+    Default: 0
+    Description: The hour at which to send the daily fortune, in the UTC time zone.
+          
+Resources:
+  FortuneFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fortune.lambda_handler
+      Runtime: python3.6
+      Timeout: 5
+      CodeUri: app
+      Environment:
+        Variables:
+          SNS_TOPIC: !Ref SNSTopic
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: !Join [' ', ['cron(0', !Ref UTCHour, '* * ? *)']]
+      Policies:
+       - SNSPublishMessagePolicy:
+           TopicName: !GetAtt SNSTopic.TopicName
+  SNSTopic:
+    Type: "AWS::SNS::Topic"
+    Properties: 
+      DisplayName: Fortune
+      Subscription:
+        -
+          Endpoint: !Ref PhoneNumber
+          Protocol: sms

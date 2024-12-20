@@ -1,0 +1,30 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: This stream Stack Exchange questions using Streamdata.io, pulling data via the API and turning it into a stream and publishing the results to an Amazon S3 data lake
+Resources:
+  streamdataiostackexchangequestions:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: s3://streamdata-serverless/streamdata-io-stack-exchange-questions/package.zip
+      Description: This stream Stack Exchange questions using Streamdata.io, pulling data via the API and turning it into a stream and publishing the results to an Amazon S3 data lake
+      MemorySize: 128
+      Timeout: 300
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: streamdata-io-stack-exchange-questions
+        - S3CrudPolicy:
+            BucketName: streaming-data-lake
+      Environment:
+        Variables:
+          targetUrl: https://api.stackexchange.com/2.2/questions
+          s3bucket: streaming-data-lake
+          targetFolder: stack-exchange-data
+          appToken: Streamdata.io-Application-Token
+          order: desc
+          sort: activity
+          site: stackoverflow
+          tagged: kafka
+          access_token: Stack-Exchange-Access-Token
+          key: Stack-Exchange-Key

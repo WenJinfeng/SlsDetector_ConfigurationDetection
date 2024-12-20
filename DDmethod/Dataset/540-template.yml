@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Architecture description for serverless fstinfo
+
+Resources:
+    FstFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.6
+            CodeUri: s3://serverless-fst/fstinfo.zip
+            Events:
+                InfoResource:
+                    Type: Api
+                    Properties:
+                        Path: /info
+                        Method: post
+                        RestApiId: !Ref FstInfoApi
+    FstInfoApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: Prod
+            DefinitionBody:
+                swagger: 2.0
+                info:
+                    title: !Ref AWS::StackName
+                x-amazon-apigateway-binary-media-types:
+                    - 'application/octet-stream'
+                paths:
+                    "/info":
+                        post:
+                            x-amazon-apigateway-integration:
+                                httpMethod: POST
+                                type: aws_proxy
+                                uri:
+                                    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FstFunction.Arn}/invocations
+                            responses: {}

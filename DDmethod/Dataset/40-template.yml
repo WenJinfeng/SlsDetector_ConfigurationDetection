@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: React TodoMVC with a Serverless backend
+Globals:
+  Api:
+    BinaryMediaTypes:
+      # The ~1 will be replaced with / when deployed
+      - '*~1*'
+Resources:
+  siteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: React TodoMVC with a Serverless backend
+      Handler: src/index.handler
+      Runtime: nodejs12.x
+      CodeUri: build/todo.zip
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: todoTable
+      Timeout: 10
+      Events:
+        root:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+        getProxy:
+          Type: Api
+          Properties:
+            Path: '/{proxy+}'
+            Method: get
+        postProxy:
+          Type: Api
+          Properties:
+            Path: '/{proxy+}'
+            Method: post
+      Environment:
+        Variables:
+          TABLE:
+            Ref: todoTable
+  todoTable:
+    Type: AWS::Serverless::SimpleTable

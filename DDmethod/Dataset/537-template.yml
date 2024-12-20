@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Hathitrust Proxy
+
+Globals:
+  Function:
+    Timeout: 30
+
+Parameters:
+  HathitrustKey:
+    Type: String
+    Description: Key for the Hathitrust API. See http://babel.hathitrust.org/cgi/kgs/request for details.
+  HathitrustSecret:
+    Type: String
+    Description: Secret for the Hathitrust API. See http://babel.hathitrust.org/cgi/kgs/request for details.
+  StageName:
+      Type: String
+      Description: Name of the API stage to be deployed
+      Default: latest    
+Resources:
+  HathitrustProxyFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: ./src
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          HATHITRUST_KEY: !Sub "${HathitrustKey}"
+          HATHITRUST_SECRET: !Sub "${HathitrustSecret}"
+      Events:
+        HathitrustProxy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            RestApiId: !Ref HathitrustProxyApi
+  CloudAppAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./cloudapp-authorizer
+      Handler: index.auth
+      Runtime: nodejs12.x
+  HathitrustProxyApi:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      Name: !Sub "${AWS::StackName}-api"
+      StageName: !Sub "${StageName}"
+      Auth:
+        Authorizers:
+          CloudAppAuthorizer:
+            FunctionArn: !GetAtt CloudAppAuthorizerFunction.Arn   
+      DefinitionBody:
+        openapi: "3.0.1"
+        info:
+          title: "HathitrustProxy"
+          description: "Proxy Hathitrust API"
+          version: "0.1"
+        paths:
+          /{proxy+}:
+            options:
+              responses:
+                '200':
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Credentials:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/Empty"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Credentials: "'true'"
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Authorization'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                    contentHandling: "CONVERT_TO_TEXT"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                passthroughBehavior: "when_no_match"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "mock"
+            x-amazon-apigateway-any-method:
+              parameters:
+              - name: "proxy"
+                in: "path"
+                required: true
+                schema:
+                  type: "string"
+              security:
+              - CloudAppAuthorizer: []
+              x-amazon-apigateway-integration:
+                uri: 
+                  Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HathitrustProxyFunction.Arn}/invocations"
+                responses:
+                  default:
+                    statusCode: "200"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                cacheNamespace: "p5sv2n"
+                cacheKeyParameters:
+                - "method.request.path.proxy"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws_proxy"
+        components:
+          schemas:
+            Empty:
+              title: "Empty Schema"
+              type: "object"
+        x-amazon-apigateway-gateway-responses:
+          UNAUTHORIZED:
+            statusCode: 401
+            responseParameters:
+              gatewayresponse.header.Access-Control-Allow-Credentials: "'true'"
+              gatewayresponse.header.Access-Control-Allow-Origin: "method.request.header.Origin"
+              gatewayresponse.header.Access-Control-Allow-Headers: "'authorization'"
+            responseTemplates:
+              application/json: "{\"message\":$context.error.messageString}"
+        x-amazon-apigateway-binary-media-types:
+        - "*/*"     
+Outputs:
+  Endpoint:
+    Description: Hathitrust Proxy URL
+    Value: !Sub "https://${HathitrustProxyApi}.execute-api.${AWS::Region}.amazonaws.com/${HathitrustProxyApi.Stage}/"
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: hathitrust-proxy
+    Description: Serverless proxy for the Hathitrust API
+    Author: Ex Libris
+    SpdxLicenseId: BSD-3-Clause
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    HomePageUrl: https://github.com/ExLibrisGroup/hathitrust-proxy
+    SemanticVersion: 0.0.5
+    SourceCodeUrl: https://github.com/ExLibrisGroup/hathitrust-proxy
+    

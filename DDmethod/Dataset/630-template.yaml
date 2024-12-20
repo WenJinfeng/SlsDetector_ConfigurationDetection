@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  streamdataiogithubsearchrepositories:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Streamdata.io Github Repositories Search Streaming to Amazon S3 Data Lake Using La
+      MemorySize: 128
+      Environment:
+        Variables:
+          appToken: Streamdata.io-Application-Token
+          s3bucket: streaming-data-lake
+          targetUrl: https://api.github.com/search/repositories
+          query: postman collections
+          github_token: Github-Token
+          targetFolder: github-search-repositories
+      Handler: index.handler
+      Timeout: 63
+      Policies:
+      - Statement:
+        - Action:
+          - lambda:InvokeFunction
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}*
+            - functionName: streamdata-io-github-search-repositories
+          Effect: Allow
+      - Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:GetBucketLocation
+          - s3:GetObjectVersion
+          - s3:PutObject
+          - s3:GetLifecycleConfiguration
+          - s3:PutLifecycleConfiguration
+          Resource:
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}
+            - bucketName: streaming-data-lake
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}/*
+            - bucketName: streaming-data-lake
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 0bcaccab-f111-4f7a-b7ee-3f88b70e701f
+      Runtime: nodejs6.10
+Description: Streamdata.io Github Repositories Search Streaming to Amazon S3 Data Lake Using Lambda

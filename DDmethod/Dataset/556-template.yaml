@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Sanction Traffic From Russian and Belarusian IP addresses to CloudFront Distributions
+Resources:
+  RussiaSanctionsLambda:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - edgelambda.amazonaws.com
+                - lambda.amazonaws.com
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Description: Tests CloudFront Viewer Requests for Russia or Belarusian IP addresses
+      MemorySize: 128
+      Timeout: 3
+      CodeUri: s3://russia-sanctions/archive.zip
+      AutoPublishAlias: live

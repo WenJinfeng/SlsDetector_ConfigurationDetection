@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  HelloWorldNodejs:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 262bb9e4-9948-43f8-9dc6-058a803fd1bc
+      Runtime: nodejs6.10
+      Handler: index.handler
+      Timeout: 3
+Description: |
+  hello-world
+  Sample SAM Template for hello-world

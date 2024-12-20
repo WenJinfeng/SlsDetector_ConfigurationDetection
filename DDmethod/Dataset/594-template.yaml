@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  S3BucketParameter:
+    Type: String
+  BuildArtifactParameter:
+    Type: String
+    Default: BuildArtifact
+    
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: codepipeline-s3-objects-public-read
+    Description: A Lambda function triggered by CodePipeline to update the S3 ACL to Public Read for objects deployed via S3 Deploy action. Originally from Sam Dengler.
+    Author: George Seib
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['codepipeline','s3']
+    HomePageUrl: https://github.com/geseib/codepipeline-s3-objects-public-read
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/geseib/codepipeline-s3-objects-public-read
+
+Resources:
+  PublicReadAclFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs8.10
+      Handler: index.handler
+      CodeUri: app
+      Timeout: 900
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3BucketParameter
+          BUILD_ARTIFACT: !Ref BuildArtifactParameter
+
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref S3BucketParameter
+        - CodePipelineLambdaExecutionPolicy: {}
+
+Outputs:
+  PublicReadAclFunctionArn:
+    Value: !GetAtt PublicReadAclFunction.Arn
+
+  PublicReadAclFunctionName:
+    Value: !Ref PublicReadAclFunction

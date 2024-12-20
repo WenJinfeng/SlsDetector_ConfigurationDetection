@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SAM template for Serverless framework service: '
+Parameters:
+  IOpipeToken:
+    Type: String
+Resources:
+  IOpipeHelloWorld:
+    Properties:
+      CodeUri: .
+      Environment:
+        Variables:
+          IOPIPE_TOKEN:
+            Ref: IOpipeToken
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: nodejs8.10
+      Timeout: 3
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

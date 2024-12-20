@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Free text search API and indexer for a collection of articles
+Parameters:
+  TargetBucket:
+    Description: Name of S3 bucket to create where search articles should be uploaded (remember s3 bucket names are only lowercase)
+    Type: String
+  InternalAPIKey:
+    Type: String
+    Default: supersecretkey
+    Description: Internal API Key that you will use when making requests to update the search index configuration
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+
+Resources:
+  DocumentSearchFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: document_search
+      Handler: app.lambdaHandler
+      Runtime: nodejs8.10
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          BUCKET_NAME: !Ref TargetBucket
+          INTERNAL_API_KEY: !Ref InternalAPIKey
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref TargetBucket
+      Events:
+        DocumentSearch:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /search
+            Method: GET
+        DocumentUpload:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /add
+            Method: ANY
+        SearchConfiguration:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /internal/config
+            Method: ANY
+  DocumentIndexingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: document_indexer
+      Handler: app.lambdaHandler
+      Runtime: nodejs8.10
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          BUCKET_NAME: !Ref TargetBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref TargetBucket
+      Events:
+        DocumentAddedEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref SearchDocumentsBucket
+            Events: s3:ObjectCreated:*
+  DocumentBatchingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: document_batch
+      Handler: app.lambdaHandler
+      Runtime: nodejs8.10
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          BUCKET_NAME: !Ref TargetBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref TargetBucket
+      Events:
+        DocumentBatchEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
+  SearchDocumentsBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref TargetBucket
+
+Outputs:
+  DocumentSearchApi:
+    Description: "Deployed API Gateway Endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
+  DocumentSearchFunction:
+    Description: "Search Document API Function ARN"
+    Value: !GetAtt DocumentSearchFunction.Arn
+
+  DocumentIndexingFunction:
+    Description: "Search Document Indexing Function ARN"
+    Value: !GetAtt DocumentIndexingFunction.Arn
+
+  DocumentBatchingFunction:
+    Description: "Search Document Batching Function ARN"
+    Value: !GetAtt DocumentBatchingFunction.Arn
+
+  DocumentCollectionBucket:
+    Description: "S3 Bucket for all uploaded documents and indexing information"
+    Value: !Ref TargetBucket

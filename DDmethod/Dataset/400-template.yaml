@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Terraform state store
+
+Parameters:
+  TfStateBucketNoncurrentVersionExpirationInDays:
+    Type: Number
+    Default: 731
+
+Resources:
+  TfStateBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - NoncurrentVersionExpirationInDays: !Ref TfStateBucketNoncurrentVersionExpirationInDays
+            Status: Enabled
+
+  TfStateLockTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: LockID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: LockID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+
+Outputs:
+  TfStateBucketName:
+    Value: !Ref TfStateBucket
+  TfStateLockTableName:
+    Value: !Ref TfStateLockTable

@@ -1,0 +1,15 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: signalfx-lambda-ruby-wrapper
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 2b5775b9-845d-43b1-8413-8c59be2a7556
+      CompatibleRuntimes:
+      - ruby2.5
+Outputs:
+  LayerArn:
+    Value:
+      Ref: SharedLayer

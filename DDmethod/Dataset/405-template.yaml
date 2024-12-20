@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  EnergyProductFinder:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 128
+      Handler: energy_product_finder.handler
+      Timeout: 100
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 6d367318-d0af-4d1a-b0d4-f1c4efbf984d
+      Runtime: python3.6
+      Events:
+        AlexaSkillEvent:
+          Type: AlexaSkill

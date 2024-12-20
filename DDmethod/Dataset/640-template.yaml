@@ -1,0 +1,821 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  IsApiGatewayDefined:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: CoreApiGateway
+      - ''
+Description: '[0.0.17] ACenterA serverless-cms - prod'
+Globals:
+  Api:
+    BinaryMediaTypes:
+    - image~1*
+    - image~1gif
+    - image~1png
+    - image~1jpeg
+    - image~1jpg
+    Cors:
+      AllowHeaders: '''X-Version, Accept, Authorization, Content-Type'''
+      AllowMethods: '''GET, POST, OPTIONS, HEAD'''
+    EndpointConfiguration: REGIONAL
+  Function:
+    Environment:
+      Variables:
+        ACCOUNT_ID:
+          Fn::Sub: ${AWS::AccountId}
+        APP_DATA_PERM_TABLE_NAME:
+          Fn::Sub: acentera-${Stage}-AppDataPermissions
+        APP_DATA_TABLE_NAME:
+          Fn::Sub: acentera-${Stage}-AppData
+        GraphApiEndpoint:
+          Fn::GetAtt: GraphApi.GraphQLUrl
+        GraphApiId:
+          Fn::GetAtt: GraphApi.ApiId
+        JWT_SECRET:
+          Ref: JWTSecret
+        KEY_ID:
+          Ref: Secret
+        PLUGIN_NAME: serverless-cms
+        PLUGIN_VERSION: 0.0.17
+        REGION:
+          Fn::Sub: ${AWS::Region}
+        S3_BUCKET:
+          Ref: AppS3Assets
+        SECRET:
+          Ref: ServerSecret
+        SESSION_TABLE_NAME:
+          Fn::Sub: acentera-${Stage}-Sessions
+        SITE:
+          Ref: SiteDataKey
+        SITE_KEY:
+          Ref: SiteDataKey
+        SITE_TITLE:
+          Ref: SiteTitle
+        STACK_ID:
+          Fn::Sub: ${AWS::StackId}
+        STACK_NAME:
+          Fn::Sub: ${AWS::StackName}
+        STAGE:
+          Ref: Stage
+    Handler: main
+    Layers:
+    - Ref: RequestsLayerCMS
+    Runtime: go1.x
+    Timeout: 60
+Mappings:
+  Cognito:
+    Values:
+      AuthName: ACenterA
+  Plugin:
+    Values:
+      Name: serverless-cms
+Outputs:
+  AccountId:
+    Description: The AccountId for Bootstrap
+    Value:
+      Fn::Sub: ${AWS::AccountId}
+  ApiId:
+    Description: GraphQL API ID
+    Value:
+      Fn::GetAtt: GraphApi.ApiId
+  ApiUrl:
+    Description: The API Url
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: ServerlessRestApi
+        - Fn::Sub: .execute-api.${AWS::Region}.amazonaws.com/Prod
+  Apindpoint:
+    Description: GraphQL API Endpoint
+    Value:
+      Fn::GetAtt: GraphApi.GraphQLUrl
+  PluginVersion:
+    Description: The Plugin Version
+    Value: 0.0.17
+  WebsiteUrl:
+    Description: The Admin Panel Default Url
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Fn::GetAtt:
+          - ServerlessCloudfront
+          - DomainName
+        - /
+Parameters:
+  AppS3Assets:
+    Default: acentera-prod-s3
+    Description: ACenterA S3 Bucket
+    Type: AWS::SSM::Parameter::Value<String>
+  CoreApiGateway:
+    Default: ''
+    Description: ACenterA Core API Gateway
+    Type: String
+  JWTSecret:
+    Default: acentera-prod-clientsecret
+    Description: JWT Client Secret from Parameter Store
+    Type: AWS::SSM::Parameter::Value<String>
+  Secret:
+    Default: acentera-prod-secret
+    Description: Server Secret Parameter Store
+    Type: AWS::SSM::Parameter::Value<String>
+  ServerSecret:
+    Default: acentera-prod-serversecret
+    Description: JWT Server Secret from Parameter Store
+    Type: AWS::SSM::Parameter::Value<String>
+  SiteDataKey:
+    Default: a2f9b231-88b5-40c9-9f75-cc14f854a7bb
+    Description: ACenterA Site Key from Admin Portal
+    Type: String
+  SiteKey:
+    Default: a3f9b231-88b5-40c9-9f75-cc14f854a7bb
+    Description: ACenterA Site Key from Admin Portal
+    Type: String
+  SiteTitle:
+    Default: ACenterA Serverless CMS - 0.0.17
+    Description: Web Portal Site Title
+    Type: String
+  Stage:
+    AllowedValues:
+    - prod
+    Default: prod
+    Description: Stage environment. Cannot be changed.
+    Type: String
+Resources:
+  ApiApp:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a63b16a9-1ada-447d-a9f9-917f70e022b9
+      Environment:
+        Variables:
+          TYPE: API
+      Events:
+        DeleteRequest:
+          Properties:
+            Method: DELETE
+            Path: /api/plugins/serverless-cms/{proxy+}
+          Type: Api
+        GetRequest:
+          Properties:
+            Method: GET
+            Path: /api/plugins/serverless-cms/{proxy+}
+          Type: Api
+        PostRequest:
+          Properties:
+            Method: POST
+            Path: /api/plugins/serverless-cms/{proxy+}
+          Type: Api
+        PutRequest:
+          Properties:
+            Method: PUT
+            Path: /api/plugins/serverless-cms/{proxy+}
+          Type: Api
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-data-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-static-partition-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-plugin-partition-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppDataPermissions
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-Sessions
+      Runtime: go1.x
+      Timeout: 60
+    Type: AWS::Serverless::Function
+  ApiPluginSettings:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a63b16a9-1ada-447d-a9f9-917f70e022b9
+      Environment:
+        Variables:
+          TYPE: API
+      Events:
+        GetSettings:
+          Properties:
+            Method: GET
+            Path: /api/plugins/serverless-cms/settings
+          Type: Api
+        PostBootstrap:
+          Properties:
+            Method: POST
+            Path: /api/plugins/serverless-cms/setup/bootstrap
+          Type: Api
+        ValidateBootstrap:
+          Properties:
+            Method: POST
+            Path: /api/plugins/serverless-cms/setup/validate
+          Type: Api
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppDataPermissions
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-Sessions
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-data-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-static-partition-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-plugin-partition-index
+      Runtime: go1.x
+      Timeout: 60
+    Type: AWS::Serverless::Function
+  AppSyncModelDataSource:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      LambdaConfig:
+        LambdaFunctionArn:
+          Fn::GetAtt: ModelLambda.Arn
+      Name:
+        Fn::Sub: generic
+      ServiceRoleArn:
+        Fn::ImportValue:
+          Fn::Sub: acentera:prod:AppSync:WriterRole
+      Type: AWS_LAMBDA
+    Type: AWS::AppSync::DataSource
+  AppSyncModelPostsCreateMutationResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      DataSourceName:
+        Fn::GetAtt: AppSyncModelDataSource.Name
+      FieldName: createPost
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke",
+        "payload": { "resolve": "mutation.createPost", "context": $utils.toJson($context)
+        } }'
+      ResponseMappingTemplate: $util.toJson($context.result)
+      TypeName: Mutation
+    Type: AWS::AppSync::Resolver
+  AppSyncModelPostsListResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      DataSourceName:
+        Fn::GetAtt: AppSyncModelDataSource.Name
+      FieldName: listPosts
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke",
+        "payload": { "resolve": "query.listPosts", "context": $utils.toJson($context)
+        } }'
+      ResponseMappingTemplate: $util.toJson($context.result)
+      TypeName: Query
+    Type: AWS::AppSync::Resolver
+  AppSyncModelProjectCreateProjectMutationResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      DataSourceName:
+        Fn::GetAtt: AppSyncModelDataSource.Name
+      FieldName: createProject
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke",
+        "payload": { "resolve": "mutation.createProject", "context": $utils.toJson($context)
+        } }'
+      ResponseMappingTemplate: $util.toJson($context.result)
+      TypeName: Mutation
+    Type: AWS::AppSync::Resolver
+  AppSyncModelProjectListResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      DataSourceName:
+        Fn::GetAtt: AppSyncModelDataSource.Name
+      FieldName: listAllProjects
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke",
+        "payload": { "resolve": "query.listAllProjects", "context": $utils.toJson($context)
+        } }'
+      ResponseMappingTemplate: $util.toJson($context.result)
+      TypeName: Query
+    Type: AWS::AppSync::Resolver
+  AppSyncModelProjectdeleteProjectMutationResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      DataSourceName:
+        Fn::GetAtt: AppSyncModelDataSource.Name
+      FieldName: deleteProject
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke",
+        "payload": { "resolve": "mutation.deleteProject", "context": $utils.toJson($context)
+        } }'
+      ResponseMappingTemplate: $util.toJson($context.result)
+      TypeName: Mutation
+    Type: AWS::AppSync::Resolver
+  AppSyncModelProjectupdateProjectMutationResolver:
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      DataSourceName:
+        Fn::GetAtt: AppSyncModelDataSource.Name
+      FieldName: updateProject
+      RequestMappingTemplate: '{ "version" : "2017-02-28", "operation": "Invoke",
+        "payload": { "resolve": "mutation.updateProject", "context": $utils.toJson($context)
+        } }'
+      ResponseMappingTemplate: $util.toJson($context.result)
+      TypeName: Mutation
+    Type: AWS::AppSync::Resolver
+  AppSyncSchema:
+    DependsOn:
+    - GraphApi
+    Properties:
+      ApiId:
+        Fn::GetAtt: GraphApi.ApiId
+      Definition: |2-
+
+        input CreateProjectInput {
+          title: String!
+          status: String!
+        }
+
+        input UpdateProjectInput {
+          id: ID!
+          title: String!
+          status: String!
+        }
+
+        input DeleteProjectInput {
+          id: ID!
+        }
+
+        input CreatePostInput {
+          project: String!
+          lang: String
+          author: String
+          title: String
+          content: String
+          description: String
+        }
+
+        input UpdatePostInput {
+          id: ID!
+          title: String
+          completed: Boolean
+        }
+
+        input DeletePostInput {
+          id: ID!
+        }
+
+        type Mutation {
+          createProject(input: CreateProjectInput!): Project
+          updateProject(input: UpdateProjectInput!): Project
+          deleteProject(input: DeleteProjectInput!): Project
+
+          createPost(input: CreatePostInput!): CreatePostOutput
+          updatePost(input: UpdatePostInput!): Post
+          deletePost(input: DeletePostInput!): Post
+        }
+
+        type CreatePostOutput {
+          userPost: UserPost
+          query: Query
+        }
+
+        type Query {
+          listAllProjects: ProjectConnection!
+          listProjects(limit: Int, nextToken: String): ProjectConnection!
+
+          getPost(id: ID!): Post
+          listPosts(project: String, lang: LangEnum, limit: Int, nextToken: String): PostConnection!
+        }
+
+        input S3ObjectInput {
+          bucket: String!
+          key: String!
+          region: String!
+        }
+
+        type S3Object {
+          bucket: String
+          key: String
+          region: String
+        }
+
+        ### POSTS
+        # Get next scheduled posts ... to proceed
+        # Get Latest Posts by Type ( published, scheduled, draft ..)
+        # For a User get the Posts that he has ( Created, Interacted, Viewed )
+        #
+
+        enum UserPostConnectionType {
+            created
+            interacted
+            viewed
+        }
+
+        enum PostStatusType {
+            published
+            draft
+            scheduled
+        }
+
+        enum LangEnum {
+            fr
+            en
+        }
+
+        type User {
+          id: ID!
+          posts(limit: Int, type: UserPostConnectionType, nextToken: String): UserPostConnection
+          profilePicture: S3Object
+          created: AWSDateTime
+          updated: AWSDateTime
+        }
+
+        type UserPost {
+          post: Post!
+          user: User!
+        }
+
+        type UserPostConnection {
+          before: String
+          after: String
+          hasAfter: Boolean
+          hasBefore: Boolean
+          items: [Post]!
+          lang: LangEnum
+          nextToken: String
+        }
+
+        type Project {
+          id: ID!
+          title: String!
+          status: String!
+          created: AWSDateTime
+          updated: AWSDateTime
+        }
+
+        type ProjectConnection {
+          before: String
+          after: String
+          hasAfter: Boolean
+          hasBefore: Boolean
+          items: [Project!]!
+          nextToken: String
+        }
+
+        # what about languages?
+        type Post {
+          id: ID!
+          title: String!
+          author: String!
+          created: AWSDateTime
+          updated: AWSDateTime
+          languages: [LangEnum]!
+          translations(lang: LangEnum): PostMetadataConnection
+          comments(lang: LangEnum, limit: Int, nextToken: String): PostCommentConnection
+          categories: [String]
+          tags: [String]
+          views: Int
+        }
+
+        type PostMetadataConnection {
+          id: ID!
+          title: String!
+          slug: String!
+          content: String!
+          description: String!
+          status: String!
+          published: AWSDateTime
+          views: Int
+        }
+
+        type Comment {
+          id: ID!
+          postId: String!
+          lang: LangEnum!
+          author: String!
+          content: String!
+          upvotes: Int
+          downvotes: Int
+        }
+
+        type PostCommentConnection {
+          before: String
+          after: String
+          hasAfter: Boolean
+          hasBefore: Boolean
+          items: [Comment]!
+          nextToken: String
+        }
+
+
+        type Category {
+          id: ID!
+          title: String!
+          status: String!
+          completed: String!
+          created: AWSDateTime
+          updated: AWSDateTime
+          categories: [String]!
+        }
+
+        type Notes {
+          id: ID!
+          content: String!
+        }
+
+        type PostConnection {
+          items: [Post!]!
+          nextToken: String
+        }
+
+        type Subscription {
+          onCreateProject(id: ID, title: String, status: String): Project
+          onUpdateProject(id: ID, title: String, status: String): Project
+          onDeleteProject(id: ID, title: String, status: String): Project
+
+          onCreatePost(id: ID, title: String, completed: Boolean): CreatePostOutput
+          onUpdatePost(id: ID, title: String, completed: Boolean): Post
+          onDeletePost(id: ID, title: String, completed: Boolean): Post
+        }
+
+        schema {
+          query: Query
+          mutation: Mutation
+          subscription: Subscription
+        }
+    Type: AWS::AppSync::GraphQLSchema
+  GraphApi:
+    Description: serverless-cms Graph Api
+    Properties:
+      AuthenticationType: AWS_IAM
+      Name:
+        Fn::Sub: ${AWS::StackName}
+    Type: AWS::AppSync::GraphQLApi
+  ModelLambda:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a63b16a9-1ada-447d-a9f9-917f70e022b9
+      Environment:
+        Variables:
+          TYPE: MODELS
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppDataPermissions
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-Sessions
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-data-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-static-partition-index
+      - DynamoDBCrudPolicy:
+          TableName: acentera-prod-AppData/index/gsi-plugin-partition-index
+      Runtime: go1.x
+    Type: AWS::Serverless::Function
+  PublicWebsite:
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a63b16a9-1ada-447d-a9f9-917f70e022b9
+      Environment:
+        Variables:
+          TYPE: WEBSITE
+      Events:
+        Request:
+          Properties:
+            Method: GET
+            Path: /api/plugins/serverless-cms/static/{proxy+}
+          Type: Api
+      Runtime: go1.x
+      Timeout: 30
+    Type: AWS::Serverless::Function
+  RequestsLayerCMS:
+    Properties:
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: cc7379a6-7d55-4863-a923-157ea7c90cb1
+    Type: AWS::Serverless::LayerVersion
+  ServerlessCloudfront:
+    DependsOn:
+    - ServerlessRestApi
+    Properties:
+      DistributionConfig:
+        CacheBehaviors:
+        - AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          CachedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          Compress: true
+          DefaultTTL: 60
+          ForwardedValues:
+            Headers:
+            - Accept
+            - Referer
+            - Athorization
+            - Content-Type
+            - Access-Control-Allow-Headers
+            QueryString: true
+          MaxTTL: 300
+          MinTTL: 60
+          PathPattern:
+            Fn::Sub: /api/plugins/serverless-cms/static/*
+          TargetOriginId:
+            Fn::Sub: Plugin-serverless-cms-Api
+          ViewerProtocolPolicy: https-only
+        - AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          CachedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          Compress: true
+          DefaultTTL: 60
+          ForwardedValues:
+            Headers:
+            - Accept
+            - Referer
+            - Athorization
+            - Content-Type
+            - Access-Control-Allow-Headers
+            QueryString: true
+          MaxTTL: 300
+          MinTTL: 60
+          PathPattern:
+            Fn::Sub: /api/plugins/serverless-cms/static*
+          TargetOriginId:
+            Fn::Sub: Plugin-serverless-cms-Api
+          ViewerProtocolPolicy: https-only
+        - AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          CachedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          Compress: true
+          DefaultTTL: 0
+          ForwardedValues:
+            Headers:
+            - Accept
+            - Referer
+            - Athorization
+            - Content-Type
+            - Token
+            - Access-Control-Allow-Headers
+            - X-Token
+            QueryString: true
+          MaxTTL: 0
+          MinTTL: 0
+          PathPattern:
+            Fn::Sub: /api/plugins/serverless-cms/*
+          TargetOriginId:
+            Fn::Sub: Plugin-serverless-cms-Api
+          ViewerProtocolPolicy: https-only
+        - AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          CachedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          Compress: true
+          DefaultTTL: 0
+          ForwardedValues:
+            Headers:
+            - Accept
+            - Referer
+            - Athorization
+            - Content-Type
+            - Token
+            - Access-Control-Allow-Headers
+            - X-Token
+            QueryString: true
+          MaxTTL: 0
+          MinTTL: 0
+          PathPattern: /api/*
+          TargetOriginId: Api
+          ViewerProtocolPolicy: https-only
+        Comment: Cloudfront Distribution pointing to api gateway static page
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          Compress: true
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            Headers:
+            - Accept
+            - Content-Type
+            QueryString: true
+          TargetOriginId: Static
+          ViewerProtocolPolicy: redirect-to-https
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2
+        IPV6Enabled: true
+        Origins:
+        - CustomOriginConfig:
+            OriginProtocolPolicy: https-only
+            OriginReadTimeout: 60
+          DomainName:
+            Fn::Join:
+            - ''
+            - - Ref: ServerlessRestApi
+              - Fn::Sub: .execute-api.${AWS::Region}.amazonaws.com
+          Id:
+            Fn::Sub: Plugin-serverless-cms-Api
+          OriginCustomHeaders:
+          - HeaderName: X-Site
+            HeaderValue:
+              Ref: SiteKey
+          - HeaderName: X-Plugin
+            HeaderValue: serverless-cms
+          OriginPath:
+            Fn::Join:
+            - ''
+            - - /
+              - Prod
+        - CustomOriginConfig:
+            OriginProtocolPolicy: https-only
+            OriginReadTimeout: 60
+          DomainName:
+            Fn::If:
+            - IsApiGatewayDefined
+            - Ref: CoreApiGateway
+            - Fn::ImportValue: acentera:prod:ApiGateway:DomainName
+          Id: Api
+          OriginCustomHeaders:
+          - HeaderName: X-Site
+            HeaderValue:
+              Ref: SiteKey
+          - HeaderName: X-Plugin
+            HeaderValue: serverless-cms
+          OriginPath:
+            Fn::Join:
+            - ''
+            - - /
+              - Prod
+        - CustomOriginConfig:
+            OriginProtocolPolicy: https-only
+            OriginReadTimeout: 60
+          DomainName:
+            Fn::If:
+            - IsApiGatewayDefined
+            - Ref: CoreApiGateway
+            - Fn::ImportValue: acentera:prod:ApiGateway:DomainName
+          Id: Static
+          OriginCustomHeaders:
+          - HeaderName: X-Site
+            HeaderValue:
+              Ref: SiteKey
+          - HeaderName: X-Plugin
+            HeaderValue: serverless-cms
+          OriginPath:
+            Fn::Join:
+            - ''
+            - - /
+              - Prod
+              - /
+              - static
+        PriceClass: PriceClass_100
+      Tags:
+      - Key: acentera:id
+        Value:
+          Fn::Sub: serverless-cms-${SiteKey}
+      - Key: environment
+        Value:
+          Fn::Sub: prod
+    Type: AWS::CloudFront::Distribution
+  ServerlessRestApi:
+    Properties:
+      BinaryMediaTypes:
+      - image~1*
+      - image~1gif
+      - image~1png
+      - image~1jpeg
+      - image~1jpg
+      Cors:
+        AllowHeaders: '''X-Version, Accept, Authorization, Content-Type'''
+        AllowMethods: '''GET, POST, OPTIONS, HEAD'''
+      EndpointConfiguration: REGIONAL
+      StageName: Prod
+    Type: AWS::Serverless::Api
+Transform: AWS::Serverless-2016-10-31

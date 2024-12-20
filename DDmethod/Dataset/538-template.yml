@@ -1,0 +1,635 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Conditions:
+  ShouldCreateErrorsTopicCondition:
+    Fn::And:
+    - Fn::Equals:
+      - Ref: ErrorsTopicArn
+      - ''
+    - Fn::Not:
+      - Fn::Equals:
+        - Ref: ErrorsTopicName
+        - ''
+  ShouldCreateFunctionAlarm0:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName0
+      - ''
+  ShouldCreateFunctionAlarm1:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName1
+      - ''
+  ShouldCreateFunctionAlarm2:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName2
+      - ''
+  ShouldCreateFunctionAlarm3:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName3
+      - ''
+  ShouldCreateFunctionAlarm4:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName4
+      - ''
+  ShouldCreateFunctionAlarm5:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName5
+      - ''
+  ShouldCreateFunctionAlarm6:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName6
+      - ''
+  ShouldCreateFunctionAlarm7:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: FunctionName7
+      - ''
+  ShouldUseSuppliedErrorsTopic:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: ErrorsTopicArn
+      - ''
+  UseAlarmActionsCondition:
+    Fn::Or:
+    - Fn::Not:
+      - Fn::Equals:
+        - Ref: ErrorsTopicName
+        - ''
+    - Fn::Not:
+      - Fn::Equals:
+        - Ref: ErrorsTopicArn
+        - ''
+Description: Creates alarms that monitor lambda error rates.
+Outputs:
+  ErrorsTopicArn:
+    Condition: ShouldCreateErrorsTopicCondition
+    Description: ARN of the created errors topic, useful for adding subscriptions
+    Value:
+      Ref: ErrorsTopic
+Parameters:
+  ErrorThreshold:
+    Default: 3
+    Description: 'The percentage of errors per EvaluationPeriod minutes before the
+      alarm is triggered (default: 3)'
+    Type: Number
+  ErrorsTopicArn:
+    Default: ''
+    Description: An ARN of an existing SNS topic suitable for receiving error and ok actions.
+    Type: String
+  ErrorsTopicName:
+    Default: ''
+    Description: A name we will use to create an SNS topic to which error and ok actions are published. The topic should be unique for your account.
+    Type: String
+  EvaluationPeriods:
+    Default: 1
+    Description: The number of minutes over which data is compared to the specified threshold.
+    Type: Number
+  FunctionName0:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName1:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName2:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName3:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName4:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName5:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName6:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  FunctionName7:
+    Default: ''
+    Description: The name of the function that's adding alarms.
+    Type: String
+  TreatMissingData:
+    AllowedValues:
+    - breaching
+    - notBreaching
+    - ignore
+    - missing
+    Default: notBreaching
+    Type: String
+Resources:
+  ErrorsTopic:
+    Condition: ShouldCreateErrorsTopicCondition
+    Properties:
+      TopicName:
+        Ref: ErrorsTopicName
+    Type: AWS::SNS::Topic
+  FunctionErrorAlarm0:
+    Condition: ShouldCreateFunctionAlarm0
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName0} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName0
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName0
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm1:
+    Condition: ShouldCreateFunctionAlarm1
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName1} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName1
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName1
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm2:
+    Condition: ShouldCreateFunctionAlarm2
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName2} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName2
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName2
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm3:
+    Condition: ShouldCreateFunctionAlarm3
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName3} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName3
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName3
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm4:
+    Condition: ShouldCreateFunctionAlarm4
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName4} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName4
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName4
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm5:
+    Condition: ShouldCreateFunctionAlarm5
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName5} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName5
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName5
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm6:
+    Condition: ShouldCreateFunctionAlarm6
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName6} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName6
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName6
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+  FunctionErrorAlarm7:
+    Condition: ShouldCreateFunctionAlarm7
+    Properties:
+      ActionsEnabled:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - true
+        - false
+      AlarmActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      AlarmName:
+        Fn::Sub: ${FunctionName7} error rate > ${ErrorThreshold}%
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods:
+        Ref: EvaluationPeriods
+      Metrics:
+      - Expression: lambdaErrors * 100 / invocations
+        Id: e1
+        Label: Errors
+      - Id: lambdaErrors
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName7
+            MetricName: Errors
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      - Id: invocations
+        MetricStat:
+          Metric:
+            Dimensions:
+            - Name: FunctionName
+              Value:
+                Ref: FunctionName7
+            MetricName: Invocations
+            Namespace: AWS/Lambda
+          Period: 60
+          Stat: Sum
+        ReturnData: false
+      OKActions:
+        Fn::If:
+        - UseAlarmActionsCondition
+        - Fn::If:
+          - ShouldUseSuppliedErrorsTopic
+          - - Ref: ErrorsTopicArn
+          - - Ref: ErrorsTopic
+        - []
+      Threshold:
+        Ref: ErrorThreshold
+      TreatMissingData:
+        Ref: TreatMissingData
+    Type: AWS::CloudWatch::Alarm
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Deploy Liquibase
+Resources:
+  DeployLiquibaseLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+      - java11
+      Description: Deploy Liquibase
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 41f067cd-5348-4365-bf6f-e5049136809f
+      LicenseInfo: MIT
+      RetentionPolicy: Retain
+Outputs:
+  Arn:
+    Value:
+      Ref: DeployLiquibaseLayer

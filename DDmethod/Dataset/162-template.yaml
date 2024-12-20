@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  ApiPublisher:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /publish:
+            post:
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaPublisher.Arn}/invocations
+  LambdaPublisher:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          TOPIC_ARN: !Ref SNSTopic
+      Policies:
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt SNSTopic.TopicName
+      Events:
+        PubApi:
+          Type: Api
+          Properties:
+            Path: /publish
+            Method: POST
+            RestApiId: !Ref ApiPublisher
+  SNSTopic:
+    Type: AWS::SNS::Topic
+
+Outputs:
+  SNSTopic:
+    Value: !Ref SNSTopic
+    Description: The SNS topic to subscribe to

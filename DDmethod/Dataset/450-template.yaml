@@ -1,0 +1,21 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: kx-kdb-3-6-layer
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: c96faf66-1e37-405d-be56-2b12f89298f3
+      CompatibleRuntimes:
+      - provided
+  ServerlessFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 2413f0b9-26bb-478c-b14f-c5a42359904f
+      Handler: script.q
+      Runtime: provided
+      Layers:
+      - Ref: SharedLayer

@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Send a reminder to bring an umbrella on rainy days.
+
+Parameters:
+  PhoneNumber:
+    Type: String
+    Description: The phone number recipient of the weather alert, in E.164 (e.g. +15555550100) format.
+  WeatherLocation: 
+    Type: String
+    Default: 47.62,-122.34
+    Description: Latitude, longitude pair of location to fetch weather for.
+  TimeZone:
+    Type: String
+    Default: America/Los_Angeles
+    Description: Local time zone for displaying weather and waiting for MessageLocalTime.
+  DarkSkyKey:
+    Type: String
+    Description: Your Dark Sky API key from https://darksky.net/dev.
+  MessageLocalTime:
+    Type: String
+    Default: 08:00
+    Description: The local time at which to check the weather. Must be zero-padded and at a fifteen minute interval, e.g. 08:15.
+
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: umbrella.lambda_handler
+      Runtime: python3.6
+      Timeout: 5
+      CodeUri: app
+      Environment:
+        Variables:
+          SNS_TOPIC: !Ref SNSTopic
+          DARK_SKY_KEY: !Ref DarkSkyKey
+          MESSAGE_LOCAL_TIME: !Ref MessageLocalTime
+          TIME_ZONE: !Ref TimeZone
+          WEATHER_LOCATION: !Ref WeatherLocation
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(0/15 * * * ? *)'
+      Policies:
+       - SNSPublishMessagePolicy:
+           TopicName: !GetAtt SNSTopic.TopicName
+  SNSTopic:
+    Type: "AWS::SNS::Topic"
+    Properties: 
+      DisplayName: Umbrella
+      Subscription:
+        -
+          Endpoint: !Ref PhoneNumber
+          Protocol: sms

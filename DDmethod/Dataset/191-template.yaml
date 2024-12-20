@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    Timeout: 10
+Resources:
+  fnPyBasicOauth:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: a4e23623-f150-4a2d-b1fa-803ba8cb9e94
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.6
+      Environment:
+        Variables:
+          okey: mykey
+          osecret: mysecret
+          screenname: myscreenname
+          authurl: myauthurl
+          apiurl: myapiurl

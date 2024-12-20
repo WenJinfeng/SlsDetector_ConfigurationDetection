@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  streamdataiogithubevents:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Streamdata.io Github Events Streaming to Amazon S3 Data Lake Using Lambda.
+      MemorySize: 128
+      Environment:
+        Variables:
+          s3bucket: streaming-data-lake
+          appToken: Streamdata.io-Application-Token
+          github_token: Github-Token
+          targetUrl: https://api.github.com/events
+          targetFolder: github-events
+      Handler: index.handler
+      Timeout: 300
+      Policies:
+      - Statement:
+        - Action:
+          - lambda:InvokeFunction
+          Resource:
+            Fn::Sub:
+            - arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${functionName}*
+            - functionName: streamdata-io-github-events
+          Effect: Allow
+      - Statement:
+        - Action:
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:GetBucketLocation
+          - s3:GetObjectVersion
+          - s3:PutObject
+          - s3:GetLifecycleConfiguration
+          - s3:PutLifecycleConfiguration
+          Resource:
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}
+            - bucketName: streaming-data-lake
+          - Fn::Sub:
+            - arn:${AWS::Partition}:s3:::${bucketName}/*
+            - bucketName: streaming-data-lake
+          Effect: Allow
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 67708409-81d6-4f98-ad65-18429b69e292
+      Runtime: nodejs6.10
+Description: Streamdata.io Github Events Streaming to Amazon S3 Data Lake Using Lambda.

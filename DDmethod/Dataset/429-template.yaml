@@ -1,0 +1,220 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: 'SAM template for Serverless framework service: '
+Parameters:
+  TABLENAME:
+    Type: String
+    Description: The DynamoDB table for the Child in Crowd service
+    Default: 'children-care'
+    MinLength: 4
+    MaxLength: 50
+  BUCKETNAME:
+    Type: String
+    Default: 'children-care'
+    Description: S3 Bucket where the check-in and check-out images will be stored
+    MinLength: 4
+    MaxLength: 50
+  COLLECTION:
+    Type: String
+    Description: The faces collection for AWS Rekognition
+    Default: 'users-faces'
+    MinLength: 4
+    MaxLength: 50
+Outputs:
+  RequestURL:
+    Description: Prod URL for API to use as endpoint in the Child in Crowd online interface
+    Value: !Sub |-
+       https://${ChildCrowdCare}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BUCKETNAME
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+            AllowedOrigins:
+              - '*'
+  ChildrenDynamoTable:
+    Type: 'AWS::DynamoDB::Table'
+    DeletionPolicy: Retain
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: !Ref TABLENAME
+  GetSignedUrl:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.getSignedURL
+      Runtime: nodejs8.10
+      CodeUri: >-
+        s3://child-in-crowd-deploy/version_0_1_2/child-crowd-care.zip
+      MemorySize: 1024
+      Timeout: 20
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref BUCKETNAME
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref BUCKETNAME
+          FACES_COLLECTION: !Ref COLLECTION
+      Events:
+        Event1:
+          Type: Api
+          Properties:
+            Path: /get-signed-url
+            Method: post
+            RestApiId:
+              Ref: ChildCrowdCare
+  ChildCrowdCare:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          title:
+            Ref: 'AWS::StackName'
+        paths:
+          /get-signed-url:
+            options:
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{ "statusCode" : 200 }'
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+                      method.response.header.Access-Control-Allow-Methods: '''post'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{}'
+              responses:
+                '200':
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Origin:
+                      type: string
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  'Fn::Sub': >-
+                    arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetSignedUrl.Arn}/invocations
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+                      method.response.header.Access-Control-Allow-Methods: '''post'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{}'
+              responses:
+                '200':
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Origin:
+                      type: string
+          /check-child:
+            options:
+              x-amazon-apigateway-integration:
+                type: mock
+                requestTemplates:
+                  application/json: '{ "statusCode" : 200 }'
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+                      method.response.header.Access-Control-Allow-Methods: '''post'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{}'
+              responses:
+                '200':
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Origin:
+                      type: string
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  'Fn::Sub': >-
+                    arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckChild.Arn}/invocations
+                responses:
+                  default:
+                    statusCode: 200
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key'''
+                      method.response.header.Access-Control-Allow-Methods: '''post'''
+                      method.response.header.Access-Control-Allow-Origin: '''*'''
+                    responseTemplates:
+                      application/json: '{}'
+              responses:
+                '200':
+                  headers:
+                    Access-Control-Allow-Headers:
+                      type: string
+                    Access-Control-Allow-Methods:
+                      type: string
+                    Access-Control-Allow-Origin:
+                      type: string
+  CheckChild:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.checkChild
+      Runtime: nodejs8.10
+      CodeUri: >-
+        s3://child-in-crowd-deploy/version_0_1_2/child-crowd-care.zip
+      MemorySize: 1024
+      Timeout: 20
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref BUCKETNAME
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TABLENAME
+        - RekognitionFacesPolicy: 
+            CollectionId: !Ref COLLECTION
+        - RekognitionReadPolicy:
+            CollectionId: !Ref COLLECTION
+        - RekognitionWriteOnlyAccessPolicy:
+            CollectionId: !Ref COLLECTION
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref BUCKETNAME
+          FACES_COLLECTION: !Ref COLLECTION
+          DYNAMO_DB: !Ref TABLENAME
+      Events:
+        Event1:
+          Type: Api
+          Properties:
+            Path: /check-child
+            Method: post
+            RestApiId:
+              Ref: ChildCrowdCare

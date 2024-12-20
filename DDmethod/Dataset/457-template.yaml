@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  LayerName:
+    Type: String
+    Default: mecab-python3
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: lambda-layer-mecab-python3
+    Description: "AWS Lambda Layer for MeCab"
+    Author: Kazuki Matsuda
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
+    ReadmeUrl: README.md
+    Labels: ['layer','lambda','mecab','python3']
+    HomePageUrl: https://github.com/mats16/lambda-layer-mecab-python3
+    SemanticVersion: 0.996.2
+    SourceCodeUrl: https://github.com/mats16/lambda-layer-mecab-python3
+
+Transform: AWS::Serverless-2016-10-31
+Description: Create a Layer
+
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Ref LayerName
+      ContentUri: opt/
+      CompatibleRuntimes:
+        - python3.6
+        - python3.7
+        - python3.8
+      LicenseInfo: 'Available under the MIT-0 license.'
+      RetentionPolicy: Retain
+
+Outputs:
+  LayerVersionArn:
+    Description: ARN for the published Layer version
+    Value: !Ref LambdaLayer
+    Export:
+      Name: !Sub 'LayerVersionArn-${AWS::StackName}'

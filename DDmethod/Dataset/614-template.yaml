@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  This file contains code that instruments Sentry custom Tags and Context for nodejs12.x
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+Resources:
+  CustomTagandContextFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: custom_tag_and_context
+      Description: This file contains code that instruments Sentry custom Tags and Context
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: c3503752-8d7d-4e8d-ad63-5d2e97a6ccf1
+      Handler: app.handler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          ENV_VAR: env_variable_value
+      Events:
+        CustomTagandContextFunction:
+          Type: Api
+          Properties:
+            Path: /custom_tag_and_context
+            Method: get
+Outputs:
+  CustomTagandContextApi:
+    Description: API Gateway endpoint URL for Prod stage for custom_tag_and_context error function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/custom_tag_and_context/
+  CustomTagandContextFunction:
+    Description: Custom tag and context Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - CustomTagandContextFunction
+      - Arn

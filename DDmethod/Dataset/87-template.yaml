@@ -1,0 +1,19 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: Boto3
+      Description: v.1.12.35
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: b8af69f7-bbc5-4f15-9900-794ef50d86f4
+      CompatibleRuntimes:
+      - python2.7
+      - python3.6
+      - python3.7
+      - python3.8
+Outputs:
+  LambdaLayer:
+    Value:
+      Ref: LambdaLayer

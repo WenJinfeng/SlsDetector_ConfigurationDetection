@@ -1,0 +1,27 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: This streams a Reddit search using Streamdata.io, pulling data via the API and turning it into a stream and publishing the results to an Amazon S3 data lake.
+Resources:
+  streamdataioredditsearch:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: s3://streamdata-serverless/streamdata-io-reddit-search/package.zip
+      Description: This streams a Reddit search using Streamdata.io, pulling data via the API and turning it into a stream and publishing the results to an Amazon S3 data lake.
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: streamdata-io-reddit-search
+        - S3CrudPolicy:
+            BucketName: streaming-data-lake
+      Environment:
+        Variables:
+          targetUrl: 'https://www.reddit.com/search.json'
+          s3bucket: streaming-data-lake
+          targetFolder: reddit-data
+          appToken: Streamdata.io-Application-Token
+          query: kafka
+          oauthToken: Reddit-OAuth-Token
+          userAgent: YourAppName/0.1 by YourCompanyName

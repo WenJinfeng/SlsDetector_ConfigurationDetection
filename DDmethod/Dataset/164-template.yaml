@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Lambda Layer with GIT
+
+Resources:
+  GitLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: dist/layer-git-2.28.0.zip
+Outputs:
+  LayerArn:
+    Value: !Ref GitLayer

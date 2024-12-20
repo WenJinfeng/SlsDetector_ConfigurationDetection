@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Aikaan Agent
+  Aikaan Agent Application to Deploy Aikaan Agent into your existing GreenGrass Core Group
+Globals:
+  Function:
+    Timeout: 900
+Parameters:
+  AikaanServer:
+    Type: String
+    Default: abc
+  AikaanTenantID:
+    Type: String
+    Default: abc
+  AikaanProfileID:
+    Type: String
+    Default: abc
+Resources:
+  AikaanAgentDeployFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: ced4c22f-c898-4ef2-ac97-372b8049e2ed
+      Handler: app.lambda_handler
+      Runtime: python2.7
+      Environment:
+        Variables:
+          AIKAAN_SERVER:
+            Ref: AikaanServer
+          AIKAAN_TENANTID:
+            Ref: AikaanTenantID
+          AIKAAN_PROFILEID:
+            Ref: AikaanProfileID

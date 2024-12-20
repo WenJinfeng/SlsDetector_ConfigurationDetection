@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  TableName:
+    Type: String
+    Description: (Required) The name of the existing DynamoDB table you want to get one record from. Minimum 3 characters.
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
+  CorsOrigin:
+    Type: String
+    Default: "'*'"
+    Description: (Optional) Cross-origin resource sharing (CORS) Origin. You can specify a single origin, all "*" or leave empty and no CORS will be applied.
+    MaxLength: 250
+Conditions:
+  IsCorsDefined: !Not [!Equals [!Ref CorsOrigin, '']]
+Resources:
+  GetOneApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /{items}/{id}:
+            get:
+              parameters:
+              - name: items
+                in: path
+                required: true
+                type: string
+              - name: id
+                in: path
+                required: true
+                type: string
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetOneLambda.Arn}/invocations
+  GetOneLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          IS_CORS: IsCorsDefined
+          CORS_ORIGIN: !Ref CorsOrigin
+          PRIMARY_KEY: !Sub ${TableName}Id
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableName
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /{items}/{id}
+            Method: GET
+            RestApiId: !Ref GetOneApi
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${GetOneApi}.execute-api.${AWS::Region}.amazonaws.com/prod/${TableName}/some-id
+    Description: The URL of the API Gateway you invoke with a GET request to retrieve all of your items in the DynamoDB Table. Don't forget to change the some-id to an id in your database.
+  DynamoDBTableName:
+    Value: !Ref TableName
+    Description: The name of the DynamoDB Table

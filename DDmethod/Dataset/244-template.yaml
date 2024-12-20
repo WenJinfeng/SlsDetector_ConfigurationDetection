@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda function layer for using SSM for PrivateKey safe keeping .
+Parameters:
+  CompatibleRuntimes:
+    Type: CommaDelimitedList
+    Description: Lambda Layer Version compatible runtimes
+    Default: nodejs16.x, nodejs18.x, nodejs14.x
+  RetentionPolicy:
+    Type: String
+    Description: Lambda Layer Version retention policy
+    AllowedValues:
+    - Retain
+    - Delete
+    Default: Retain
+Resources:
+  LambdaLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: coralogix-ssmlayer
+      Description: Lambda function layer for using SSM for PrivateKey safe keeping
+      LicenseInfo: Apache-2.0
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: d3aed8b6-e543-4fde-9b04-3e54e5a410aa
+      CompatibleRuntimes:
+        Ref: CompatibleRuntimes
+      CompatibleArchitectures:
+      - x86_64
+      - arm64
+      RetentionPolicy:
+        Ref: RetentionPolicy
+    Metadata:
+      SamResourceId: LambdaLayer
+Outputs:
+  LambdaLayerVersionArn:
+    Description: Lambda Layer version ARN for coralogix-ssmlayer
+    Value:
+      Ref: LambdaLayer
+    Export:
+      Name: CORALOGIX-SSMLAYER

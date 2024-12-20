@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  YalkFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 28d1dc79-3b61-4285-b068-37442da4c195
+      Handler: index.handler
+      Runtime: nodejs8.10
+Description: 'SAM template for Serverless framework service: '

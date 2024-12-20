@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  AWS Data Wrangler Lambda Layer (Python 3.7)
+Parameters:
+  LayerName:
+    Description: Name of the Layer
+    Type: String
+    Default: AWSDataWrangler-Python37
+  ExportName:
+    Description: Name of the export
+    Type: String
+    Default: aws-data-wrangler-py3-7
+Resources:
+  WranglerLayer37:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName:
+        Ref: LayerName
+      ContentUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 6bca6397-8d23-4fd8-9d3a-1e4d94db8de8
+      Description: AWS Data Wrangler Lambda Layer - 2.16.1 (Python 3.7)
+      LicenseInfo: Apache 2.0
+      CompatibleRuntimes:
+      - python3.7
+    Metadata:
+      SamResourceId: WranglerLayer37
+Outputs:
+  WranglerLayer37Arn:
+    Value:
+      Ref: WranglerLayer37
+    Export:
+      Name:
+        Ref: ExportName

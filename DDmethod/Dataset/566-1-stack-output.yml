@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Serverless Carrier Info
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Required
+      Parameters:
+      - TwilioAccountSid
+      - TwilioAuthToken
+    - Label:
+        default: Optional
+      Parameters:
+      - IOPipeToken
+Outputs:
+  ApiUrl:
+    Description: URL of your API endpoint
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: ServerlessRestApi
+        - .execute-api.
+        - Ref: AWS::Region
+        - .amazonaws.com/Prod
+Parameters:
+  IOPipeToken:
+    Default: ''
+    Description: Serverless DevOps?
+    Type: String
+  TwilioAccountSid:
+    Description: Twilio Account SID
+    Type: String
+  TwilioAuthToken:
+    Description: Twilio Auth Token
+    Type: String
+Resources:
+  ApiFunction:
+    Properties:
+      CodeUri: s3://serverless-carrier-info/4079100627af3303454537ddb1280641
+      Environment:
+        Variables:
+          IOPipeToken:
+            Ref: IOPipeToken
+          TwilioAccountSid:
+            Ref: TwilioAccountSid
+          TwilioAuthToken:
+            Ref: TwilioAuthToken
+      Events:
+        PostEvent:
+          Properties:
+            Method: post
+            Path: /
+          Type: Api
+      Handler: index.handler
+      Runtime: nodejs8.10
+      Timeout: 5
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  FaveAnimal:
+    Type: String
+    Default: Elephant
+    Description: What is your favorite animal
+Resources:
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      CodeUri:
+        Bucket: <%REPO_BUCKET%>
+        Key: 19a887fa-ca87-472a-bd5b-d729e4df2ae6
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          FavoriteAnimal:
+            Ref: FaveAnimal

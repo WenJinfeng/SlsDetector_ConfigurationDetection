@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  Elastic Serverless Forwarder
+  Send observability data from your AWS environment to Elastic.
+Parameters:
+  ElasticServerlessForwarderS3ConfigFile:
+    Type: String
+    Default: s3://
+    Description: S3 URL of the config yaml file (to be set as `S3_CONFIG_FILE` env
+      variable)
+  ElasticServerlessForwarderSSMSecrets:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of AWS SSM Secrets ARNs referenced in the config
+      yaml file
+  ElasticServerlessForwarderKMSKeys:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of AWS KMS Keys ARNs to be used for decrypting
+      AWS SSM Secrets referenced in the config yaml file
+  ElasticServerlessForwarderSQSEvents:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of Direct SQS queues ARNs to set as event triggers
+      for the Lambda
+  ElasticServerlessForwarderS3SQSEvents:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of S3 SQS Event Notifications ARNs to set as
+      event triggers for the Lambda
+  ElasticServerlessForwarderKinesisEvents:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of Kinesis Data Stream ARNs to set as event
+      triggers for the Lambda
+  ElasticServerlessForwarderCloudWatchLogsEvents:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of Cloudwatch Logs Log Groups ARNs to set subscription
+      filters on the Lambda for
+  ElasticServerlessForwarderS3Buckets:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of S3 buckets ARNs that are the sources of the
+      S3 SQS Event Notifications
+  ElasticServerlessForwarderSecurityGroups:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of the security group IDs to attach to the Lambda
+  ElasticServerlessForwarderSubnets:
+    Type: CommaDelimitedList
+    Default: ''
+    Description: Comma delimited list of the subnet IDs the Lambda should belong to
+Resources:
+  ElasticServerlessForwarderEventMacro:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-central-1:267093732750:applications/helper-macro-elastic-serverless-forwarder
+        SemanticVersion: 1.8.0
+    Metadata:
+      SamResourceId: ElasticServerlessForwarderEventMacro
+  ElasticServerlessForwarderApplication:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:eu-central-1:267093732750:applications/helper-application-elastic-serverless-forwarder
+        SemanticVersion: 1.8.0
+      Parameters:
+        ElasticServerlessForwarderS3ConfigFile:
+          Ref: ElasticServerlessForwarderS3ConfigFile
+        ElasticServerlessForwarderSSMSecrets:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderSSMSecrets
+        ElasticServerlessForwarderKMSKeys:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderKMSKeys
+        ElasticServerlessForwarderSQSEvents:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderSQSEvents
+        ElasticServerlessForwarderS3SQSEvents:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderS3SQSEvents
+        ElasticServerlessForwarderKinesisEvents:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderKinesisEvents
+        ElasticServerlessForwarderCloudWatchLogsEvents:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderCloudWatchLogsEvents
+        ElasticServerlessForwarderS3Buckets:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderS3Buckets
+        ElasticServerlessForwarderSecurityGroups:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderSecurityGroups
+        ElasticServerlessForwarderSubnets:
+          Fn::Join:
+          - ','
+          - Ref: ElasticServerlessForwarderSubnets
+    DependsOn: ElasticServerlessForwarderEventMacro
+    Metadata:
+      SamResourceId: ElasticServerlessForwarderApplication
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Elastic Serverless Forwarder Configuration options
+      Parameters:
+      - ElasticServerlessForwarderS3ConfigFile
+      - ElasticServerlessForwarderSSMSecrets
+      - ElasticServerlessForwarderKMSKeys
+    - Label:
+        default: Elastic Serverless Forwarder Events options
+      Parameters:
+      - ElasticServerlessForwarderSQSEvents
+      - ElasticServerlessForwarderS3SQSEvents
+      - ElasticServerlessForwarderKinesisEvents
+      - ElasticServerlessForwarderCloudWatchLogsEvents
+    - Label:
+        default: Elastic Serverless Forwarder S3 Buckets Permissions options
+      Parameters:
+      - ElasticServerlessForwarderS3Buckets
+    - Label:
+        default: Elastic Serverless Forwarder Network options
+      Parameters:
+      - ElasticServerlessForwarderSecurityGroups
+      - ElasticServerlessForwarderSubnets
+    ParameterLabels:
+      ElasticServerlessForwarderS3ConfigFile:
+        default: Config File
+      ElasticServerlessForwarderSSMSecrets:
+        default: AWS SSM Secrets
+      ElasticServerlessForwarderKMSKeys:
+        default: AWS KMS Keys
+      ElasticServerlessForwarderCloudWatchLogsEvents:
+        default: Cloudwatch Logs subscription filters
+      ElasticServerlessForwarderKinesisEvents:
+        default: Kinesis Data Stream event triggers
+      ElasticServerlessForwarderS3SQSEvents:
+        default: S3 SQS Event Notifications event triggers
+      ElasticServerlessForwarderSQSEvents:
+        default: Direct SQS queues event triggers
+      ElasticServerlessForwarderS3Buckets:
+        default: S3 buckets of S3 SQS Event Notifications
+      ElasticServerlessForwarderSecurityGroups:
+        default: Security groups to attach to the Elastic Serverless Forwarder
+      ElasticServerlessForwarderSubnets:
+        default: Subnets for the Elastic Serverless Forwarder
