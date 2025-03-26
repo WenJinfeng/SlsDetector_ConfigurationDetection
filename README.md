@@ -5,7 +5,7 @@ We provide code of our framework SlsDetector, evaluation baselines, evaluation d
 
 ## New Experiments
 
-All new experiments are added in the directory “NewExperiments”.
+!!!! All new experiments are added in the directory “NewExperiments”.
 
 
 ## Code of SlsDetector
