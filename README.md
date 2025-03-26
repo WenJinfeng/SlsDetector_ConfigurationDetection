@@ -3,6 +3,11 @@
 We provide code of our framework SlsDetector, evaluation baselines, evaluation dataset, and evaluation results.
 
 
+## New Experiments
+
+All new experiments are added in the directory “NewExperiments”.
+
+
 ## Code of SlsDetector
 
 Our misconfiguration detection approach is implemented in the file "SlsDetector.py", which supports different LLMs.
