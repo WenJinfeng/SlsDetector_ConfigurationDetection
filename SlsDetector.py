@@ -38,14 +38,14 @@ def create_prompt(data):
     
     Are there any misconfigurations in the above configuration file? Please consider the following constraints in a category-by-category manner.
 
-    1. Resource Type Constraint: Check whether the resource type is currently supported by AWS SAM, search the following URL to compare all supported AWS resources listed, noting the letter case. https://docs.aws.amazon.com/serverlessrepo/latest/devguide/list-supported-resources.html.
+    1. Resource Type Constraint: Check whether the resource type is currently supported by AWS SAM. Search the following URL to compare all supported AWS resources listed, noting the letter case. https://docs.aws.amazon.com/serverlessrepo/latest/devguide/list-supported-resources.html.
     2. Entry Constraint: Follow the steps below for a step-by-step check. 
     Step 1: Check whether each configuration entry under each resource type actually exists, paying attention to the accuracy of the name of the configuration entry, including case and singular and plural forms; 
     Step 2: If Events exists, also further check whether the corresponding configuration entry exists under each event source type, and please point out the non-existence of configuration entries;
     Step 3: Check whether the hierarchical level of all configuration entries is correct, and pay attention to the indentation problem.
     3. Value Constraint: Check that the value type, constraints, and supported values of the configuration entry are correct, that the value representation is accurate, and that the value cannot be defined as null.
-    4. Entry Dependency: Check if there are dependencies between configuration entries, check that they are used in the correct way, e.g. Ref and that the referenced resource types are correct, and that the relevant required reference definitions are given. Further check which configuration entries are or are not required under the PackageType type.
-    5. Value Dependency: Check if there is a dependency (possibly implicit) between the values of configuration entries, check that the usage is correct and that the relevant required reference definitions are given.
+    4. Entry Dependency: Check if there are dependencies between configuration entries and check that they are used in the correct way, e.g. Ref and that the referenced resource types are correct, and that the relevant required reference definitions are given. Further check which configuration entries are or are not required under the PackageType type.
+    5. Value Dependency: Check if there is a dependency (possibly implicit) between the values of configuration entries. Check that the usage is correct and that the relevant required reference definitions are given.
 
     Please summarize the misconfigurations that are absolutely certain. They are categorized as [Resource Type Errors],[Configuration Entry Errors],[Configuration Entry Value Errors],[Entry Dependency Errors],[Value Dependency Errors] (if present).
     Answer format (You MUST follow this): 
