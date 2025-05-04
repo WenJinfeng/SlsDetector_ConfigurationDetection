@@ -5,7 +5,7 @@ We provide code of our framework SlsDetector, evaluation baselines, evaluation d
 
 ## New Experiments
 
-!!!! All new experiments are added in the directory “NewExperiments”.
+!!!! All new experiments are added in the directory “NewExperiments”, where BL represents the basic LLM method, SL refers to the separated LLM method, and FL is the few-shot LLM method.
 
 
 ## Code of SlsDetector
@@ -30,10 +30,10 @@ Baseline 2: basic LLM-based approach.
 
 ## Evaluation Dataset
 
-We construct this evalution dataset (in the directory "EvaluationDateset") including configuration files without errors, configuration files with real-world errors, and configuration files with injected errors.
+We construct this evaluation dataset (in the directory "EvaluationDateset") including configuration files without errors, configuration files with real-world errors, and configuration files with injected errors.
 
 - The directory "configurations without errors" contains 52 correct configuration files, where 26 (naming from case 1 to case 26) are used to evaluate error-free configurations, while the remaining 26  (naming from case 27 to case 52) are reserved for generating configurations with injected errors.
-    - The detailed information of these configuration files are described in the file "correct configurations.xlsx".
+    - The detailed information of these configuration files is described in the file "correct configurations.xlsx".
 - The directory "configurations with real-world errors" contains 58 configuration files with real-world misconfigurations from GitHub.
     - The specific links of these configuration problems are provided in the file "realworld problem information.xlsx".
 - The directory "configurations with injected errors" contains 26 configuration files with injected errors (case 27 to case 52).
@@ -48,5 +48,5 @@ The information of all configuration files with their ground-truth answers is su
 We provide the evaluation results about RQ1, RQ2, RQ3, and RQ4 in the directory "EvaluationResults"
 
 - In the directory "RQ1", the response information and metric results of DD methods are provided when using different thresholds (1%, 3%, 5%, and 10%).
-- In the directory "RQ2+RQ3+RQ4", the response information and metric results of SlsDetector and BL methods (an simple LLM-based method) are provided, including results of different LLMs (ChatGPT-4o, Llama 3.1 (405B) Instruct Turbo, and Gemini 1.5 Pro) when repeated 5 times.
+- In the directory "RQ2+RQ3+RQ4", the response information and metric results of SlsDetector and BL methods (a simple LLM-based method) are provided, including results of different LLMs (ChatGPT-4o, Llama 3.1 (405B) Instruct Turbo, and Gemini 1.5 Pro) when repeated 5 times.
 
