@@ -38,7 +38,7 @@ def get_file(file_path):
 
 # baseline1 simple prompt
 def create_prompt(data):
-    prompt = f"""The following is a configuration file in YAML format:
+    prompt = f"""The following is a configuration file of AWS SAM:
     {data}
 
     Are there any configuration errors in the above configuration?
